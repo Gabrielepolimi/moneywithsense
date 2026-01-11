@@ -20,7 +20,7 @@ const staticPages = [
   { url: '/cookie-policy', priority: 0.5, changeFrequency: 'yearly' as const },
   { url: '/disclaimer', priority: 0.5, changeFrequency: 'yearly' as const },
   { url: '/affiliate-disclosure', priority: 0.5, changeFrequency: 'yearly' as const },
-  { url: '/sitemap', priority: 0.4, changeFrequency: 'weekly' as const },
+  { url: '/site-map', priority: 0.4, changeFrequency: 'weekly' as const },
 ]
 
 // Categories
@@ -35,6 +35,25 @@ const categories = [
   'taxes-tips',
   'side-hustles',
   'money-psychology',
+]
+
+// Pillar Guides (important for SEO)
+const pillarGuides = [
+  'personal-finance-guide',
+  'saving-money-guide',
+  'budgeting-guide',
+  'investing-basics-guide',
+  'passive-income-guide',
+  'credit-debt-guide',
+  'banking-cards-guide',
+  'taxes-tips-guide',
+  'side-hustles-guide',
+  'money-psychology-guide',
+]
+
+// Tools
+const tools = [
+  'savings-goal',
 ]
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -63,6 +82,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }))
 
+  // Pillar Guide pages (high priority for SEO)
+  const guideEntries = pillarGuides.map((guide) => ({
+    url: `${baseUrl}/guides/${guide}`,
+    lastModified: new Date(),
+    changeFrequency: 'monthly' as const,
+    priority: 0.9,
+  }))
+
+  // Tool pages
+  const toolEntries = tools.map((tool) => ({
+    url: `${baseUrl}/tools/${tool}`,
+    lastModified: new Date(),
+    changeFrequency: 'monthly' as const,
+    priority: 0.7,
+  }))
+
   // Article pages
   const articleEntries = articles.map((article) => ({
     url: `${baseUrl}/articles/${article.slug.current}`,
@@ -71,5 +106,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }))
 
-  return [...staticEntries, ...categoryEntries, ...articleEntries]
+  return [
+    ...staticEntries,
+    ...categoryEntries,
+    ...guideEntries,
+    ...toolEntries,
+    ...articleEntries,
+  ]
 }
