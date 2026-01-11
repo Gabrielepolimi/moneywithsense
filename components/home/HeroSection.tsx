@@ -10,32 +10,30 @@ export default function HeroSection() {
           {/* Text Content */}
           <div className="order-2 lg:order-1">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
-              La tua guida per la{' '}
-              <span className="text-blue-600">pesca sportiva</span>{' '}
-              in Italia
+              Practical personal finance
+              <br />
+              made clear and actionable
             </h1>
             <p className="text-xl text-gray-600 leading-relaxed mb-8 max-w-lg">
-              Scopri tecniche, spot segreti e consigli esperti per migliorare 
-              le tue catture. Dalla costa ai laghi, tutto quello che serve 
-              per diventare un pescatore migliore.
+              Save smarter, budget better, invest with confidence, and build multiple income streams. Simple, jargon-free guidance for a global audience.
             </p>
             
             {/* CTA Buttons */}
             <div className="flex flex-wrap gap-4">
               <Link 
-                href="/articoli"
+                href="/articles"
                 className="inline-flex items-center px-6 py-3 bg-gray-900 text-white font-medium rounded-full hover:bg-gray-800 transition-colors"
               >
-                Esplora gli articoli
+                Explore articles
                 <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
               </Link>
               <Link 
-                href="/spot-pesca-italia"
+                href="/pillars"
                 className="inline-flex items-center px-6 py-3 bg-white text-gray-900 font-medium rounded-full border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors"
               >
-                Trova uno spot
+                View pillars
               </Link>
             </div>
 
@@ -43,34 +41,29 @@ export default function HeroSection() {
             <div className="flex gap-8 mt-12 pt-8 border-t border-gray-100">
               <div>
                 <div className="text-2xl font-bold text-gray-900">100+</div>
-                <div className="text-sm text-gray-500">Articoli</div>
+                <div className="text-sm text-gray-500">Articles & guides</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-gray-900">30+</div>
-                <div className="text-sm text-gray-500">Spot in Italia</div>
+                <div className="text-2xl font-bold text-gray-900">40+</div>
+                <div className="text-sm text-gray-500">Actionable checklists</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-gray-900">20+</div>
-                <div className="text-sm text-gray-500">Specie di pesci</div>
+                <div className="text-2xl font-bold text-gray-900">10</div>
+                <div className="text-sm text-gray-500">Pillar hubs</div>
               </div>
             </div>
           </div>
 
           {/* Hero Image */}
           <div className="order-1 lg:order-2 relative">
-            <div className="relative aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl">
-              <video
-                className="h-full w-full object-cover"
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="metadata"
-                poster="/images/background.jpg"
-              >
-                <source src="/videos/hero.webm" type="video/webm" />
-                <source src="/videos/hero.mp4" type="video/mp4" />
-              </video>
+            <div className="relative aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br from-emerald-50 via-white to-blue-50 flex items-center justify-center">
+              <div className="max-w-md mx-auto text-center p-8">
+                <div className="text-5xl mb-4">💡</div>
+                <p className="text-xl font-semibold text-gray-900 mb-2">Clear, practical money guidance</p>
+                <p className="text-gray-600">
+                  Build a steady financial foundation: budgeting that sticks, savings on autopilot, calm investing, and smarter income.
+                </p>
+              </div>
             </div>
             {/* Floating Card */}
             <div className="absolute -bottom-6 -left-6 bg-white rounded-2xl shadow-xl p-4 hidden sm:block">
@@ -81,8 +74,8 @@ export default function HeroSection() {
                   </svg>
                 </div>
                 <div>
-                  <div className="font-semibold text-gray-900">Consigli esperti</div>
-                  <div className="text-sm text-gray-500">Aggiornati ogni settimana</div>
+                  <div className="font-semibold text-gray-900">Actionable playbooks</div>
+                  <div className="text-sm text-gray-500">Short, clear, and tested</div>
                 </div>
               </div>
             </div>
@@ -95,11 +88,11 @@ export default function HeroSection() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-wrap justify-center gap-4">
             {[
-              { label: 'Tecniche', href: '/tecniche', icon: '🎣' },
-              { label: 'Attrezzatura', href: '/trova-attrezzatura', icon: '🎒' },
-              { label: 'Spot', href: '/spot-pesca-italia', icon: '📍' },
-              { label: 'Pesci', href: '/pesci-mediterraneo', icon: '🐟' },
-              { label: 'Calendario', href: '/calendario-pesca', icon: '📅' },
+              { label: 'Pillars', href: '/pillars', icon: '🏛️' },
+              { label: 'Budgeting', href: '/categories/budgeting', icon: '📊' },
+              { label: 'Saving Money', href: '/categories/saving-money', icon: '💰' },
+              { label: 'Investing Basics', href: '/categories/investing-basics', icon: '📈' },
+              { label: 'Side Hustles', href: '/categories/side-hustles', icon: '🚀' },
             ].map((item) => (
               <Link
                 key={item.href}

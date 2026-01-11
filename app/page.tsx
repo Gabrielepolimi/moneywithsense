@@ -6,29 +6,27 @@ import { getPosts } from '../lib/getPosts';
 
 export default async function HomePage() {
   const posts = await getPosts();
-  
-  // Definisco le categorie
+
   const categories = [
-    { name: 'Tecniche di Pesca', slug: 'tecniche-di-pesca', color: 'blue' },
-    { name: 'Attrezzature', slug: 'attrezzature', color: 'green' },
-    { name: 'Consigli', slug: 'consigli', color: 'orange' },
-    { name: 'Spot di Pesca', slug: 'spot-di-pesca', color: 'purple' }
+    { name: 'Personal Finance', slug: 'personal-finance', color: 'blue' },
+    { name: 'Saving Money', slug: 'saving-money', color: 'green' },
+    { name: 'Investing Basics', slug: 'investing-basics', color: 'purple' },
+    { name: 'Budgeting', slug: 'budgeting', color: 'orange' },
   ];
-  
+
   return (
     <div className="min-h-screen bg-white">
       <HeroSection />
       <FeaturedArticles articles={posts} />
-      
-      {/* Sezioni per categoria */}
+
       {categories.map((category) => (
-        <CategoryArticles 
+        <CategoryArticles
           key={category.slug}
           category={category}
           articles={posts}
         />
       ))}
-      
+
       <NewsletterSection />
     </div>
   );
