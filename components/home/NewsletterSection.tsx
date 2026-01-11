@@ -2,22 +2,18 @@
 
 import React, { useState } from 'react';
 
-const WATER_TYPES = [
-  { id: 'mare', label: 'Mare', icon: '🌊' },
-  { id: 'lago', label: 'Lago', icon: '🏞️' },
-  { id: 'fiume', label: 'Fiume', icon: '🏞️' },
+const SEGMENTS = [
+  { id: 'saving', label: 'Saving & budgeting', icon: '💰' },
+  { id: 'investing', label: 'Investing basics', icon: '📈' },
+  { id: 'income', label: 'Income & side hustles', icon: '🚀' },
 ];
 
 const REGIONS = [
-  'Lombardia', 'Piemonte', 'Veneto', 'Emilia-Romagna', 'Toscana',
-  'Lazio', 'Campania', 'Puglia', 'Sicilia', 'Sardegna',
-  'Liguria', 'Friuli-Venezia Giulia', 'Trentino-Alto Adige', 'Calabria',
-  'Marche', 'Abruzzo', 'Umbria', 'Basilicata', 'Molise', "Valle d'Aosta"
+  'North America', 'Europe', 'APAC', 'LatAm', 'Middle East', 'Africa'
 ];
 
-const TECHNIQUES = [
-  'Spinning', 'Surfcasting', 'Bolognese', 'Feeder', 'Carp Fishing',
-  'Eging', 'Jigging', 'Traina', 'Pesca a Mosca', 'Pesca a Fondo'
+const TOPICS = [
+  'Emergency fund', 'Debt payoff', 'ETFs', 'Retirement basics', 'Budgeting', 'Taxes basics'
 ];
 
 export default function NewsletterSection() {
@@ -25,9 +21,9 @@ export default function NewsletterSection() {
     nome: '',
     cognome: '',
     email: '',
-    tipiAcqua: [] as string[],
-    regioni: [] as string[],
-    tecniche: [] as string[]
+    tipiAcqua: [] as string[], // segments
+    regioni: [] as string[], // regions
+    tecniche: [] as string[] // topics
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -35,7 +31,7 @@ export default function NewsletterSection() {
   const [showRegions, setShowRegions] = useState(false);
   const [showTechniques, setShowTechniques] = useState(false);
 
-  const handleWaterTypeToggle = (type: string) => {
+  const handleSegmentToggle = (type: string) => {
     setFormData(prev => ({
       ...prev,
       tipiAcqua: prev.tipiAcqua.includes(type)
@@ -53,7 +49,7 @@ export default function NewsletterSection() {
     }));
   };
 
-  const handleTechniqueToggle = (technique: string) => {
+  const handleTopicToggle = (technique: string) => {
     setFormData(prev => ({
       ...prev,
       tecniche: prev.tecniche.includes(technique)
@@ -98,10 +94,10 @@ export default function NewsletterSection() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h3 className="text-2xl font-semibold text-gray-900 mb-3">Sei dei nostri! 🎣</h3>
+            <h3 className="text-2xl font-semibold text-gray-900 mb-3">You’re in! 🎉</h3>
             <p className="text-gray-600">
-              Ti invieremo solo contenuti su misura per te: {formData.tipiAcqua.join(', ')} 
-              {formData.regioni.length > 0 && ` nelle zone ${formData.regioni.slice(0, 3).join(', ')}`}.
+              We’ll send only the finance content you picked: {formData.tipiAcqua.join(', ')}
+              {formData.regioni.length > 0 && ` | Regions: ${formData.regioni.slice(0, 3).join(', ')}`}.
             </p>
           </div>
         </div>
@@ -115,11 +111,10 @@ export default function NewsletterSection() {
         {/* Header */}
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4">
-            Ricevi solo quello che ti interessa
+            Get weekly finance tips tailored to you
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Dicci dove peschi e cosa ti appassiona. Ti manderemo solo consigli, spot e tecniche 
-            su misura per te. Zero spam, solo valore.
+            Tell us your focus areas and region. We’ll send only actionable insights—no spam, just value.
           </p>
         </div>
 
@@ -131,27 +126,27 @@ export default function NewsletterSection() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nome
+                  First name
                 </label>
                 <input
                   type="text"
                   value={formData.nome}
                   onChange={(e) => setFormData({...formData, nome: e.target.value})}
                   required
-                  placeholder="Mario"
+                  placeholder="Alex"
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-gray-900 focus:ring-0 transition-colors text-gray-900 placeholder-gray-400"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Cognome
+                  Last name
                 </label>
                 <input
                   type="text"
                   value={formData.cognome}
                   onChange={(e) => setFormData({...formData, cognome: e.target.value})}
                   required
-                  placeholder="Rossi"
+                  placeholder="Taylor"
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-gray-900 focus:ring-0 transition-colors text-gray-900 placeholder-gray-400"
                 />
               </div>
@@ -160,29 +155,29 @@ export default function NewsletterSection() {
             {/* Email */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                La tua email
+                Your email
               </label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
                 required
-                placeholder="email@esempio.com"
+                placeholder="you@example.com"
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-gray-900 focus:ring-0 transition-colors text-gray-900 placeholder-gray-400"
               />
             </div>
 
-            {/* Water Type Selection */}
+            {/* Segments */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">
-                Dove peschi di solito?
+                What do you want to focus on?
               </label>
               <div className="grid grid-cols-3 gap-3">
-                {WATER_TYPES.map((type) => (
+                {SEGMENTS.map((type) => (
                   <button
                     key={type.id}
                     type="button"
-                    onClick={() => handleWaterTypeToggle(type.id)}
+                    onClick={() => handleSegmentToggle(type.id)}
                     className={`p-4 rounded-2xl border-2 transition-all ${
                       formData.tipiAcqua.includes(type.id)
                         ? 'border-gray-900 bg-gray-900 text-white'
@@ -206,14 +201,14 @@ export default function NewsletterSection() {
                 <div className="text-left">
                   <div className="font-medium text-gray-900">
                     {formData.regioni.length > 0 
-                      ? `${formData.regioni.length} ${formData.regioni.length === 1 ? 'regione selezionata' : 'regioni selezionate'}`
-                      : 'In quali regioni peschi?'
+                      ? `${formData.regioni.length} selected`
+                      : 'Which region are you in?'
                     }
                   </div>
                   <div className="text-sm text-gray-500">
                     {formData.regioni.length > 0 
                       ? formData.regioni.slice(0, 3).join(', ') + (formData.regioni.length > 3 ? '...' : '')
-                      : 'Così ti segnaliamo gli spot migliori vicino a te'
+                      : 'So we can keep examples relevant'
                     }
                   </div>
                 </div>
@@ -249,7 +244,7 @@ export default function NewsletterSection() {
               )}
             </div>
 
-            {/* Techniques Selection */}
+            {/* Topics Selection */}
             <div>
               <button
                 type="button"
@@ -259,14 +254,14 @@ export default function NewsletterSection() {
                 <div className="text-left">
                   <div className="font-medium text-gray-900">
                     {formData.tecniche.length > 0 
-                      ? `${formData.tecniche.length} ${formData.tecniche.length === 1 ? 'tecnica selezionata' : 'tecniche selezionate'}`
-                      : 'Quali tecniche ti interessano?'
+                      ? `${formData.tecniche.length} selected`
+                      : 'Topics you care about (optional)'
                     }
                   </div>
                   <div className="text-sm text-gray-500">
                     {formData.tecniche.length > 0 
                       ? formData.tecniche.slice(0, 3).join(', ') + (formData.tecniche.length > 3 ? '...' : '')
-                      : 'Opzionale - Per contenuti ancora più mirati'
+                      : 'For more tailored content'
                     }
                   </div>
                 </div>
@@ -282,12 +277,12 @@ export default function NewsletterSection() {
               
               {showTechniques && (
                 <div className="mt-3 p-4 bg-gray-50 rounded-xl">
-                  <div className="flex flex-wrap gap-2">
-                    {TECHNIQUES.map((technique) => (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {TOPICS.map((technique) => (
                       <button
                         key={technique}
                         type="button"
-                        onClick={() => handleTechniqueToggle(technique)}
+                        onClick={() => handleTopicToggle(technique)}
                         className={`px-4 py-2 text-sm rounded-full transition-all ${
                           formData.tecniche.includes(technique)
                             ? 'bg-gray-900 text-white'
@@ -321,18 +316,18 @@ export default function NewsletterSection() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Iscrizione in corso...
+                  Subscribing...
                 </span>
               ) : (
-                'Iscriviti gratis'
+                'Subscribe for free'
               )}
             </button>
 
             {/* Privacy Note */}
             <p className="text-center text-xs text-gray-500">
-              Iscrivendoti accetti la nostra{' '}
+              By subscribing you agree to our{' '}
               <a href="/privacy" className="underline hover:text-gray-700">Privacy Policy</a>.
-              Niente spam, solo contenuti utili. Puoi disiscriverti quando vuoi.
+              No spam. Unsubscribe anytime.
             </p>
           </form>
         </div>

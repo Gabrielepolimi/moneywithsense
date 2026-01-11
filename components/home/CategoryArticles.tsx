@@ -25,8 +25,8 @@ interface CategoryArticlesProps {
 }
 
 export default function CategoryArticles({ category, articles }: CategoryArticlesProps) {
-  const categoryArticles = articles.filter(article => 
-    article.categories?.some(cat => 
+  const categoryArticles = articles.filter(article =>
+    article.categories?.some(cat =>
       cat.toLowerCase().includes(category.slug.toLowerCase())
     )
   );
@@ -37,9 +37,9 @@ export default function CategoryArticles({ category, articles }: CategoryArticle
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString('it-IT', {
-      day: 'numeric',
-      month: 'short'
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric'
     });
   };
 
@@ -53,14 +53,14 @@ export default function CategoryArticles({ category, articles }: CategoryArticle
               {category.name}
             </h2>
             <p className="text-gray-500 text-sm">
-              {categoryArticles.length} {categoryArticles.length === 1 ? 'articolo' : 'articoli'}
+              {categoryArticles.length} {categoryArticles.length === 1 ? 'article' : 'articles'}
             </p>
           </div>
           <Link 
-            href={`/categoria/${category.slug}`}
+            href={`/categories/${category.slug}`}
             className="text-sm font-medium text-gray-900 hover:text-gray-600 transition-colors flex items-center gap-1"
           >
-            Vedi tutti
+            View all
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
@@ -72,7 +72,7 @@ export default function CategoryArticles({ category, articles }: CategoryArticle
           {categoryArticles.slice(0, 8).map((article) => (
             <Link
               key={article._id}
-              href={`/articoli/${article.slug.current}`}
+              href={`/articles/${article.slug.current}`}
               className="flex-shrink-0 w-72 snap-start group"
             >
               <article>

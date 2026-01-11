@@ -20,9 +20,9 @@ interface FeaturedArticlesProps {
 export default function FeaturedArticles({ articles }: FeaturedArticlesProps) {
   const formatDate = (dateString?: string) => {
     if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString('it-IT', {
-      day: 'numeric',
-      month: 'short'
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric'
     });
   };
 
@@ -32,16 +32,16 @@ export default function FeaturedArticles({ articles }: FeaturedArticlesProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Articoli in arrivo
+              Articles coming soon
             </h2>
             <p className="text-gray-600 mb-8">
-              Stiamo preparando contenuti di qualità. Torna presto!
+              We’re preparing new personal finance guides. Stay tuned!
             </p>
             <Link 
-              href="/registrazione"
+              href="/newsletter"
               className="inline-flex items-center px-6 py-3 bg-gray-900 text-white font-medium rounded-full hover:bg-gray-800 transition-colors"
             >
-              Avvisami quando escono
+              Notify me
             </Link>
           </div>
         </div>
@@ -56,17 +56,17 @@ export default function FeaturedArticles({ articles }: FeaturedArticlesProps) {
         <div className="flex items-end justify-between mb-12">
           <div>
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              Ultimi articoli
+              Latest articles
             </h2>
             <p className="text-gray-600">
-              Le guide più recenti per migliorare la tua pesca
+              Fresh guides on saving, budgeting, investing, and growing income.
             </p>
           </div>
           <Link 
-            href="/articoli"
+            href="/articles"
             className="hidden sm:flex items-center gap-2 text-gray-900 font-medium hover:text-gray-600 transition-colors"
           >
-            Vedi tutti
+            View all
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
@@ -78,7 +78,7 @@ export default function FeaturedArticles({ articles }: FeaturedArticlesProps) {
           {articles.slice(0, 6).map((article) => (
             <Link 
               key={article._id}
-              href={`/articoli/${article.slug.current}`}
+              href={`/articles/${article.slug.current}`}
               className="group"
             >
               <article className="h-full">
@@ -126,7 +126,7 @@ export default function FeaturedArticles({ articles }: FeaturedArticlesProps) {
 
                   {/* Excerpt */}
                   <p className="text-gray-500 text-sm line-clamp-2">
-                    {article.excerpt || 'Scopri tecniche e consigli per migliorare le tue catture...'}
+                    {article.excerpt || 'Practical tips to improve your finances...'}
                   </p>
                 </div>
               </article>
@@ -137,10 +137,10 @@ export default function FeaturedArticles({ articles }: FeaturedArticlesProps) {
         {/* Mobile CTA */}
         <div className="mt-10 text-center sm:hidden">
           <Link 
-            href="/articoli"
+            href="/articles"
             className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-900 font-medium rounded-full hover:bg-gray-200 transition-colors"
           >
-            Vedi tutti gli articoli
+            View all articles
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
