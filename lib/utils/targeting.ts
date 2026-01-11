@@ -2,7 +2,7 @@ import { sanityClient } from '../../sanityClient';
 
 export interface UserPreferences {
   interests: {
-    techniques: string[];
+    topics: string[];
   };
 }
 
@@ -15,7 +15,7 @@ export interface Article {
   mainImage: string;
   author: string;
   categories: Array<{ _id: string; title: string; slug: string }>;
-  fishingTechniques: Array<{ _id: string; title: string; slug: string }>;
+  financeTopics: Array<{ _id: string; title: string; slug: string }>;
 }
 
 export interface ScoredArticle extends Article {
@@ -23,18 +23,20 @@ export interface ScoredArticle extends Article {
   matchReasons: string[];
 }
 
-// Calcola il punteggio di matching tra utente e articolo
+// Calculate matching score between user and article
 export function calculateArticleScore(user: UserPreferences, article: Article): ScoredArticle {
   let score = 0;
   const matchReasons: string[] = [];
 
-  // Matching per tecniche di pesca (peso: 100%)
-  const techniqueMatches = user.interests.techniques.filter(technique =>
-    article.fishingTechniques?.some(art => art.slug === technique) || false
+  // Matching for finance topics (weight: 100%)
+  const topicMatches = user.interests.topics.filter(topic =>
+    article.financeTopics?.some(art => art.slug === topic) || 
+    article.categories?.some(cat => cat.slug === topic) || 
+    false
   );
-  if (techniqueMatches.length > 0) {
-    score += 100 * (techniqueMatches.length / user.interests.techniques.length);
-    matchReasons.push(`Tecniche: ${techniqueMatches.join(', ')}`);
+  if (topicMatches.length > 0) {
+    score += 100 * (topicMatches.length / user.interests.topics.length);
+    matchReasons.push(`Topics: ${topicMatches.join(', ')}`);
   }
 
   return {
@@ -44,10 +46,10 @@ export function calculateArticleScore(user: UserPreferences, article: Article): 
   };
 }
 
-// Recupera articoli per newsletter (usa i POST esistenti)
+// Fetch articles for newsletter (uses existing POSTs)
 export async function getNewsletterArticles(user: UserPreferences): Promise<ScoredArticle[]> {
   try {
-    // Query per i POST esistenti
+    // Query for existing POSTs
     const articles = await sanityClient.fetch(`
       *[_type == "post"] | order(publishedAt desc) [0...10] {
         _id,
@@ -62,7 +64,7 @@ export async function getNewsletterArticles(user: UserPreferences): Promise<Scor
           title,
           slug
         },
-        fishingTechniques[]->{
+        financeTopics[]->{
           _id,
           title,
           slug
@@ -70,36 +72,36 @@ export async function getNewsletterArticles(user: UserPreferences): Promise<Scor
       }
     `);
 
-    // Calcola i punteggi e ordina
+    // Calculate scores and sort
     const scoredArticles = articles
-      .map(article => calculateArticleScore(user, article))
-      .sort((a, b) => b.score - a.score) // Ordina per punteggio decrescente
-      .slice(0, 5); // Prendi i migliori 5
+      .map((article: Article) => calculateArticleScore(user, article))
+      .sort((a: ScoredArticle, b: ScoredArticle) => b.score - a.score) // Sort by score descending
+      .slice(0, 5); // Take top 5
 
     return scoredArticles;
   } catch (error) {
-    console.error('Errore nel recupero articoli newsletter:', error);
+    console.error('Error fetching newsletter articles:', error);
     return [];
   }
 }
 
-// Analizza le preferenze utente per suggerimenti
+// Analyze user preferences for suggestions
 export function analyzeUserPreferences(user: UserPreferences) {
   const analysis = {
     totalInterests: 0,
-    techniqueCount: user.interests.techniques.length,
+    topicCount: user.interests.topics.length,
     suggestions: [] as string[]
   };
 
-  analysis.totalInterests = analysis.techniqueCount;
+  analysis.totalInterests = analysis.topicCount;
 
-  // Suggerimenti basati sui dati
+  // Suggestions based on data
   if (analysis.totalInterests < 2) {
-    analysis.suggestions.push('Aggiungi più tecniche di pesca per ricevere contenuti più personalizzati');
+    analysis.suggestions.push('Add more finance topics to receive more personalized content');
   }
 
-  if (analysis.techniqueCount === 0) {
-    analysis.suggestions.push('Seleziona le tue tecniche di pesca preferite');
+  if (analysis.topicCount === 0) {
+    analysis.suggestions.push('Select your preferred finance topics');
   }
 
   return analysis;

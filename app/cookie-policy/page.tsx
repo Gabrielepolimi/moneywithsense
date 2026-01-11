@@ -1,140 +1,145 @@
 import { Metadata } from 'next';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Cookie Policy',
-  description: 'Informazioni sui cookie utilizzati da FishandTips e su come gestirli.',
-  robots: {
-    index: true,
-    follow: true,
-  },
+  description: 'MoneyWithSense cookie policy - how we use cookies and similar technologies.',
 };
 
 export default function CookiePolicyPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-white">
       {/* Header */}
-      <section className="bg-brand-blue text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl font-bold mb-4">Cookie Policy</h1>
-          <p className="text-xl text-white/90">
-            Come utilizziamo i cookie su FishandTips
+      <section className="bg-gradient-to-b from-secondary-50 to-white py-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <span className="text-primary-600 text-sm font-semibold uppercase tracking-wider mb-4 block">
+            Legal
+          </span>
+          <h1 className="text-4xl font-bold text-secondary-900 mb-4">
+            Cookie Policy
+          </h1>
+          <p className="text-xl text-secondary-600">
+            How MoneyWithSense uses cookies and similar technologies.
+          </p>
+          <p className="text-sm text-secondary-500 mt-4">
+            Last Updated: January 2026
           </p>
         </div>
       </section>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white rounded-lg shadow-sm p-8">
-          <div className="prose prose-lg max-w-none">
-            <h2>Cosa sono i Cookie?</h2>
-            <p>
-              I cookie sono piccoli file di testo che vengono memorizzati sul tuo dispositivo quando visiti un sito web. 
-              Questi file contengono informazioni che aiutano il sito a funzionare correttamente e a migliorare la tua esperienza.
-            </p>
-
-            <h2>Come utilizziamo i Cookie</h2>
-            <p>
-              FishandTips utilizza i cookie per:
-            </p>
-            <ul>
-              <li><strong>Cookie Tecnici:</strong> Essenziali per il funzionamento del sito</li>
-              <li><strong>Cookie di Preferenze:</strong> Per ricordare le tue scelte (es. tecniche di pesca preferite)</li>
-              <li><strong>Cookie Analitici:</strong> Per analizzare il traffico e migliorare il sito</li>
-              <li><strong>Cookie di Marketing:</strong> Per mostrare contenuti personalizzati</li>
-            </ul>
-
-            <h2>Tipi di Cookie che Utilizziamo</h2>
+      <section className="py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="prose prose-lg max-w-none text-secondary-600">
             
-            <h3>Cookie Essenziali</h3>
+            <h2 className="text-2xl font-bold text-secondary-900">What Are Cookies?</h2>
             <p>
-              Questi cookie sono necessari per il funzionamento del sito e non possono essere disabilitati:
+              Cookies are small text files that are placed on your device when you visit a website. They are widely used to make websites work more efficiently and to provide information to website owners.
+            </p>
+
+            <h2 className="text-2xl font-bold text-secondary-900">How We Use Cookies</h2>
+            <p>
+              MoneyWithSense uses cookies for the following purposes:
+            </p>
+
+            <h3 className="text-xl font-semibold text-secondary-900">Essential Cookies</h3>
+            <p>
+              These cookies are necessary for the website to function properly. They enable core functionality such as security, network management, and accessibility. You cannot opt out of these cookies.
             </p>
             <ul>
-              <li>Cookie di sessione per mantenere attivo il tuo login</li>
-              <li>Cookie di sicurezza per proteggere i dati</li>
-              <li>Cookie di preferenze per la newsletter</li>
+              <li>Session management</li>
+              <li>Security features</li>
+              <li>Cookie consent preferences</li>
             </ul>
 
-            <h3>Cookie Analitici</h3>
+            <h3 className="text-xl font-semibold text-secondary-900">Analytics Cookies</h3>
             <p>
-              Utilizziamo Google Analytics per comprendere come i visitatori utilizzano il nostro sito:
+              We use analytics cookies to understand how visitors interact with our website. This helps us improve the site experience.
             </p>
             <ul>
-              <li>Numero di visitatori</li>
-              <li>Pagine più visitate</li>
-              <li>Tempo di permanenza</li>
-              <li>Fonte del traffico</li>
+              <li><strong>Google Analytics:</strong> Collects anonymous usage data including pages visited, time on site, and traffic sources.</li>
             </ul>
 
-            <h3>Cookie di Preferenze</h3>
+            <h3 className="text-xl font-semibold text-secondary-900">Advertising Cookies</h3>
             <p>
-              Questi cookie ricordano le tue scelte per migliorare la tua esperienza:
+              These cookies are used to deliver advertisements relevant to you and your interests. They also help limit the number of times you see an ad and measure the effectiveness of advertising campaigns.
             </p>
             <ul>
-              <li>Preferenze per la newsletter</li>
-              <li>Tecniche di pesca di interesse</li>
-              <li>Impostazioni di visualizzazione</li>
+              <li>Third-party advertising networks</li>
+              <li>Retargeting cookies</li>
             </ul>
 
-            <h2>Come Gestire i Cookie</h2>
+            <h3 className="text-xl font-semibold text-secondary-900">Functionality Cookies</h3>
             <p>
-              Puoi controllare e gestire i cookie attraverso le impostazioni del tuo browser:
+              These cookies enable enhanced functionality and personalization:
             </p>
             <ul>
-              <li><strong>Chrome:</strong> Impostazioni → Privacy e sicurezza → Cookie</li>
-              <li><strong>Firefox:</strong> Opzioni → Privacy e sicurezza → Cookie</li>
-              <li><strong>Safari:</strong> Preferenze → Privacy → Cookie</li>
-              <li><strong>Edge:</strong> Impostazioni → Cookie e permessi sito</li>
+              <li>Remembering your preferences</li>
+              <li>Newsletter subscription status</li>
+              <li>Display settings</li>
             </ul>
 
-            <h2>Cookie di Terze Parti</h2>
+            <h2 className="text-2xl font-bold text-secondary-900">Third-Party Cookies</h2>
             <p>
-              Utilizziamo servizi di terze parti che potrebbero impostare cookie:
+              Some cookies on our site are set by third-party services that appear on our pages. We do not control these cookies and recommend reviewing the privacy policies of these third parties:
             </p>
             <ul>
-              <li><strong>Google Analytics:</strong> Per analisi del traffico</li>
-              <li><strong>Sanity.io:</strong> Per la gestione dei contenuti</li>
-              <li><strong>Resend:</strong> Per l'invio delle newsletter</li>
+              <li>Google Analytics</li>
+              <li>Advertising partners</li>
+              <li>Social media platforms (if sharing features are used)</li>
             </ul>
 
-            <h2>Aggiornamenti alla Cookie Policy</h2>
+            <h2 className="text-2xl font-bold text-secondary-900">Managing Cookies</h2>
             <p>
-              Questa cookie policy può essere aggiornata periodicamente. Ti informeremo di eventuali modifiche 
-              significative attraverso il nostro sito o la newsletter.
+              You can control and manage cookies in several ways:
             </p>
 
-            <h2>Contattaci</h2>
+            <h3 className="text-xl font-semibold text-secondary-900">Browser Settings</h3>
             <p>
-              Se hai domande sui cookie o su questa policy, non esitare a contattarci:
+              Most browsers allow you to:
             </p>
             <ul>
-              <li>Email: info@fishandtips.it</li>
-              <li>Pagina contatti: <a href="/contatti" className="text-brand-blue hover:text-brand-blue-dark">/contatti</a></li>
+              <li>View what cookies are stored and delete them individually</li>
+              <li>Block third-party cookies</li>
+              <li>Block all cookies</li>
+              <li>Clear all cookies when you close the browser</li>
             </ul>
 
-            <div className="mt-8 p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600">
-                <strong>Ultimo aggiornamento:</strong> {new Date().toLocaleDateString('it-IT')}
+            <p>
+              Note: Blocking or deleting cookies may impact your experience on our site and other websites.
+            </p>
+
+            <h3 className="text-xl font-semibold text-secondary-900">Our Cookie Banner</h3>
+            <p>
+              When you first visit our site, you can accept or decline non-essential cookies through our cookie banner. You can change your preferences at any time by clearing your browser cookies and revisiting the site.
+            </p>
+
+            <h3 className="text-xl font-semibold text-secondary-900">Opt-Out Links</h3>
+            <ul>
+              <li><a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:text-primary-700">Google Analytics Opt-out</a></li>
+              <li><a href="https://optout.networkadvertising.org/" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:text-primary-700">Network Advertising Initiative Opt-out</a></li>
+              <li><a href="https://optout.aboutads.info/" target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:text-primary-700">Digital Advertising Alliance Opt-out</a></li>
+            </ul>
+
+            <h2 className="text-2xl font-bold text-secondary-900">Changes to This Policy</h2>
+            <p>
+              We may update this Cookie Policy from time to time. Changes will be posted on this page with an updated date.
+            </p>
+
+            <h2 className="text-2xl font-bold text-secondary-900">Contact Us</h2>
+            <p>
+              If you have questions about our use of cookies, please <Link href="/contact" className="text-primary-600 hover:text-primary-700">contact us</Link>.
+            </p>
+
+            <div className="mt-12 pt-8 border-t border-secondary-200">
+              <p className="text-sm text-secondary-500">
+                Related policies: <Link href="/privacy" className="text-primary-600 hover:text-primary-700">Privacy Policy</Link> | <Link href="/terms" className="text-primary-600 hover:text-primary-700">Terms of Service</Link>
               </p>
             </div>
+
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,208 +1,165 @@
-import React from 'react';
-import Breadcrumb from '../../components/articles/Breadcrumb';
+import { Metadata } from 'next';
+import Link from 'next/link';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy',
+  description: 'MoneyWithSense privacy policy - how we collect, use, and protect your personal information.',
+};
 
 export default function PrivacyPage() {
   return (
-    <>
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary-600 to-secondary-600 py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
+    <div className="bg-white">
+      {/* Header */}
+      <section className="bg-gradient-to-b from-secondary-50 to-white py-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <span className="text-primary-600 text-sm font-semibold uppercase tracking-wider mb-4 block">
+            Legal
+          </span>
+          <h1 className="text-4xl font-bold text-secondary-900 mb-4">
             Privacy Policy
           </h1>
-          <p className="text-xl text-primary-100 max-w-2xl mx-auto">
-            Come raccogliamo, utilizziamo e proteggiamo i tuoi dati personali
+          <p className="text-xl text-secondary-600">
+            How we collect, use, and protect your personal information.
+          </p>
+          <p className="text-sm text-secondary-500 mt-4">
+            Effective Date: January 1, 2026 | Last Updated: January 2026
           </p>
         </div>
       </section>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <Breadcrumb items={[
-          { label: 'Privacy Policy' }
-        ]} />
-
-        <div className="prose prose-lg max-w-none">
-          <p className="text-gray-600 mb-8">
-            <strong>Ultimo aggiornamento:</strong> {new Date().toLocaleDateString('it-IT')}
-          </p>
-
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">1. Informazioni Generali</h2>
-            <p className="text-gray-700 mb-4">
-              FishandTips.it ("noi", "nostro", "sito") rispetta la tua privacy e si impegna a proteggere i tuoi dati personali. 
-              Questa Privacy Policy spiega come raccogliamo, utilizziamo e proteggiamo le informazioni che ci fornisci quando 
-              visiti il nostro sito web.
-            </p>
-            <p className="text-gray-700">
-              Utilizzando il nostro sito, accetti le pratiche descritte in questa Privacy Policy.
-            </p>
-          </section>
-
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">2. Dati che Raccogliamo</h2>
+      <section className="py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="prose prose-lg max-w-none text-secondary-600">
             
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">2.1 Dati Forniti Volontariamente</h3>
-            <ul className="list-disc list-inside text-gray-700 mb-6 space-y-2">
-              <li><strong>Informazioni di contatto:</strong> nome, email quando ti iscrivi alla newsletter o ci contatti</li>
-              <li><strong>Contenuti:</strong> commenti, messaggi che invii attraverso il form di contatto</li>
-              <li><strong>Preferenze:</strong> preferenze di pesca, interessi specifici</li>
+            <p>
+              MoneyWithSense ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website MoneyWithSense.com (the "Site").
+            </p>
+
+            <h2 className="text-2xl font-bold text-secondary-900">Information We Collect</h2>
+            
+            <h3 className="text-xl font-semibold text-secondary-900">Information You Provide</h3>
+            <p>We may collect information you voluntarily provide, including:</p>
+            <ul>
+              <li><strong>Newsletter subscriptions:</strong> Email address, name, and content preferences</li>
+              <li><strong>Contact forms:</strong> Name, email, and message content</li>
+              <li><strong>Comments:</strong> Name, email, and comment content (if enabled)</li>
             </ul>
 
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">2.2 Dati Raccolti Automaticamente</h3>
-            <ul className="list-disc list-inside text-gray-700 mb-6 space-y-2">
-              <li><strong>Dati tecnici:</strong> indirizzo IP, tipo di browser, sistema operativo</li>
-              <li><strong>Dati di navigazione:</strong> pagine visitate, tempo di permanenza, link cliccati</li>
-              <li><strong>Cookie:</strong> piccoli file di testo per migliorare l'esperienza utente</li>
+            <h3 className="text-xl font-semibold text-secondary-900">Information Collected Automatically</h3>
+            <p>When you visit our Site, we may automatically collect:</p>
+            <ul>
+              <li><strong>Device information:</strong> Browser type, operating system, device type</li>
+              <li><strong>Usage data:</strong> Pages visited, time spent, referral source</li>
+              <li><strong>IP address:</strong> General location information</li>
+              <li><strong>Cookies:</strong> See our Cookie Policy section below</li>
             </ul>
-          </section>
 
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">3. Come Utilizziamo i Tuoi Dati</h2>
-            <p className="text-gray-700 mb-4">Utilizziamo i tuoi dati per:</p>
-            <ul className="list-disc list-inside text-gray-700 mb-6 space-y-2">
-              <li>Fornire e migliorare i nostri servizi</li>
-              <li>Inviare newsletter e contenuti personalizzati</li>
-              <li>Rispondere alle tue richieste e domande</li>
-              <li>Analizzare l'utilizzo del sito per migliorare l'esperienza</li>
-              <li>Rispettare gli obblighi legali</li>
+            <h2 className="text-2xl font-bold text-secondary-900">How We Use Your Information</h2>
+            <p>We use collected information to:</p>
+            <ul>
+              <li>Deliver and improve our content and services</li>
+              <li>Send newsletters and updates (with your consent)</li>
+              <li>Respond to inquiries and provide support</li>
+              <li>Analyze site usage and optimize user experience</li>
+              <li>Comply with legal obligations</li>
+              <li>Prevent fraud and ensure security</li>
             </ul>
-          </section>
 
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">4. Condivisione dei Dati</h2>
-            <p className="text-gray-700 mb-4">
-              Non vendiamo, affittiamo o condividiamo i tuoi dati personali con terze parti, 
-              eccetto nei seguenti casi:
-            </p>
-            <ul className="list-disc list-inside text-gray-700 mb-6 space-y-2">
-              <li><strong>Fornitori di servizi:</strong> per l'hosting, analytics, email marketing</li>
-              <li><strong>Obblighi legali:</strong> quando richiesto dalla legge</li>
-              <li><strong>Protezione:</strong> per proteggere i nostri diritti e la sicurezza</li>
+            <h2 className="text-2xl font-bold text-secondary-900">Cookies and Tracking</h2>
+            <p>We use cookies and similar technologies to:</p>
+            <ul>
+              <li>Remember your preferences</li>
+              <li>Analyze site traffic and usage patterns</li>
+              <li>Serve relevant advertisements</li>
+              <li>Improve site functionality</li>
             </ul>
-          </section>
-
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">5. Cookie e Tecnologie Simili</h2>
-            <p className="text-gray-700 mb-4">
-              Utilizziamo cookie e tecnologie simili per:
+            <p>
+              You can control cookies through your browser settings. Note that disabling cookies may affect site functionality.
             </p>
-            <ul className="list-disc list-inside text-gray-700 mb-6 space-y-2">
-              <li>Migliorare l'esperienza di navigazione</li>
-              <li>Analizzare il traffico del sito</li>
-              <li>Personalizzare contenuti e pubblicità</li>
-              <li>Ricordare le tue preferenze</li>
+            <p>
+              <Link href="/cookie-policy" className="text-primary-600 hover:text-primary-700">
+                View our full Cookie Policy →
+              </Link>
+            </p>
+
+            <h2 className="text-2xl font-bold text-secondary-900">Third-Party Services</h2>
+            <p>We may use third-party services that collect information:</p>
+            <ul>
+              <li><strong>Analytics:</strong> Google Analytics to understand site usage</li>
+              <li><strong>Advertising:</strong> Display advertising networks</li>
+              <li><strong>Email:</strong> Newsletter delivery services</li>
+              <li><strong>Hosting:</strong> Web hosting and CDN providers</li>
             </ul>
-            <p className="text-gray-700">
-              Puoi gestire le impostazioni dei cookie attraverso il tuo browser.
+            <p>
+              These services have their own privacy policies governing their use of your data.
             </p>
-          </section>
 
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">6. Sicurezza dei Dati</h2>
-            <p className="text-gray-700 mb-4">
-              Implementiamo misure di sicurezza appropriate per proteggere i tuoi dati personali:
-            </p>
-            <ul className="list-disc list-inside text-gray-700 mb-6 space-y-2">
-              <li>Crittografia SSL per le trasmissioni</li>
-              <li>Controlli di accesso rigorosi</li>
-              <li>Monitoraggio continuo della sicurezza</li>
-              <li>Backup regolari dei dati</li>
+            <h2 className="text-2xl font-bold text-secondary-900">Data Sharing</h2>
+            <p>We do not sell your personal information. We may share data with:</p>
+            <ul>
+              <li>Service providers who assist our operations</li>
+              <li>Legal authorities when required by law</li>
+              <li>Business partners with your consent</li>
             </ul>
-          </section>
 
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">7. I Tuoi Diritti</h2>
-            <p className="text-gray-700 mb-4">Hai il diritto di:</p>
-            <ul className="list-disc list-inside text-gray-700 mb-6 space-y-2">
-              <li><strong>Accesso:</strong> richiedere copia dei tuoi dati personali</li>
-              <li><strong>Rettifica:</strong> correggere dati inesatti o incompleti</li>
-              <li><strong>Cancellazione:</strong> richiedere la cancellazione dei tuoi dati</li>
-              <li><strong>Limitazione:</strong> limitare l'utilizzo dei tuoi dati</li>
-              <li><strong>Portabilità:</strong> ricevere i tuoi dati in formato strutturato</li>
-              <li><strong>Opposizione:</strong> opporti al trattamento dei tuoi dati</li>
+            <h2 className="text-2xl font-bold text-secondary-900">Your Rights</h2>
+            <p>Depending on your location, you may have rights to:</p>
+            <ul>
+              <li>Access your personal data</li>
+              <li>Correct inaccurate data</li>
+              <li>Delete your data</li>
+              <li>Opt out of marketing communications</li>
+              <li>Object to data processing</li>
+              <li>Data portability</li>
             </ul>
-          </section>
-
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">8. Conservazione dei Dati</h2>
-            <p className="text-gray-700 mb-4">
-              Conserviamo i tuoi dati personali solo per il tempo necessario a:
+            <p>
+              To exercise these rights, please <Link href="/contact" className="text-primary-600 hover:text-primary-700">contact us</Link>.
             </p>
-            <ul className="list-disc list-inside text-gray-700 mb-6 space-y-2">
-              <li>Fornire i nostri servizi</li>
-              <li>Rispettare gli obblighi legali</li>
-              <li>Risolvere controversie</li>
-              <li>Applicare i nostri accordi</li>
+
+            <h2 className="text-2xl font-bold text-secondary-900">Data Security</h2>
+            <p>
+              We implement appropriate technical and organizational measures to protect your personal information. However, no internet transmission is completely secure, and we cannot guarantee absolute security.
+            </p>
+
+            <h2 className="text-2xl font-bold text-secondary-900">Data Retention</h2>
+            <p>
+              We retain personal information for as long as necessary to fulfill the purposes outlined in this policy, unless a longer retention period is required by law.
+            </p>
+
+            <h2 className="text-2xl font-bold text-secondary-900">Children's Privacy</h2>
+            <p>
+              Our Site is not intended for children under 16. We do not knowingly collect personal information from children. If you believe we have collected such information, please contact us immediately.
+            </p>
+
+            <h2 className="text-2xl font-bold text-secondary-900">International Users</h2>
+            <p>
+              If you access our Site from outside the United States, your information may be transferred to and processed in the United States or other countries with different data protection laws.
+            </p>
+
+            <h2 className="text-2xl font-bold text-secondary-900">Changes to This Policy</h2>
+            <p>
+              We may update this Privacy Policy periodically. Changes will be posted on this page with an updated effective date. We encourage you to review this policy regularly.
+            </p>
+
+            <h2 className="text-2xl font-bold text-secondary-900">Contact Us</h2>
+            <p>
+              If you have questions about this Privacy Policy or our data practices, please contact us:
+            </p>
+            <ul>
+              <li>Email: privacy@moneywithsense.com</li>
+              <li>Contact form: <Link href="/contact" className="text-primary-600 hover:text-primary-700">Contact Page</Link></li>
             </ul>
-          </section>
 
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">9. Trasferimenti Internazionali</h2>
-            <p className="text-gray-700 mb-4">
-              I tuoi dati potrebbero essere trasferiti e processati in paesi diversi dal tuo. 
-              Assicuriamo che tali trasferimenti avvengano in conformità con le leggi sulla privacy applicabili 
-              e utilizzando adeguate misure di protezione.
-            </p>
-          </section>
-
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">10. Minori</h2>
-            <p className="text-gray-700 mb-4">
-              Il nostro sito non è destinato a minori di 16 anni. Non raccogliamo consapevolmente 
-              dati personali da minori di 16 anni. Se sei un genitore e ritieni che tuo figlio 
-              ci abbia fornito dati personali, contattaci immediatamente.
-            </p>
-          </section>
-
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">11. Modifiche alla Privacy Policy</h2>
-            <p className="text-gray-700 mb-4">
-              Potremmo aggiornare questa Privacy Policy di tanto in tanto. Ti notificheremo 
-              eventuali modifiche significative pubblicando la nuova Privacy Policy su questa pagina 
-              e aggiornando la data di "Ultimo aggiornamento".
-            </p>
-          </section>
-
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">12. Contatti</h2>
-            <p className="text-gray-700 mb-4">
-              Se hai domande su questa Privacy Policy o sul trattamento dei tuoi dati personali, 
-              contattaci:
-            </p>
-            <div className="bg-gray-50 rounded-lg p-6">
-              <p className="text-gray-700 mb-2">
-                <strong>Email:</strong> privacy@fishandtips.it
-              </p>
-              <p className="text-gray-700 mb-2">
-                <strong>Indirizzo:</strong> FishandTips.it
-              </p>
-              <p className="text-gray-700">
-                <strong>Responsabile della protezione dei dati:</strong> Team FishandTips
+            <div className="mt-12 pt-8 border-t border-secondary-200">
+              <p className="text-sm text-secondary-500">
+                This Privacy Policy was last updated in January 2026.
               </p>
             </div>
-          </section>
 
-          <div className="bg-primary-50 border border-primary-200 rounded-lg p-6 mt-8">
-            <h3 className="text-lg font-semibold text-primary-900 mb-2">
-              Hai Domande sulla Privacy?
-            </h3>
-            <p className="text-primary-700 mb-4">
-              Se hai dubbi su come trattiamo i tuoi dati, non esitare a contattarci. 
-              Siamo qui per aiutarti e garantire la massima trasparenza.
-            </p>
-            <a 
-              href="/contatti" 
-              className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-            >
-              Contattaci
-              <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </a>
           </div>
         </div>
-      </div>
-    </>
+      </section>
+    </div>
   );
 }

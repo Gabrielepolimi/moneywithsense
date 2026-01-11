@@ -24,10 +24,24 @@ interface CategoryArticlesProps {
   articles: Article[];
 }
 
+const categoryIcons: Record<string, string> = {
+  'personal-finance': '💼',
+  'saving-money': '💰',
+  'budgeting': '📊',
+  'investing-basics': '📈',
+  'passive-income': '🔄',
+  'credit-debt': '💳',
+  'banking-cards': '🏦',
+  'taxes-tips': '📋',
+  'side-hustles': '🚀',
+  'money-psychology': '🧠',
+};
+
 export default function CategoryArticles({ category, articles }: CategoryArticlesProps) {
   const categoryArticles = articles.filter(article =>
     article.categories?.some(cat =>
-      cat.toLowerCase().includes(category.slug.toLowerCase())
+      cat.toLowerCase().replace(/\s+/g, '-').includes(category.slug.toLowerCase()) ||
+      cat.toLowerCase().includes(category.name.toLowerCase())
     )
   );
 
@@ -43,25 +57,30 @@ export default function CategoryArticles({ category, articles }: CategoryArticle
     });
   };
 
+  const icon = categoryIcons[category.slug] || '📄';
+
   return (
-    <section className="py-16 bg-white border-t border-gray-100">
+    <section className="py-16 bg-white border-t border-secondary-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex items-end justify-between mb-10">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-1">
-              {category.name}
-            </h2>
-            <p className="text-gray-500 text-sm">
-              {categoryArticles.length} {categoryArticles.length === 1 ? 'article' : 'articles'}
-            </p>
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">{icon}</span>
+            <div>
+              <h2 className="text-2xl font-bold text-secondary-900">
+                {category.name}
+              </h2>
+              <p className="text-secondary-500 text-sm">
+                {categoryArticles.length} {categoryArticles.length === 1 ? 'article' : 'articles'}
+              </p>
+            </div>
           </div>
           <Link 
             href={`/categories/${category.slug}`}
-            className="text-sm font-medium text-gray-900 hover:text-gray-600 transition-colors flex items-center gap-1"
+            className="text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors flex items-center gap-1 group"
           >
             View all
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </Link>
@@ -73,11 +92,11 @@ export default function CategoryArticles({ category, articles }: CategoryArticle
             <Link
               key={article._id}
               href={`/articles/${article.slug.current}`}
-              className="flex-shrink-0 w-72 snap-start group"
+              className="flex-shrink-0 w-80 snap-start group"
             >
-              <article>
+              <article className="bg-white rounded-2xl border border-secondary-100 overflow-hidden hover:border-primary-200 hover:shadow-card-hover transition-all">
                 {/* Image */}
-                <div className="relative aspect-[4/3] rounded-xl overflow-hidden mb-3 bg-gray-100">
+                <div className="relative aspect-[16/10] overflow-hidden bg-secondary-100">
                   {article.mainImage?.asset?.url ? (
                     <Image
                       src={article.mainImage.asset.url}
@@ -86,24 +105,25 @@ export default function CategoryArticles({ category, articles }: CategoryArticle
                       className="object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                      <svg className="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary-50 to-secondary-100 flex items-center justify-center">
+                      <span className="text-4xl">{icon}</span>
                     </div>
                   )}
                 </div>
 
                 {/* Content */}
-                <div>
+                <div className="p-5">
                   {article.publishedAt && (
-                    <span className="text-xs text-gray-400 mb-1 block">
+                    <span className="text-xs text-secondary-400 mb-2 block">
                       {formatDate(article.publishedAt)}
                     </span>
                   )}
-                  <h3 className="font-medium text-gray-900 group-hover:text-gray-600 transition-colors line-clamp-2">
+                  <h3 className="font-semibold text-secondary-900 group-hover:text-primary-600 transition-colors line-clamp-2 mb-2">
                     {article.title}
                   </h3>
+                  <p className="text-sm text-secondary-500 line-clamp-2">
+                    {article.excerpt || 'Learn practical tips and strategies...'}
+                  </p>
                 </div>
               </article>
             </Link>

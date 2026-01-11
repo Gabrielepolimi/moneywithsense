@@ -29,7 +29,6 @@ interface NewsletterTemplateProps {
 }
 
 export default function NewsletterTemplate({
-  userName,
   userFirstName,
   articles,
   userPreferences,
@@ -37,9 +36,8 @@ export default function NewsletterTemplate({
   preferencesUrl,
 }: NewsletterTemplateProps) {
 
-
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('it-IT', {
+    return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -49,11 +47,11 @@ export default function NewsletterTemplate({
   return (
     <Html>
       <Head>
-        <title>FishandTips - Newsletter Personalizzata</title>
-        <meta name="description" content="Le migliori notizie di pesca selezionate per te" />
+        <title>MoneyWithSense - Your Weekly Finance Insights</title>
+        <meta name="description" content="Personalized personal finance articles selected for you" />
       </Head>
       <Preview>
-        🎣 {userFirstName}, ecco i migliori articoli di pesca selezionati per te!
+        💰 {userFirstName}, here are your personalized finance articles!
       </Preview>
       
       <Body style={main}>
@@ -62,8 +60,8 @@ export default function NewsletterTemplate({
           <Section style={header}>
             <Row>
               <Column>
-                <Heading style={logo}>🎣 FishandTips</Heading>
-                <Text style={tagline}>La tua passione per la pesca, personalizzata</Text>
+                <Heading style={logo}>💰 MoneyWithSense</Heading>
+                <Text style={tagline}>Practical money education for everyday people</Text>
               </Column>
             </Row>
           </Section>
@@ -71,11 +69,11 @@ export default function NewsletterTemplate({
           {/* Greeting */}
           <Section style={greeting}>
             <Heading style={h1}>
-              Ciao {userFirstName}! 👋
+              Hey {userFirstName}! 👋
             </Heading>
             <Text style={text}>
-              Ecco i migliori articoli di pesca selezionati apposta per te, 
-              basati sulle tue preferenze e sul tuo livello di esperienza.
+              Here are the best personal finance articles selected just for you, 
+              based on your preferences and interests.
             </Text>
           </Section>
 
@@ -84,16 +82,16 @@ export default function NewsletterTemplate({
             <Row>
               <Column style={statItem}>
                 <Text style={statNumber}>{userPreferences.totalInterests}</Text>
-                <Text style={statLabel}>Tecniche Preferite</Text>
+                <Text style={statLabel}>Topics You Follow</Text>
               </Column>
             </Row>
           </Section>
 
           {/* Articles */}
           <Section style={articlesSection}>
-            <Heading style={h2}>📝 Articoli per Te</Heading>
+            <Heading style={h2}>📝 Articles For You</Heading>
             
-            {articles.map((article, index) => (
+            {articles.map((article) => (
               <Section key={article._id} style={articleContainer}>
                 <Row>
                   <Column style={articleImageColumn}>
@@ -111,7 +109,7 @@ export default function NewsletterTemplate({
                     
                     <Row style={articleMeta}>
                       <Column>
-                        <Text style={articleAuthor}>di {article.author}</Text>
+                        <Text style={articleAuthor}>by MoneyWithSense Team</Text>
                       </Column>
                       <Column>
                         <Text style={articleDate}>{formatDate(article.publishedAt)}</Text>
@@ -126,19 +124,8 @@ export default function NewsletterTemplate({
                       </Column>
                     </Row>
 
-                    {article.fishingTechniques && article.fishingTechniques.length > 0 && (
-                      <Row style={techniquesRow}>
-                        <Column>
-                          <Text style={techniquesLabel}>
-                            🎣 Tecniche: {article.fishingTechniques.slice(0, 2).map(t => t.title).join(', ')}
-                            {article.fishingTechniques.length > 2 && '...'}
-                          </Text>
-                        </Column>
-                      </Row>
-                    )}
-
-                    <Button style={readButton} href={`https://fishandtips.it/articoli/${article.slug}`}>
-                      Leggi Articolo →
+                    <Button style={readButton} href={`https://moneywithsense.com/articles/${article.slug}`}>
+                      Read Article →
                     </Button>
                   </Column>
                 </Row>
@@ -148,12 +135,12 @@ export default function NewsletterTemplate({
 
           {/* Call to Action */}
           <Section style={ctaSection}>
-            <Heading style={h2}>🎯 Vuoi più contenuti personalizzati?</Heading>
+            <Heading style={h2}>🎯 Want more personalized content?</Heading>
             <Text style={text}>
-              Aggiorna le tue preferenze per ricevere articoli ancora più mirati alle tue esigenze.
+              Update your preferences to receive even more targeted articles.
             </Text>
             <Button style={ctaButton} href={preferencesUrl}>
-              Modifica Preferenze
+              Update Preferences
             </Button>
           </Section>
 
@@ -161,22 +148,25 @@ export default function NewsletterTemplate({
           <Hr style={hr} />
           <Section style={footer}>
             <Text style={footerText}>
-              Ricevi questa email perché ti sei iscritto alla newsletter di FishandTips.
+              You received this email because you subscribed to the MoneyWithSense newsletter.
             </Text>
             <Row style={footerLinks}>
               <Column>
                 <Link style={footerLink} href={preferencesUrl}>
-                  Modifica Preferenze
+                  Update Preferences
                 </Link>
               </Column>
               <Column>
                 <Link style={footerLink} href={unsubscribeUrl}>
-                  Disiscriviti
+                  Unsubscribe
                 </Link>
               </Column>
             </Row>
             <Text style={footerText}>
-              © 2024 FishandTips. Tutti i diritti riservati.
+              © {new Date().getFullYear()} MoneyWithSense. All rights reserved.
+            </Text>
+            <Text style={disclaimerText}>
+              This email is for informational purposes only and does not constitute financial advice.
             </Text>
           </Section>
         </Container>
@@ -198,7 +188,7 @@ const container = {
 };
 
 const header = {
-  backgroundColor: '#1f2937',
+  backgroundColor: '#1E6F5C',
   padding: '20px',
   borderRadius: '8px 8px 0 0',
   textAlign: 'center' as const,
@@ -206,14 +196,14 @@ const header = {
 
 const logo = {
   color: '#ffffff',
-  fontSize: '32px',
+  fontSize: '28px',
   fontWeight: 'bold',
   margin: '0 0 8px 0',
 };
 
 const tagline = {
-  color: '#9ca3af',
-  fontSize: '16px',
+  color: '#a7f3d0',
+  fontSize: '14px',
   margin: '0',
 };
 
@@ -256,7 +246,7 @@ const statItem = {
 };
 
 const statNumber = {
-  color: '#1f2937',
+  color: '#1E6F5C',
   fontSize: '24px',
   fontWeight: 'bold',
   margin: '0 0 4px 0',
@@ -333,28 +323,16 @@ const articleTags = {
   marginBottom: '12px',
 };
 
-
-
 const matchScore = {
-  color: '#059669',
+  color: '#1E6F5C',
   fontSize: '11px',
   fontWeight: 'bold',
   textAlign: 'right' as const,
   margin: '0',
 };
 
-const techniquesRow = {
-  marginBottom: '16px',
-};
-
-const techniquesLabel = {
-  color: '#6b7280',
-  fontSize: '12px',
-  margin: '0',
-};
-
 const readButton = {
-  backgroundColor: '#1f2937',
+  backgroundColor: '#1E6F5C',
   color: '#ffffff',
   fontSize: '14px',
   fontWeight: 'bold',
@@ -372,7 +350,7 @@ const ctaSection = {
 };
 
 const ctaButton = {
-  backgroundColor: '#059669',
+  backgroundColor: '#243A5E',
   color: '#ffffff',
   fontSize: '16px',
   fontWeight: 'bold',
@@ -400,12 +378,19 @@ const footerText = {
   margin: '0 0 16px 0',
 };
 
+const disclaimerText = {
+  color: '#9ca3af',
+  fontSize: '11px',
+  margin: '16px 0 0 0',
+  fontStyle: 'italic' as const,
+};
+
 const footerLinks = {
   marginBottom: '16px',
 };
 
 const footerLink = {
-  color: '#1f2937',
+  color: '#1E6F5C',
   fontSize: '14px',
   textDecoration: 'underline',
   margin: '0 16px',

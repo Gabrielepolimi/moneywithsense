@@ -1,75 +1,75 @@
 import { MetadataRoute } from 'next'
-import { sanityClient } from '../sanityClient'
+import { getPosts } from '../lib/getPosts'
 
-// Cache la sitemap per 1h per evitare richieste continue a Sanity
-export const revalidate = 3600
+const baseUrl = 'https://moneywithsense.com'
+
+// Static pages
+const staticPages = [
+  { url: '', priority: 1.0, changeFrequency: 'daily' as const },
+  { url: '/articles', priority: 0.9, changeFrequency: 'daily' as const },
+  { url: '/categories', priority: 0.9, changeFrequency: 'weekly' as const },
+  { url: '/guides', priority: 0.9, changeFrequency: 'weekly' as const },
+  { url: '/tools', priority: 0.8, changeFrequency: 'weekly' as const },
+  { url: '/newsletter', priority: 0.8, changeFrequency: 'monthly' as const },
+  { url: '/about', priority: 0.7, changeFrequency: 'monthly' as const },
+  { url: '/editorial-policy', priority: 0.6, changeFrequency: 'monthly' as const },
+  { url: '/sources', priority: 0.6, changeFrequency: 'monthly' as const },
+  { url: '/contact', priority: 0.6, changeFrequency: 'monthly' as const },
+  { url: '/privacy', priority: 0.5, changeFrequency: 'yearly' as const },
+  { url: '/terms', priority: 0.5, changeFrequency: 'yearly' as const },
+  { url: '/cookie-policy', priority: 0.5, changeFrequency: 'yearly' as const },
+  { url: '/disclaimer', priority: 0.5, changeFrequency: 'yearly' as const },
+  { url: '/affiliate-disclosure', priority: 0.5, changeFrequency: 'yearly' as const },
+  { url: '/sitemap', priority: 0.4, changeFrequency: 'weekly' as const },
+]
+
+// Categories
+const categories = [
+  'personal-finance',
+  'saving-money',
+  'budgeting',
+  'investing-basics',
+  'passive-income',
+  'credit-debt',
+  'banking-cards',
+  'taxes-tips',
+  'side-hustles',
+  'money-psychology',
+]
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://moneywithsense.com'
+  // Get all published articles
+  let articles: { slug: { current: string }; publishedAt?: string }[] = []
+  try {
+    articles = await getPosts()
+  } catch {
+    console.error('Failed to fetch posts for sitemap')
+    articles = []
+  }
 
-  const [posts = [], categories = []] = await Promise.all([
-    sanityClient
-      .fetch(
-        `
-        *[_type == "post" && status == "published"] {
-          "slug": slug.current,
-          publishedAt,
-          _updatedAt
-        }
-      `,
-      )
-      .catch((err) => {
-        console.error('Errore fetch articoli per sitemap:', err)
-        return []
-      }),
-    sanityClient
-      .fetch(
-        `
-        *[_type == "category" && defined(slug.current)] {
-          "slug": slug.current,
-          _updatedAt
-        }
-      `,
-      )
-      .catch((err) => {
-        console.error('Errore fetch categorie per sitemap:', err)
-        return []
-      }),
-  ])
+  // Static pages
+  const staticEntries = staticPages.map((page) => ({
+    url: `${baseUrl}${page.url}`,
+    lastModified: new Date(),
+    changeFrequency: page.changeFrequency,
+    priority: page.priority,
+  }))
 
-  const now = new Date()
-
-  const staticPages: MetadataRoute.Sitemap = [
-    { url: baseUrl, lastModified: now, changeFrequency: 'daily', priority: 1.0 },
-    { url: `${baseUrl}/articoli`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
-    { url: `${baseUrl}/categoria`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${baseUrl}/pillars`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${baseUrl}/tools`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
-    { url: `${baseUrl}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
-    { url: `${baseUrl}/editorial-policy`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
-    { url: `${baseUrl}/sources`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
-    { url: `${baseUrl}/disclaimer`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
-    { url: `${baseUrl}/contatti`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
-    { url: `${baseUrl}/supporto`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
-    { url: `${baseUrl}/newsletter`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
-    { url: `${baseUrl}/cookie-policy`, lastModified: now, changeFrequency: 'monthly', priority: 0.3 },
-    { url: `${baseUrl}/privacy`, lastModified: now, changeFrequency: 'monthly', priority: 0.3 },
-    { url: `${baseUrl}/termini`, lastModified: now, changeFrequency: 'monthly', priority: 0.3 },
-  ]
-
-  const categoryPages: MetadataRoute.Sitemap = categories.map((category: any) => ({
-    url: `${baseUrl}/categoria/${category.slug}`,
-    lastModified: category._updatedAt ? new Date(category._updatedAt) : now,
-    changeFrequency: 'weekly',
+  // Category pages
+  const categoryEntries = categories.map((category) => ({
+    url: `${baseUrl}/categories/${category}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
     priority: 0.8,
   }))
 
-  const articlePages: MetadataRoute.Sitemap = posts.map((post: any) => ({
-    url: `${baseUrl}/articoli/${post.slug}`,
-    lastModified: post._updatedAt ? new Date(post._updatedAt) : new Date(post.publishedAt),
-    changeFrequency: 'weekly',
-    priority: 0.8,
+  // Article pages
+  const articleEntries = articles.map((article) => ({
+    url: `${baseUrl}/articles/${article.slug.current}`,
+    lastModified: article.publishedAt ? new Date(article.publishedAt) : new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
   }))
 
-  return [...staticPages, ...categoryPages, ...articlePages]
+  return [...staticEntries, ...categoryEntries, ...articleEntries]
 }

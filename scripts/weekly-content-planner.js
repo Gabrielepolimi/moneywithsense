@@ -1,6 +1,6 @@
 /**
  * 📅 MoneyWithSense - Weekly Content Planner (finance, EN)
- * Genera automaticamente un piano editoriale settimanale con contenuti diversificati per tono e tipo.
+ * Automatically generates a weekly editorial plan with diversified content by tone and type.
  */
 
 import dotenv from 'dotenv';
@@ -26,57 +26,46 @@ const WEEKLY_PLAN = [
   { day: 'Sunday', dayNumber: 7, contentType: 'story', tone: 'storytelling', description: 'Story/Case study with lessons', bestTime: '18:00' },
 ];
 
-// ===== BANCA TOPIC PER TIPO =====
+// ===== TOPIC BANK BY TYPE (FINANCE, EN) =====
 const TOPIC_BANK = {
-  tutorial: [
-    'Come scegliere la canna da spinning perfetta',
-    'Tecniche di lancio per principianti',
-    'Nodi da pesca essenziali: guida completa',
-    'Come preparare l\'attrezzatura per il surfcasting',
-    'Pesca alla bolognese: setup perfetto',
-    'Come leggere le maree per pescare meglio',
-    'Terminali per la pesca all\'orata',
-    'Come scegliere il mulinello giusto',
-    'Pesca a fondo dalla scogliera: guida',
-    'Come innestare correttamente le esche vive',
-    'Montature per la pesca alla spigola',
-    'Come pescare in condizioni di mare mosso'
+  howto: [
+    'How to create a monthly budget that actually works',
+    'How to start investing with just $100',
+    'How to build an emergency fund in 6 months',
+    'How to improve your credit score fast',
+    'How to automate your savings effectively',
+    'How to pay off credit card debt using the avalanche method',
+    'How to choose the right high-yield savings account',
+    'How to set up a simple investment portfolio',
+    'How to track your net worth monthly',
+    'How to negotiate a raise at work',
+    'How to start a side hustle with zero capital',
+    'How to reduce your monthly expenses by 20%'
   ],
   
   mistakes: [
-    'pesca alla spigola',
-    'surfcasting',
-    'spinning',
-    'pesca all\'orata',
-    'scelta del mulinello',
-    'uso delle esche artificiali',
-    'pesca notturna',
-    'pesca dalla scogliera',
-    'pesca con il vivo',
-    'gestione della canna'
-  ],
-  
-  quiz: [
-    'pesci del mediterraneo',
-    'tecniche di pesca',
-    'nodi da pesca',
-    'attrezzatura da pesca',
-    'esche naturali',
-    'regolamenti pesca sportiva',
-    'specie ittiche italiane',
-    'mulinelli e canne'
+    'budgeting for beginners',
+    'first-time investing',
+    'credit card management',
+    'building an emergency fund',
+    'choosing a bank account',
+    'paying off debt',
+    'saving for retirement',
+    'side hustle tax mistakes',
+    'using robo-advisors',
+    'managing multiple income streams'
   ],
   
   comparison: {
     items: [
-      ['Spinning', 'Surfcasting'],
-      ['Mulinello frontale', 'Mulinello a bobina fissa'],
-      ['Esche naturali', 'Esche artificiali'],
-      ['Canna telescopica', 'Canna in due pezzi'],
-      ['Trecciato', 'Nylon'],
-      ['Pesca da riva', 'Pesca in barca'],
-      ['Alba', 'Tramonto (per pescare)'],
-      ['Mare calmo', 'Mare mosso']
+      ['High-yield savings', 'CDs'],
+      ['401(k)', 'IRA'],
+      ['Debt snowball', 'Debt avalanche'],
+      ['Index funds', 'Actively managed funds'],
+      ['Roth IRA', 'Traditional IRA'],
+      ['Credit union', 'Traditional bank'],
+      ['Budgeting apps', 'Spreadsheets'],
+      ['Dividend stocks', 'Growth stocks']
     ]
   },
   
@@ -84,39 +73,57 @@ const TOPIC_BANK = {
     'Best low-effort side hustles for weekends',
     'Best budgeting methods (50/30/20, zero-based, envelope)',
     'Best ways to cut fixed costs without downgrading life',
-    'Best simple ETF portfolio ideas for beginners'
+    'Best simple ETF portfolio ideas for beginners',
+    'Best free budgeting apps in 2026',
+    'Best ways to earn passive income with little money',
+    'Best credit cards for beginners',
+    'Best money books to read this year'
   ],
 
   story: [
     'Case: from paycheck-to-paycheck to 3-month buffer in 9 months',
     'Case: paying off $5k card debt with a 12-month plan',
-    'Case: first-time investor building a $10k starter portfolio'
+    'Case: first-time investor building a $10k starter portfolio',
+    'Case: millennial saves $50k in 2 years with side hustles',
+    'Case: recovering from financial setback in your 30s'
   ],
 
   quiz: [
     'ETFs vs mutual funds basics',
     'Credit score factors',
     'Emergency fund rules of thumb',
-    'Debt payoff methods overview'
+    'Debt payoff methods overview',
+    'Retirement account basics',
+    'Tax deduction essentials',
+    'Investment risk tolerance',
+    'Budgeting method quiz'
   ],
 
   checklist: [
     'Monthly money review: cash flow, debt, savings rate',
     'Pre-payday checklist: bills, buffers, transfers',
     'Starter investing checklist for beginners',
-    'Debt payoff checklist (snowball/avalanche)'
+    'Debt payoff checklist (snowball/avalanche)',
+    'Year-end financial review checklist',
+    'Side hustle launch checklist',
+    'Credit score improvement checklist',
+    'Emergency fund setup checklist'
   ],
 
   faq: [
-    'ETF vs mutual fund: what’s the difference?',
+    'ETF vs mutual fund: what is the difference?',
     'What credit score matters and how to improve it?',
     'How much emergency fund should I keep?',
-    'Should I pay debt first or invest first?'
+    'Should I pay debt first or invest first?',
+    'How does compound interest work?',
+    'What is dollar-cost averaging?',
+    'When should I start saving for retirement?',
+    'How do I start investing with no experience?'
   ]
 };
 
 /**
- * Seleziona topic casuale dalla banca
+ * Select random topic from bank
  */
 function selectTopic(contentType) {
   if (contentType === 'comparison') {
@@ -130,7 +137,7 @@ function selectTopic(contentType) {
 }
 
 /**
- * Genera piano settimanale con topic
+ * Generate weekly plan with topics
  */
 export function generateWeeklyPlan(startDate = new Date()) {
   const plan = [];
@@ -154,15 +161,15 @@ export function generateWeeklyPlan(startDate = new Date()) {
 }
 
 /**
- * Genera tutti i carousel per il piano settimanale
+ * Generate all carousels for the weekly plan
  */
 export async function generateWeeklyContent(plan) {
   const results = [];
   
   console.log('\n' + '📅'.repeat(30));
-  console.log('GENERAZIONE CONTENUTI SETTIMANALI');
+  console.log('WEEKLY CONTENT GENERATION');
   console.log('📅'.repeat(30));
-  console.log(`\n📊 Post da generare: ${plan.length}\n`);
+  console.log(`\n📊 Posts to generate: ${plan.length}\n`);
   
   for (let i = 0; i < plan.length; i++) {
     const dayPlan = plan[i];
@@ -189,11 +196,11 @@ export async function generateWeeklyContent(plan) {
         status: 'generated'
       });
       
-      console.log(`✅ Generato con successo!`);
+      console.log(`✅ Generated successfully!`);
       
-      // Pausa tra le generazioni per rispettare rate limits
+      // Pause between generations to respect rate limits
       if (i < plan.length - 1) {
-        console.log('⏳ Attesa 5 secondi...');
+        console.log('⏳ Waiting 5 seconds...');
         await new Promise(r => setTimeout(r, 5000));
       }
       

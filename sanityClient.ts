@@ -1,7 +1,7 @@
 import { createClient } from '@sanity/client';
 import imageUrlBuilder from '@sanity/image-url';
 
-// Configurazione Sanity Client
+// Sanity Client Configuration
 export const sanityClient = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || 'z0g6hj8g',
   dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
@@ -10,14 +10,14 @@ export const sanityClient = createClient({
   token: process.env.SANITY_API_TOKEN,
 });
 
-// Builder per URL immagini
+// Image URL builder
 const builder = imageUrlBuilder(sanityClient);
 
-export function urlFor(source: any) {
+export function urlFor(source: unknown) {
   return builder.image(source);
 }
 
-// Query per articoli
+// Query for articles
 export const articlesQuery = `
   *[_type == "article"] {
     _id,
@@ -41,22 +41,7 @@ export const articlesQuery = `
     readingTime,
     difficulty,
     targetAudience,
-    fishingTechniques[]->{
-      _id,
-      title,
-      slug
-    },
-    targetSpecies[]->{
-      _id,
-      title,
-      slug
-    },
-    environments[]->{
-      _id,
-      title,
-      slug
-    },
-    seasons[]->{
+    financeTopics[]->{
       _id,
       title,
       slug
@@ -66,13 +51,10 @@ export const articlesQuery = `
   } | order(publishedAt desc)
 `;
 
-// Query per articoli con targeting
+// Query for articles with targeting
 export const targetedArticlesQuery = `
   *[_type == "article" && (
-    $techniques in fishingTechniques[]->slug ||
-    $species in targetSpecies[]->slug ||
-    $environments in environments[]->slug ||
-    $seasons in seasons[]->slug ||
+    $topics in financeTopics[]->slug ||
     $difficulty == difficulty ||
     $categories in categories[]->slug
   )] {
@@ -97,22 +79,7 @@ export const targetedArticlesQuery = `
     readingTime,
     difficulty,
     targetAudience,
-    fishingTechniques[]->{
-      _id,
-      title,
-      slug
-    },
-    targetSpecies[]->{
-      _id,
-      title,
-      slug
-    },
-    environments[]->{
-      _id,
-      title,
-      slug
-    },
-    seasons[]->{
+    financeTopics[]->{
       _id,
       title,
       slug
@@ -122,7 +89,7 @@ export const targetedArticlesQuery = `
   } | order(publishedAt desc) [0...$limit]
 `;
 
-// Query per newsletter
+// Query for newsletter
 export const newsletterArticlesQuery = `
   *[_type == "article" && newsletterFeatured == true] | order(newsletterPriority desc, publishedAt desc) [0...5] {
     _id,
@@ -144,22 +111,7 @@ export const newsletterArticlesQuery = `
     },
     readingTime,
     difficulty,
-    fishingTechniques[]->{
-      _id,
-      title,
-      slug
-    },
-    targetSpecies[]->{
-      _id,
-      title,
-      slug
-    },
-    environments[]->{
-      _id,
-      title,
-      slug
-    },
-    seasons[]->{
+    financeTopics[]->{
       _id,
       title,
       slug

@@ -1,80 +1,58 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 export default function CookieBanner() {
-  const [showBanner, setShowBanner] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // Controlla se l'utente ha già fatto una scelta sui cookie
-    const cookieConsent = localStorage.getItem('cookieConsent');
-    if (!cookieConsent) {
-      setShowBanner(true);
+    const consent = localStorage.getItem('cookie-consent');
+    if (!consent) {
+      // Small delay for better UX
+      const timer = setTimeout(() => setIsVisible(true), 1500);
+      return () => clearTimeout(timer);
     }
   }, []);
 
-  const acceptAll = () => {
-    localStorage.setItem('cookieConsent', 'all');
-    setShowBanner(false);
-    // Abilita Google Analytics
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('consent', 'update', {
-        'analytics_storage': 'granted',
-        'ad_storage': 'granted'
-      });
-      // Invia evento di consenso
-      window.gtag('event', 'cookie_consent', {
-        'event_category': 'engagement',
-        'event_label': 'accepted_all'
-      });
-    }
+  const handleAccept = () => {
+    localStorage.setItem('cookie-consent', 'accepted');
+    setIsVisible(false);
   };
 
-  const acceptEssential = () => {
-    localStorage.setItem('cookieConsent', 'essential');
-    setShowBanner(false);
-    // Mantiene Google Analytics disabilitato
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('consent', 'update', {
-        'analytics_storage': 'denied',
-        'ad_storage': 'denied'
-      });
-      // Invia evento di consenso essenziale
-      window.gtag('event', 'cookie_consent', {
-        'event_category': 'engagement',
-        'event_label': 'essential_only'
-      });
-    }
+  const handleDecline = () => {
+    localStorage.setItem('cookie-consent', 'declined');
+    setIsVisible(false);
   };
 
-  if (!showBanner) return null;
+  if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex-1">
-            <p className="text-sm text-gray-700">
-              Utilizziamo i cookie per migliorare la tua esperienza su FishandTips. 
-              Continuando a navigare, accetti la nostra{' '}
-              <Link href="/cookie-policy" className="text-brand-blue hover:text-brand-blue-dark underline">
+    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 animate-slide-up">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-secondary-900 text-white rounded-2xl shadow-2xl p-6 md:flex md:items-center md:justify-between gap-6">
+          <div className="mb-4 md:mb-0">
+            <p className="text-sm text-secondary-200 leading-relaxed">
+              We use cookies to improve your experience and analyze site traffic. 
+              By continuing, you agree to our{' '}
+              <Link href="/cookie-policy" className="underline hover:text-white">
                 Cookie Policy
-              </Link>.
+              </Link>
+              .
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <div className="flex gap-3 flex-shrink-0">
             <button
-              onClick={acceptEssential}
-              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              onClick={handleDecline}
+              className="px-5 py-2.5 text-sm font-medium text-secondary-300 hover:text-white transition-colors"
             >
-              Solo Essenziali
+              Decline
             </button>
             <button
-              onClick={acceptAll}
-              className="px-4 py-2 text-sm bg-brand-blue text-white rounded-lg hover:bg-brand-blue-light transition-colors"
+              onClick={handleAccept}
+              className="px-5 py-2.5 text-sm font-medium bg-primary-600 text-white rounded-full hover:bg-primary-500 transition-colors"
             >
-              Accetta Tutti
+              Accept Cookies
             </button>
           </div>
         </div>

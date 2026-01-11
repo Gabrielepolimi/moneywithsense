@@ -8,7 +8,7 @@ export interface User {
   lastLogin?: string;
   isActive: boolean;
   preferences: UserPreferences;
-  interests: FishingInterests;
+  interests: FinanceInterests;
   location?: UserLocation;
   experience: ExperienceLevel;
   notifications: NotificationSettings;
@@ -16,22 +16,22 @@ export interface User {
 
 export interface UserPreferences {
   newsletterFrequency: 'weekly' | 'biweekly' | 'monthly';
-  preferredContent: 'techniques' | 'gear' | 'spots' | 'all';
-  language: 'it' | 'en';
+  preferredContent: 'saving' | 'investing' | 'income' | 'all';
+  language: 'en';
   timezone?: string;
 }
 
-export interface FishingInterests {
-  techniques: FishingTechnique[];
-  targetSpecies: string[];
-  environments: FishingEnvironment[];
-  gearTypes: GearType[];
-  seasons: Season[];
+export interface FinanceInterests {
+  topics: FinanceTopic[];
+  goals: string[];
+  categories: FinanceCategory[];
+  productTypes: ProductType[];
+  timeHorizons: TimeHorizon[];
 }
 
 export interface UserLocation {
   region?: string;
-  province?: string;
+  country?: string;
   city?: string;
   coordinates?: {
     lat: number;
@@ -46,58 +46,54 @@ export interface NotificationSettings {
   push: boolean;
   weeklyDigest: boolean;
   newArticles: boolean;
-  seasonalTips: boolean;
-  gearDeals: boolean;
+  marketUpdates: boolean;
+  productDeals: boolean;
 }
 
 // Enums for better type safety
-export enum FishingTechnique {
-  SPINNING = 'spinning',
-  FLY_FISHING = 'fly_fishing',
-  CARP_FISHING = 'carp_fishing',
-  BASS_FISHING = 'bass_fishing',
-  PIKE_FISHING = 'pike_fishing',
-  TROUT_FISHING = 'trout_fishing',
-  SEA_FISHING = 'sea_fishing',
-  LAKE_FISHING = 'lake_fishing',
-  RIVER_FISHING = 'river_fishing',
-  ICE_FISHING = 'ice_fishing',
-  SURF_FISHING = 'surf_fishing',
-  BOAT_FISHING = 'boat_fishing'
+export enum FinanceTopic {
+  PERSONAL_FINANCE = 'personal-finance',
+  SAVING_MONEY = 'saving-money',
+  BUDGETING = 'budgeting',
+  INVESTING_BASICS = 'investing-basics',
+  PASSIVE_INCOME = 'passive-income',
+  CREDIT_DEBT = 'credit-debt',
+  BANKING_CARDS = 'banking-cards',
+  TAXES_TIPS = 'taxes-tips',
+  SIDE_HUSTLES = 'side-hustles',
+  MONEY_PSYCHOLOGY = 'money-psychology',
+  RETIREMENT = 'retirement',
+  REAL_ESTATE = 'real-estate'
 }
 
-export enum FishingEnvironment {
-  RIVERS = 'rivers',
-  LAKES = 'lakes',
-  SEA = 'sea',
-  PONDS = 'ponds',
-  STREAMS = 'streams',
-  RESERVOIRS = 'reservoirs',
-  COASTAL = 'coastal',
-  DEEP_SEA = 'deep_sea'
+export enum FinanceCategory {
+  SAVING = 'saving',
+  INVESTING = 'investing',
+  BUDGETING = 'budgeting',
+  DEBT = 'debt',
+  INCOME = 'income',
+  TAXES = 'taxes',
+  BANKING = 'banking',
+  RETIREMENT = 'retirement'
 }
 
-export enum GearType {
-  RODS = 'rods',
-  REELS = 'reels',
-  LURES = 'lures',
-  BAITS = 'baits',
-  LINES = 'lines',
-  HOOKS = 'hooks',
-  SINKERS = 'sinkers',
-  FLOATS = 'floats',
-  NETS = 'nets',
-  WADERS = 'waders',
-  BOOTS = 'boots',
-  CLOTHING = 'clothing',
-  ACCESSORIES = 'accessories'
+export enum ProductType {
+  BANK_ACCOUNTS = 'bank-accounts',
+  CREDIT_CARDS = 'credit-cards',
+  BROKERAGES = 'brokerages',
+  ROBO_ADVISORS = 'robo-advisors',
+  BUDGETING_APPS = 'budgeting-apps',
+  SAVINGS_ACCOUNTS = 'savings-accounts',
+  INSURANCE = 'insurance',
+  COURSES = 'courses',
+  BOOKS = 'books',
+  SOFTWARE = 'software'
 }
 
-export enum Season {
-  SPRING = 'spring',
-  SUMMER = 'summer',
-  AUTUMN = 'autumn',
-  WINTER = 'winter'
+export enum TimeHorizon {
+  SHORT_TERM = 'short-term',
+  MEDIUM_TERM = 'medium-term',
+  LONG_TERM = 'long-term'
 }
 
 // Registration form data
@@ -108,7 +104,7 @@ export interface RegistrationData {
   password: string;
   confirmPassword: string;
   experience: ExperienceLevel;
-  interests: Partial<FishingInterests>;
+  interests: Partial<FinanceInterests>;
   location?: Partial<UserLocation>;
   preferences: Partial<UserPreferences>;
   notifications: Partial<NotificationSettings>;
@@ -124,7 +120,7 @@ export interface LoginData {
 export interface ProfileUpdateData {
   firstName?: string;
   lastName?: string;
-  interests?: Partial<FishingInterests>;
+  interests?: Partial<FinanceInterests>;
   location?: Partial<UserLocation>;
   preferences?: Partial<UserPreferences>;
   notifications?: Partial<NotificationSettings>;

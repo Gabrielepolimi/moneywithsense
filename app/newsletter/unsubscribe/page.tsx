@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Check, X } from 'lucide-react';
+import { ArrowLeft, X } from 'lucide-react';
 
 export default function UnsubscribePage() {
   const [email, setEmail] = useState('');
@@ -28,10 +28,10 @@ export default function UnsubscribePage() {
         setIsSubmitted(true);
       } else {
         const data = await response.json();
-        setError(data.error || 'Errore durante la disiscrizione. Riprova.');
+        setError(data.error || 'Error unsubscribing. Please try again.');
       }
-    } catch (error) {
-      setError('Errore durante la disiscrizione. Riprova.');
+    } catch {
+      setError('Error unsubscribing. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -46,14 +46,14 @@ export default function UnsubscribePage() {
               <X className="w-8 h-8 text-red-600" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-4">
-              Disiscrizione Completata
+              Unsubscribe Complete
             </h1>
             <p className="text-gray-600 mb-6">
-              Sei stato disiscritto dalla newsletter. Non riceverai più email da FishandTips.
+              You have been unsubscribed from the newsletter. You will no longer receive emails from MoneyWithSense.
             </p>
             <Link href="/">
               <button className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
-                Torna alla Home
+                Back to Home
               </button>
             </Link>
           </div>
@@ -69,13 +69,13 @@ export default function UnsubscribePage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Link href="/" className="inline-flex items-center text-red-100 hover:text-white mb-6">
             <ArrowLeft size={20} className="mr-2" />
-            Torna alla Home
+            Back to Home
           </Link>
           <h1 className="text-4xl md:text-5xl font-bold mb-6">
-            Disiscriviti dalla Newsletter
+            Unsubscribe from Newsletter
           </h1>
           <p className="text-xl text-red-100 max-w-2xl mx-auto">
-            Inserisci la tua email per disiscriverti dalla newsletter
+            Enter your email to unsubscribe from the newsletter
           </p>
         </div>
       </section>
@@ -98,7 +98,7 @@ export default function UnsubscribePage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  placeholder="La tua email"
+                  placeholder="Your email"
                 />
               </div>
 
@@ -115,11 +115,11 @@ export default function UnsubscribePage() {
                 disabled={isSubmitting || !email}
                 className="w-full bg-red-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-red-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? 'Disiscrizione in corso...' : 'Disiscriviti'}
+                {isSubmitting ? 'Processing...' : 'Unsubscribe'}
               </button>
 
               <p className="text-xs text-gray-500 text-center">
-                Questa azione è irreversibile. Non riceverai più email da FishandTips.
+                This action is irreversible. You will no longer receive emails from MoneyWithSense.
               </p>
             </form>
           </div>

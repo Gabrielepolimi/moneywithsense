@@ -1,8 +1,8 @@
-import { MetadataRoute } from 'next';
-
-const siteUrl = 'https://moneywithsense.com';
+import { MetadataRoute } from 'next'
 
 export default function robots(): MetadataRoute.Robots {
+  const baseUrl = 'https://moneywithsense.com'
+  
   return {
     rules: [
       {
@@ -11,15 +11,12 @@ export default function robots(): MetadataRoute.Robots {
         disallow: [
           '/api/',
           '/admin/',
-          '/dashboard/',
           '/_next/',
-          '/newsletter/unsubscribe',
-          '/*?search=',
-          '/*&search=',
+          '/private/',
         ],
       },
     ],
-    sitemap: `${siteUrl}/sitemap.xml`,
-    host: siteUrl,
-  };
+    sitemap: `${baseUrl}/sitemap.xml`,
+    host: baseUrl,
+  }
 }

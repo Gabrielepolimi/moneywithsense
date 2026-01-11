@@ -1,12 +1,14 @@
 import { sanityClient } from '../../sanityClient';
 import { NextResponse } from 'next/server';
 
+const siteUrl = 'https://moneywithsense.com';
+
 export async function GET() {
   try {
     const posts = await sanityClient.fetch(`
       *[_type == "post" && status == "published" && publishedAt <= $now] | order(publishedAt desc)[0...20] {
         title,
-        slug,
+        "slug": slug.current,
         excerpt,
         publishedAt,
         "author": author->name,
@@ -15,28 +17,29 @@ export async function GET() {
     `, { now: new Date().toISOString() });
 
     const rss = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:wfw="http://wellformedweb.org/CommentAPI/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom">
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>FishandTips - Blog di Pesca</title>
-    <atom:link href="https://fishandtips.it/feed.xml" rel="self" type="application/rss+xml" />
-    <link>https://fishandtips.it</link>
-    <description>Consigli di pesca esperti e personalizzati. Scopri tecniche, attrezzature e spot di pesca.</description>
+    <title>MoneyWithSense - Personal Finance Education</title>
+    <atom:link href="${siteUrl}/feed.xml" rel="self" type="application/rss+xml" />
+    <link>${siteUrl}</link>
+    <description>Practical personal finance education for everyday people. Clear, actionable guidance on saving, budgeting, investing, and building income.</description>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
-    <language>it-IT</language>
-    <category>Sports</category>
+    <language>en-US</language>
+    <category>Finance</category>
+    <category>Education</category>
     <image>
-      <url>https://fishandtips.it/images/icononly.png</url>
-      <title>FishandTips</title>
-      <link>https://fishandtips.it</link>
+      <url>${siteUrl}/images/logo.png</url>
+      <title>MoneyWithSense</title>
+      <link>${siteUrl}</link>
     </image>
-    ${posts.map((post: any) => `
+    ${posts.map((post: { title: string; slug: string; excerpt: string; publishedAt: string; author: string; mainImage?: string }) => `
     <item>
       <title><![CDATA[${post.title}]]></title>
-      <link>https://fishandtips.it/articoli/${post.slug}</link>
-      <guid>https://fishandtips.it/articoli/${post.slug}</guid>
+      <link>${siteUrl}/articles/${post.slug}</link>
+      <guid isPermaLink="true">${siteUrl}/articles/${post.slug}</guid>
       <pubDate>${new Date(post.publishedAt).toUTCString()}</pubDate>
-      <description><![CDATA[${post.excerpt}]]></description>
-      <author>${post.author}</author>
+      <description><![CDATA[${post.excerpt || ''}]]></description>
+      <dc:creator><![CDATA[MoneyWithSense Team]]></dc:creator>
       ${post.mainImage ? `<enclosure url="${post.mainImage}" type="image/jpeg" />` : ''}
     </item>
     `).join('')}
@@ -50,7 +53,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('Errore nella generazione RSS feed:', error);
-    return new NextResponse('Errore interno del server', { status: 500 });
+    console.error('Error generating RSS feed:', error);
+    return new NextResponse('Internal Server Error', { status: 500 });
   }
 }

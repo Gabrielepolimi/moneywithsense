@@ -1,264 +1,97 @@
 {
   "metadata": {
-    "version": "1.0",
-    "lastUpdated": "2024-12-06",
-    "description": "Database delle nicchie target per la generazione di keyword e contenuti"
+    "version": "2.0",
+    "lastUpdated": "2026-01-11",
+    "description": "Keyword niches for MoneyWithSense content strategy"
   },
-  "tecniche": {
-    "surfcasting": {
-      "nome": "Surfcasting",
-      "descrizione": "Pesca dalla spiaggia con lanci lunghi",
-      "stagionalità": ["autunno", "inverno", "primavera"],
-      "specie_target": ["spigola", "orata", "sarago", "mormore", "ombrina"],
-      "attrezzatura_tipica": ["canne surfcasting", "mulinelli 6000-8000", "piombi", "trecciato"],
-      "keywords_base": [
-        "surfcasting",
-        "pesca dalla spiaggia",
-        "lancio tecnico",
-        "surfcasting notturno"
+  "niches": [
+    {
+      "id": "budgeting-methods",
+      "category": "Budgeting",
+      "keywords": [
+        "50/30/20 budget rule",
+        "zero-based budgeting",
+        "envelope budgeting system",
+        "pay yourself first method",
+        "budget template free"
       ]
     },
-    "spinning": {
-      "nome": "Spinning",
-      "descrizione": "Pesca con esche artificiali in movimento",
-      "stagionalità": ["tutto-anno"],
-      "specie_target": ["spigola", "serra", "barracuda", "leccia", "lampuga"],
-      "attrezzatura_tipica": ["canne spinning", "mulinelli 2500-4000", "artificiali", "fluorocarbon"],
-      "keywords_base": [
-        "spinning in mare",
-        "spinning dalla scogliera",
-        "light spinning",
-        "shore spinning"
+    {
+      "id": "saving-strategies",
+      "category": "Saving Money",
+      "keywords": [
+        "how to build emergency fund",
+        "high-yield savings account",
+        "save money on groceries",
+        "no-spend challenge",
+        "sinking funds explained"
       ]
     },
-    "bolognese": {
-      "nome": "Pesca a Bolognese",
-      "descrizione": "Pesca con canna lunga e galleggiante",
-      "stagionalità": ["tutto-anno"],
-      "specie_target": ["sarago", "occhiata", "salpa", "cefalo", "orata"],
-      "attrezzatura_tipica": ["canne bolognese", "mulinelli 2000-3000", "galleggianti", "ami"],
-      "keywords_base": [
-        "pesca a bolognese",
-        "bolognese in mare",
-        "bolognese dalla scogliera"
+    {
+      "id": "investing-beginners",
+      "category": "Investing Basics",
+      "keywords": [
+        "how to start investing",
+        "index funds for beginners",
+        "roth ira vs traditional ira",
+        "401k basics",
+        "dollar cost averaging"
       ]
     },
-    "feeder": {
-      "nome": "Feeder Fishing",
-      "descrizione": "Pesca a fondo con pasturatore",
-      "stagionalità": ["tutto-anno"],
-      "specie_target": ["orata", "sarago", "mormore", "pagello"],
-      "attrezzatura_tipica": ["canne feeder", "mulinelli", "pasturatori", "esche"],
-      "keywords_base": [
-        "feeder fishing mare",
-        "pesca a feeder",
-        "light feeder"
+    {
+      "id": "debt-payoff",
+      "category": "Credit & Debt",
+      "keywords": [
+        "debt snowball vs avalanche",
+        "how to improve credit score",
+        "pay off credit card debt fast",
+        "debt consolidation options",
+        "student loan repayment"
       ]
     },
-    "traina": {
-      "nome": "Traina",
-      "descrizione": "Pesca trainando esche dalla barca",
-      "stagionalità": ["primavera", "estate", "autunno"],
-      "specie_target": ["dentice", "ricciola", "palamita", "tonno", "lampuga"],
-      "attrezzatura_tipica": ["canne traina", "mulinelli rotanti", "piombi affondatori", "artificiali"],
-      "keywords_base": [
-        "traina costiera",
-        "traina col vivo",
-        "traina con artificiali"
+    {
+      "id": "side-income",
+      "category": "Side Hustles",
+      "keywords": [
+        "best side hustles 2026",
+        "work from home jobs",
+        "freelance writing for beginners",
+        "passive income ideas",
+        "make money online legitimate"
       ]
     },
-    "vertical_jigging": {
-      "nome": "Vertical Jigging",
-      "descrizione": "Pesca verticale con jig metallici",
-      "stagionalità": ["tutto-anno"],
-      "specie_target": ["ricciola", "dentice", "cernia", "tonno"],
-      "attrezzatura_tipica": ["canne jigging", "mulinelli", "jig", "assist hook"],
-      "keywords_base": [
-        "vertical jigging",
-        "slow jigging",
-        "jigging in mediterraneo"
+    {
+      "id": "tax-basics",
+      "category": "Taxes & Tips",
+      "keywords": [
+        "tax deductions checklist",
+        "how to file taxes yourself",
+        "self-employment tax guide",
+        "tax-advantaged accounts",
+        "capital gains tax explained"
       ]
     },
-    "eging": {
-      "nome": "Eging",
-      "descrizione": "Pesca ai cefalopodi con totanare",
-      "stagionalità": ["autunno", "inverno"],
-      "specie_target": ["seppia", "calamaro", "totano"],
-      "attrezzatura_tipica": ["canne eging", "totanare", "fluorocarbon"],
-      "keywords_base": [
-        "pesca alla seppia",
-        "pesca al calamaro",
-        "eging tecnica"
+    {
+      "id": "banking-optimization",
+      "category": "Banking & Cards",
+      "keywords": [
+        "best high-yield savings accounts",
+        "credit card rewards maximizing",
+        "no-fee checking accounts",
+        "cashback credit cards",
+        "CD ladder strategy"
       ]
     },
-    "rockfishing": {
-      "nome": "Rock Fishing",
-      "descrizione": "Pesca leggera dalla scogliera",
-      "stagionalità": ["tutto-anno"],
-      "specie_target": ["scorfano", "tordo", "perchia", "donzella"],
-      "attrezzatura_tipica": ["canne ultralight", "mulinelli 1000-2000", "micro jig", "esche siliconiche"],
-      "keywords_base": [
-        "rock fishing",
-        "light rock fishing",
-        "pesca ultraleggera"
+    {
+      "id": "money-mindset",
+      "category": "Money Psychology",
+      "keywords": [
+        "overcome money anxiety",
+        "financial goals setting",
+        "money habits successful people",
+        "emotional spending triggers",
+        "abundance mindset money"
       ]
     }
-  },
-  "specie": {
-    "spigola": {
-      "nome": "Spigola (Branzino)",
-      "stagionalità": ["autunno", "inverno", "primavera"],
-      "tecniche_consigliate": ["spinning", "surfcasting", "bolognese"],
-      "esche_migliori": ["artificiali", "bigattino", "verme americano", "gambero"],
-      "spot_tipici": ["foci dei fiumi", "porti", "scogliere"]
-    },
-    "orata": {
-      "nome": "Orata",
-      "stagionalità": ["tutto-anno"],
-      "tecniche_consigliate": ["surfcasting", "bolognese", "feeder"],
-      "esche_migliori": ["granchio", "cozza", "bigattino", "verme"],
-      "spot_tipici": ["spiagge sabbiose", "posidonia", "porti"]
-    },
-    "sarago": {
-      "nome": "Sarago",
-      "stagionalità": ["tutto-anno"],
-      "tecniche_consigliate": ["bolognese", "rockfishing", "feeder"],
-      "esche_migliori": ["gambero", "granchio", "bigattino", "pane"],
-      "spot_tipici": ["scogliere", "moli", "reef artificiali"]
-    },
-    "dentice": {
-      "nome": "Dentice",
-      "stagionalità": ["primavera", "autunno"],
-      "tecniche_consigliate": ["traina", "vertical_jigging", "bolentino"],
-      "esche_migliori": ["calamaro", "totano", "sgombro vivo"],
-      "spot_tipici": ["secche", "cadute", "relitti"]
-    },
-    "ricciola": {
-      "nome": "Ricciola",
-      "stagionalità": ["estate", "autunno"],
-      "tecniche_consigliate": ["vertical_jigging", "spinning", "traina"],
-      "esche_migliori": ["jig", "popper", "vivo"],
-      "spot_tipici": ["secche", "correnti", "frangenti"]
-    },
-    "tonno": {
-      "nome": "Tonno Rosso",
-      "stagionalità": ["estate"],
-      "tecniche_consigliate": ["traina", "drifting", "spinning"],
-      "esche_migliori": ["calamaro", "sgombro", "popper"],
-      "spot_tipici": ["largo", "correnti"]
-    },
-    "seppia": {
-      "nome": "Seppia",
-      "stagionalità": ["autunno", "inverno", "primavera"],
-      "tecniche_consigliate": ["eging"],
-      "esche_migliori": ["totanare", "gambero"],
-      "spot_tipici": ["fondali sabbiosi", "posidonia"]
-    },
-    "calamaro": {
-      "nome": "Calamaro",
-      "stagionalità": ["autunno", "inverno"],
-      "tecniche_consigliate": ["eging", "bolentino"],
-      "esche_migliori": ["totanare", "gambero morto"],
-      "spot_tipici": ["porti", "scogliere", "profondità 10-50m"]
-    }
-  },
-  "attrezzature": {
-    "canne": {
-      "categorie": [
-        "canne da surfcasting",
-        "canne da spinning",
-        "canne da bolognese",
-        "canne da feeder",
-        "canne da traina",
-        "canne da jigging",
-        "canne da eging",
-        "canne telescopiche",
-        "canne da viaggio"
-      ],
-      "marche_top": ["Shimano", "Daiwa", "Colmic", "Trabucco", "Tubertini", "Penn"]
-    },
-    "mulinelli": {
-      "categorie": [
-        "mulinelli da spinning",
-        "mulinelli da surfcasting",
-        "mulinelli rotanti",
-        "mulinelli elettrici"
-      ],
-      "marche_top": ["Shimano", "Daiwa", "Penn", "Okuma", "Abu Garcia"]
-    },
-    "esche": {
-      "naturali": ["bigattino", "verme americano", "verme coreano", "granchio", "cozza", "gambero", "sardina", "calamaro"],
-      "artificiali": ["minnow", "popper", "jig", "totanare", "softbait", "spinnerbait", "cucchiaini"]
-    },
-    "accessori": {
-      "categorie": [
-        "ami",
-        "girelle",
-        "piombi",
-        "galleggianti",
-        "trecciati",
-        "fluorocarbon",
-        "nylon",
-        "borse e zaini",
-        "cassette porta artificiali",
-        "guadini",
-        "stivali e waders"
-      ]
-    }
-  },
-  "stagionalità": {
-    "inverno": {
-      "mesi": ["dicembre", "gennaio", "febbraio"],
-      "specie_attive": ["spigola", "sarago", "seppia", "calamaro"],
-      "tecniche_consigliate": ["surfcasting", "eging", "bolognese"],
-      "condizioni": "Mare spesso mosso, temperature basse, pesci in profondità"
-    },
-    "primavera": {
-      "mesi": ["marzo", "aprile", "maggio"],
-      "specie_attive": ["spigola", "orata", "sarago", "seppia", "dentice"],
-      "tecniche_consigliate": ["spinning", "surfcasting", "bolognese", "traina"],
-      "condizioni": "Risveglio dell'attività, temperatura in aumento"
-    },
-    "estate": {
-      "mesi": ["giugno", "luglio", "agosto"],
-      "specie_attive": ["ricciola", "lampuga", "tonno", "serra", "leccia"],
-      "tecniche_consigliate": ["spinning", "traina", "vertical_jigging"],
-      "condizioni": "Acque calde, pesci molto attivi, pesca all'alba e tramonto"
-    },
-    "autunno": {
-      "mesi": ["settembre", "ottobre", "novembre"],
-      "specie_attive": ["spigola", "orata", "dentice", "ricciola", "seppia", "calamaro"],
-      "tecniche_consigliate": ["surfcasting", "spinning", "eging", "vertical_jigging"],
-      "condizioni": "Stagione d'oro per la pesca, pesci in mangianza pre-inverno"
-    }
-  },
-  "località_italia": {
-    "liguria": {
-      "spot_tipici": ["Portofino", "Cinque Terre", "Golfo dei Poeti"],
-      "specie_comuni": ["sarago", "orata", "dentice", "ricciola"],
-      "tecniche_popolari": ["spinning", "bolognese", "traina"]
-    },
-    "toscana": {
-      "spot_tipici": ["Argentario", "Isola d'Elba", "Versilia"],
-      "specie_comuni": ["spigola", "orata", "ricciola"],
-      "tecniche_popolari": ["surfcasting", "spinning"]
-    },
-    "sardegna": {
-      "spot_tipici": ["Costa Smeralda", "Carloforte", "Alghero"],
-      "specie_comuni": ["dentice", "ricciola", "cernia", "tonno"],
-      "tecniche_popolari": ["traina", "jigging", "spinning"]
-    },
-    "sicilia": {
-      "spot_tipici": ["Stretto di Messina", "Isole Eolie", "Trapani"],
-      "specie_comuni": ["tonno", "ricciola", "dentice", "pesce spada"],
-      "tecniche_popolari": ["traina", "drifting", "jigging"]
-    },
-    "adriatico": {
-      "spot_tipici": ["Riviera Romagnola", "Marche", "Puglia"],
-      "specie_comuni": ["orata", "spigola", "seppia", "calamaro"],
-      "tecniche_popolari": ["surfcasting", "bolognese", "eging"]
-    }
-  }
+  ]
 }
-
-

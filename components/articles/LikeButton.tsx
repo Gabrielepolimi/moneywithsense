@@ -13,13 +13,13 @@ export default function LikeButton({ articleId, initialLikes }: LikeButtonProps)
   const [isLiked, setIsLiked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Controlla se l'utente ha già messo like e calcola il contatore corretto
+  // Check if user has already liked and calculate the correct counter
   useEffect(() => {
-    const likedArticles = JSON.parse(localStorage.getItem('fishandtips_liked_articles') || '[]');
+    const likedArticles = JSON.parse(localStorage.getItem('moneywithsense_liked_articles') || '[]');
     const userHasLiked = likedArticles.includes(articleId);
     setIsLiked(userHasLiked);
     
-    // Calcola il contatore corretto: like iniziali + like dell'utente
+    // Calculate correct counter: initial likes + user like
     const userLikes = userHasLiked ? 1 : 0;
     setLikes(initialLikes + userLikes);
   }, [articleId, initialLikes]);
@@ -30,19 +30,19 @@ export default function LikeButton({ articleId, initialLikes }: LikeButtonProps)
     setIsLoading(true);
     
     try {
-      const likedArticles = JSON.parse(localStorage.getItem('fishandtips_liked_articles') || '[]');
+      const likedArticles = JSON.parse(localStorage.getItem('moneywithsense_liked_articles') || '[]');
       
       if (isLiked) {
-        // Rimuovi like
+        // Remove like
         const newLikedArticles = likedArticles.filter((id: string) => id !== articleId);
-        localStorage.setItem('fishandtips_liked_articles', JSON.stringify(newLikedArticles));
-        setLikes(initialLikes); // Torna ai like iniziali
+        localStorage.setItem('moneywithsense_liked_articles', JSON.stringify(newLikedArticles));
+        setLikes(initialLikes); // Return to initial likes
         setIsLiked(false);
       } else {
-        // Aggiungi like
+        // Add like
         const newLikedArticles = [...likedArticles, articleId];
-        localStorage.setItem('fishandtips_liked_articles', JSON.stringify(newLikedArticles));
-        setLikes(initialLikes + 1); // Like iniziali + 1
+        localStorage.setItem('moneywithsense_liked_articles', JSON.stringify(newLikedArticles));
+        setLikes(initialLikes + 1); // Initial likes + 1
         setIsLiked(true);
       }
     } catch (error) {
@@ -55,7 +55,7 @@ export default function LikeButton({ articleId, initialLikes }: LikeButtonProps)
   return (
     <div className="flex items-center space-x-3">
       <span className="text-sm text-gray-600 font-medium">
-        Utenti che apprezzano questo contenuto:
+        Readers who found this helpful:
       </span>
       <button
         onClick={handleLike}
@@ -65,7 +65,7 @@ export default function LikeButton({ articleId, initialLikes }: LikeButtonProps)
             ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100' 
             : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100'
         } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-        aria-label={isLiked ? 'Rimuovi like' : 'Metti like'}
+        aria-label={isLiked ? 'Remove like' : 'Like this article'}
       >
         <Heart 
           className={`w-5 h-5 transition-all duration-200 ${

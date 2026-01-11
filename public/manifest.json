@@ -1,11 +1,11 @@
 {
-  "name": "FishandTips - Il tuo blog di pesca personalizzato",
-  "short_name": "FishandTips",
-  "description": "Scopri le migliori tecniche di pesca, consigli esperti e contenuti personalizzati per la tua passione.",
+  "name": "Money With Sense - Practical Personal Finance",
+  "short_name": "MoneyWithSense",
+  "description": "Practical money education for everyday people. Learn saving, budgeting, investing basics, and side hustles.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#1f2937",
+  "theme_color": "#1F7A63",
   "icons": [
     {
       "src": "/icon-192x192.png",
@@ -18,7 +18,7 @@
       "type": "image/png"
     }
   ],
-  "categories": ["sports", "lifestyle", "education"],
-  "lang": "it",
+  "categories": ["finance", "education", "business"],
+  "lang": "en",
   "dir": "ltr"
 }

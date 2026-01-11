@@ -249,11 +249,11 @@ async function getImageWithFallback(keyword, categorySlug, finalSlug, articleTit
       
       if (mainImageAsset) {
         imageSource = 'fallback';
-        imageCredit = { name: 'FishandTips', username: 'fishandtips' };
+        imageCredit = { name: 'MoneyWithSense', username: 'moneywithsense' };
       }
     } else {
-      log('   ⚠️ Nessuna immagine fallback disponibile');
-      log('   💡 Aggiungi immagini in: public/images/fallback-fishing/');
+      log('   ⚠️ No fallback images available');
+      log('   💡 Add images to: public/images/fallback-finance/');
     }
   }
   

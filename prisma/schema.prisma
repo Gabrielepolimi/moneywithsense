@@ -14,26 +14,26 @@ model User {
   id                   String   @id @default(cuid())
   name                 String
   email                String   @unique
-  fishingTechniques    String   // JSON array di tecniche
+  financeTopics        String   // JSON array of topics (saving, investing, income, etc.)
   newsletterSubscribed Boolean  @default(true)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
-  // Relazioni
+  // Relations
   activities UserActivity[]
 
   @@map("users")
 }
 
-// Modello per tracking delle attività utente
+// Model for tracking user activities
 model UserActivity {
   id        String   @id @default(cuid())
   userId    String
   action    String   // newsletter_subscription, newsletter_unsubscription, etc.
-  details   String?  // Dettagli dell'azione
+  details   String?  // Action details
   createdAt DateTime @default(now())
 
-  // Relazione con User
+  // Relation with User
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_activities")

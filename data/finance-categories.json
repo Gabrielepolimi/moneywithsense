@@ -1,0 +1,99 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "lastUpdated": "2026-01-11",
+    "description": "Finance categories for MoneyWithSense content structure"
+  },
+  "categories": [
+    {
+      "id": "personal-finance",
+      "name": "Personal Finance",
+      "slug": "personal-finance",
+      "description": "Core concepts and foundations of managing your money effectively.",
+      "icon": "💼",
+      "color": "#1E6F5C",
+      "keywords": ["money management", "financial planning", "personal finance basics", "financial literacy"]
+    },
+    {
+      "id": "saving-money",
+      "name": "Saving Money",
+      "slug": "saving-money",
+      "description": "Practical strategies to reduce expenses and grow your savings.",
+      "icon": "💰",
+      "color": "#22C55E",
+      "keywords": ["saving tips", "emergency fund", "frugal living", "save money"]
+    },
+    {
+      "id": "budgeting",
+      "name": "Budgeting",
+      "slug": "budgeting",
+      "description": "Budget methods, templates, and tips that actually work.",
+      "icon": "📊",
+      "color": "#3B82F6",
+      "keywords": ["budget template", "50/30/20 rule", "zero-based budget", "budgeting apps"]
+    },
+    {
+      "id": "investing-basics",
+      "name": "Investing Basics",
+      "slug": "investing-basics",
+      "description": "Introduction to stocks, ETFs, retirement accounts, and building wealth.",
+      "icon": "📈",
+      "color": "#8B5CF6",
+      "keywords": ["stock market basics", "index funds", "retirement accounts", "beginner investing"]
+    },
+    {
+      "id": "passive-income",
+      "name": "Passive Income",
+      "slug": "passive-income",
+      "description": "Ways to earn money with minimal ongoing effort.",
+      "icon": "🔄",
+      "color": "#14B8A6",
+      "keywords": ["passive income ideas", "dividend investing", "rental income", "royalties"]
+    },
+    {
+      "id": "credit-debt",
+      "name": "Credit & Debt",
+      "slug": "credit-debt",
+      "description": "Managing credit scores, paying off debt, and using credit wisely.",
+      "icon": "💳",
+      "color": "#F59E0B",
+      "keywords": ["credit score", "debt payoff", "credit cards", "debt management"]
+    },
+    {
+      "id": "banking-cards",
+      "name": "Banking & Cards",
+      "slug": "banking-cards",
+      "description": "Choosing the right bank accounts, credit cards, and maximizing benefits.",
+      "icon": "🏦",
+      "color": "#06B6D4",
+      "keywords": ["high-yield savings", "credit card rewards", "bank accounts", "online banking"]
+    },
+    {
+      "id": "taxes-tips",
+      "name": "Taxes & Tips",
+      "slug": "taxes-tips",
+      "description": "Tax basics, deductions, and strategies for everyday people.",
+      "icon": "📋",
+      "color": "#EAB308",
+      "keywords": ["tax deductions", "tax filing", "tax tips", "tax planning"]
+    },
+    {
+      "id": "side-hustles",
+      "name": "Side Hustles",
+      "slug": "side-hustles",
+      "description": "Ideas and strategies for earning extra income outside your job.",
+      "icon": "🚀",
+      "color": "#EC4899",
+      "keywords": ["side hustle ideas", "freelancing", "gig economy", "extra income"]
+    },
+    {
+      "id": "money-psychology",
+      "name": "Money Psychology",
+      "slug": "money-psychology",
+      "description": "Understanding your relationship with money and building better habits.",
+      "icon": "🧠",
+      "color": "#A855F7",
+      "keywords": ["money mindset", "financial habits", "behavioral finance", "money anxiety"]
+    }
+  ]
+}
