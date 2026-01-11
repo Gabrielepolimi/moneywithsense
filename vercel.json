@@ -11,25 +11,10 @@
       "has": [
         {
           "type": "host",
-          "value": "www.fishandtips.it"
+          "value": "www.moneywithsense.com"
         }
       ],
-      "destination": "https://fishandtips.it/:path*",
-      "permanent": true
-    },
-    {
-      "source": "/articoli/montature-surfcasting-guida-completa-con-le-mie-configurazioni-vincenti",
-      "destination": "/articoli/montature-surfcasting",
-      "permanent": true
-    },
-    {
-      "source": "/categoria/spot",
-      "destination": "/categoria/spot-di-pesca",
-      "permanent": true
-    },
-    {
-      "source": "/categoria/tecniche",
-      "destination": "/categoria/tecniche-di-pesca",
+      "destination": "https://moneywithsense.com/:path*",
       "permanent": true
     }
   ],
@@ -88,5 +73,3 @@
     }
   ]
 }
-
-
