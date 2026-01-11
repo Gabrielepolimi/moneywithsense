@@ -2,11 +2,12 @@
 
 - [ ] Google Search Console verification (meta tag or DNS)
 - [ ] Bing Webmaster verification
+- [ ] GA4 measurement ID set and firing (NEXT_PUBLIC_GA_MEASUREMENT_ID)
+- [ ] GSC meta or DNS (NEXT_PUBLIC_GSC_VERIFICATION)
 - [ ] Canonical domain: https://moneywithsense.com (no www) + 301 redirect configured
 - [ ] Trailing slash policy consistent (trailingSlash: false)
 - [ ] `/sitemap.xml` reachable and current
 - [ ] `robots.txt` allows crawling; no accidental `noindex` in prod
-- [ ] GA4 measurement ID set and firing
 - [ ] Cookie/consent banner (if required for region)
 - [ ] Open Graph/Twitter metadata on key pages (home, article, category, pillar, tools)
 - [ ] CLS-safe ad placeholders (fixed-height containers)
