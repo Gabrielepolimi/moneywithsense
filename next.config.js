@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  trailingSlash: false,
   images: {
     remotePatterns: [
       {
@@ -14,7 +15,18 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   generateEtags: false,
-  
+
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.moneywithsense.com' }],
+        destination: 'https://moneywithsense.com/:path*',
+        permanent: true,
+      },
+    ];
+  },
+
   // Headers per sicurezza e performance
   async headers() {
     return [

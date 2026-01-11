@@ -11,47 +11,54 @@ const nunito = Nunito({
   display: 'swap',
 })
 
+const siteUrl = 'https://moneywithsense.com'
+const siteName = 'Money With Sense'
+const gscVerification = process.env.NEXT_PUBLIC_GSC_VERIFICATION
+const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
+
 export const metadata: Metadata = {
-  title: 'FishandTips - Consigli di Pesca Esperti e Personalizzati',
-  description: 'Scopri le migliori tecniche di pesca, consigli esperti e contenuti personalizzati. Blog di pesca con newsletter personalizzata per spinning, bolognese, feeder e molto altro.',
-  authors: [{ name: 'FishandTips Team' }],
+  metadataBase: new URL(siteUrl),
+  title: `${siteName} - Smart Personal Finance Made Simple`,
+  description: 'Actionable money tips: saving, budgeting, investing basics, side hustles, and debt management. Clear, practical guidance for a global audience.',
+  authors: [{ name: `${siteName} Team` }],
   manifest: '/manifest.webmanifest',
-  keywords: 'pesca,tecniche di pesca,blog pesca,consigli pesca,spinning,bolognese,feeder,pesca sportiva,attrezzatura pesca,esche pesca,spot pesca',
-  creator: 'FishandTips',
-  publisher: 'FishandTips',
+  keywords: 'personal finance,saving money,investing basics,passive income,budgeting,credit,debt,banking,cards,taxes,finance tips,side hustles,money psychology',
+  creator: siteName,
+  publisher: siteName,
   robots: 'index, follow',
-  category: 'Sports',
-  classification: 'Fishing Blog',
+  category: 'Finance',
+  classification: 'Personal Finance Blog',
+  alternates: { canonical: siteUrl },
   formatDetection: {
     telephone: false,
     address: false,
     email: false,
   },
   verification: {
-    google: 'i4LMv2IA4qtDXwenLVOI0BHEDsz0pVRjD_2wd',
+    google: gscVerification || undefined,
   },
   openGraph: {
-    title: 'FishandTips - Consigli di Pesca Esperti e Personalizzati',
-    description: 'Scopri le migliori tecniche di pesca, consigli esperti e contenuti personalizzati per la tua passione. Blog di pesca con newsletter personalizzata.',
-    url: 'https://fishandtips.it',
-    siteName: 'FishandTips',
-    locale: 'it_IT',
+    title: `${siteName} - Smart Personal Finance Made Simple`,
+    description: 'Straightforward money advice: save, budget, invest, earn more.',
+    url: siteUrl,
+    siteName,
+    locale: 'en_US',
     images: [
       {
-        url: 'https://fishandtips.it/og-image.jpg',
+        url: `${siteUrl}/og-image.jpg`,
         width: 1200,
         height: 630,
-        alt: 'FishandTips - Blog di pesca con consigli esperti',
+        alt: `${siteName} - Personal finance tips`,
       },
     ],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    creator: '@fishandtips',
-    title: 'FishandTips - Consigli di Pesca Esperti e Personalizzati',
-    description: 'Scopri le migliori tecniche di pesca, consigli esperti e contenuti personalizzati per la tua passione.',
-    images: ['https://fishandtips.it/og-image.jpg'],
+    creator: '@moneywithsense',
+    title: `${siteName} - Smart Personal Finance Made Simple`,
+    description: 'Actionable tips to save, budget, invest, and build income.',
+    images: [`${siteUrl}/og-image.jpg`],
   },
 }
 
@@ -62,12 +69,12 @@ export default function RootLayout({
 }) {
   
   return (
-    <html lang="it" className={nunito.variable}>
+    <html lang="en" className={nunito.variable}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://cdn.sanity.io" />
-        <link rel="alternate" type="application/rss+xml" title="FishandTips RSS Feed" href="/feed.xml" />
+        <link rel="alternate" type="application/rss+xml" title="Money With Sense RSS Feed" href="/feed.xml" />
         
         {/* Favicon */}
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
@@ -76,23 +83,29 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/favicon.png" />
         
         {/* Google Search Console Verification */}
-        <meta name="google-site-verification" content="i4LMv2IA4qtDXwenLVOI0BHEDsz0pVRjD_2wd" />
+        {gscVerification ? (
+          <meta name="google-site-verification" content={gscVerification} />
+        ) : null}
         
-        {/* Google Analytics */}
-        <script
-          async
-          src="https://www.googletagmanager.com/gtag/js?id=G-HDF7MPV8ZB"
-        />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'G-HDF7MPV8ZB');
-            `,
-          }}
-        />
+        {/* Google Analytics (GA4) */}
+        {gaMeasurementId ? (
+          <>
+            <script
+              async
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}
+            />
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `
+                  window.dataLayer = window.dataLayer || [];
+                  function gtag(){dataLayer.push(arguments);}
+                  gtag('js', new Date());
+                  gtag('config', '${gaMeasurementId}');
+                `,
+              }}
+            />
+          </>
+        ) : null}
         
         {/* JSON-LD Schema */}
         <script
@@ -101,20 +114,20 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebSite",
-              "name": "FishandTips",
-              "url": "https://fishandtips.it",
-              "description": "Blog di pesca con consigli esperti e contenuti personalizzati",
+              "name": siteName,
+              "url": siteUrl,
+              "description": "Personal finance guidance that is clear, practical, and global.",
               "publisher": {
                 "@type": "Organization",
-                "name": "FishandTips",
+                "name": siteName,
                 "logo": {
                   "@type": "ImageObject",
-                  "url": "https://fishandtips.it/images/icononly.png"
+                  "url": `${siteUrl}/images/icononly.png`
                 }
               },
               "potentialAction": {
                 "@type": "SearchAction",
-                "target": "https://fishandtips.it/articoli?search={search_term_string}",
+                "target": `${siteUrl}/articoli?search={search_term_string}`,
                 "query-input": "required name=search_term_string"
               }
             })

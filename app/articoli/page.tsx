@@ -2,64 +2,39 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 
+const siteUrl = 'https://moneywithsense.com';
+
 export const metadata: Metadata = {
-  title: 'Articoli di Pesca - Consigli, Tecniche e Guide | FishandTips',
-  description: 'Scopri tutti gli articoli di pesca: tecniche, attrezzature, spot e consigli. Guide complete per spinning, bolognese, feeder e molto altro.',
-  keywords: 'articoli pesca, tecniche di pesca, guide pesca, spinning, bolognese, feeder, attrezzature pesca, spot pesca, consigli pesca',
+  title: 'Articles | Money With Sense',
+  description: 'Clear, actionable personal finance articles: saving, budgeting, investing basics, side hustles, credit, and more.',
+  keywords: 'personal finance articles,saving money,investing basics,budgeting,side hustles,credit,debt',
   openGraph: {
-    title: 'Articoli di Pesca - Consigli, Tecniche e Guide | FishandTips',
-    description: 'Scopri tutti gli articoli di pesca: tecniche, attrezzature, spot e consigli. Guide complete per spinning, bolognese, feeder e molto altro.',
+    title: 'Articles | Money With Sense',
+    description: 'Actionable personal finance guides for a global audience.',
     type: 'website',
-    url: 'https://fishandtips.it/articoli',
-    images: [
-      {
-        url: 'https://fishandtips.it/images/articoli.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'Articoli di pesca FishandTips',
-      },
-    ],
+    url: `${siteUrl}/articoli`,
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Articoli di Pesca - Consigli, Tecniche e Guide | FishandTips',
-    description: 'Scopri tutti gli articoli di pesca: tecniche, attrezzature, spot e consigli.',
-    images: ['https://fishandtips.it/images/articoli.jpg'],
+    title: 'Articles | Money With Sense',
+    description: 'Actionable personal finance guides for a global audience.',
   },
   alternates: {
-    canonical: 'https://fishandtips.it/articoli',
+    canonical: `${siteUrl}/articoli`,
   },
 };
 
 const categories = [
-  { 
-    title: 'Tecniche di Pesca', 
-    slug: 'tecniche-di-pesca', 
-    image: '/images/tecniche.jpg',
-    description: 'Spinning, bolognese, feeder e molto altro',
-    count: '25+ guide'
-  },
-  { 
-    title: 'Attrezzature', 
-    slug: 'attrezzature', 
-    image: '/images/attrezzature.jpg',
-    description: 'Canne, mulinelli, esche e accessori',
-    count: '30+ recensioni'
-  },
-  { 
-    title: 'Spot di Pesca', 
-    slug: 'spot-di-pesca', 
-    image: '/images/spot.jpg',
-    description: 'I migliori luoghi in Italia',
-    count: '20+ spot'
-  },
-  { 
-    title: 'Consigli', 
-    slug: 'consigli', 
-    image: '/images/consigligenerali.jpg',
-    description: 'Trucchi e segreti dei pro',
-    count: '40+ tips'
-  }
+  { title: 'Personal Finance', slug: 'personal-finance', color: 'from-emerald-100 to-emerald-200', description: 'Money foundations and smart habits', count: '20+ guides' },
+  { title: 'Saving Money', slug: 'saving-money', color: 'from-blue-100 to-blue-200', description: 'Cut costs, build an emergency fund', count: '20+ guides' },
+  { title: 'Investing Basics', slug: 'investing-basics', color: 'from-indigo-100 to-indigo-200', description: 'Start investing with confidence', count: '15+ guides' },
+  { title: 'Passive Income', slug: 'passive-income', color: 'from-orange-100 to-orange-200', description: 'Earn while you sleep, responsibly', count: '15+ guides' },
+  { title: 'Budgeting', slug: 'budgeting', color: 'from-teal-100 to-teal-200', description: 'Budgets that actually stick', count: '20+ guides' },
+  { title: 'Credit & Debt', slug: 'credit-and-debt', color: 'from-amber-100 to-amber-200', description: 'Use credit wisely, pay down debt', count: '20+ guides' },
+  { title: 'Banking & Cards', slug: 'banking-and-cards', color: 'from-violet-100 to-violet-200', description: 'Accounts, cards, fees, and perks', count: '10+ guides' },
+  { title: 'Taxes & Finance Tips', slug: 'taxes-and-finance-tips', color: 'from-cyan-100 to-cyan-200', description: 'Everyday tax basics and quick wins', count: '10+ guides' },
+  { title: 'Side Hustles', slug: 'side-hustles', color: 'from-rose-100 to-rose-200', description: 'Earn extra with low-barrier ideas', count: '15+ guides' },
+  { title: 'Money Psychology', slug: 'money-psychology', color: 'from-slate-100 to-slate-200', description: 'Mindset, habits, behavior change', count: '10+ guides' },
 ];
 
 export default function ArticoliPage() {
@@ -74,16 +49,15 @@ export default function ArticoliPage() {
               Home
             </Link>
             <span className="text-gray-300">/</span>
-            <span className="text-gray-900 font-medium">Articoli</span>
+            <span className="text-gray-900 font-medium">Articles</span>
           </nav>
 
           <div className="max-w-3xl">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-              Articoli e guide
+              Articles & guides
             </h1>
             <p className="text-xl text-gray-600 leading-relaxed">
-              Tecniche, consigli e segreti per migliorare le tue catture. 
-              Scritti da pescatori, per pescatori.
+              Clear, actionable personal finance content. Save, budget, invest, and earn more with practical advice.
             </p>
           </div>
         </div>
@@ -93,7 +67,7 @@ export default function ArticoliPage() {
       <section className="py-12 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-8">
-            Esplora per categoria
+            Browse by category
           </h2>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -104,14 +78,10 @@ export default function ArticoliPage() {
                 className="group"
               >
                 <article className="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-gray-200 hover:shadow-lg transition-all duration-300">
-                  {/* Image */}
-                  <div className="relative aspect-[4/3] overflow-hidden">
-                    <Image
-                      src={category.image}
-                      alt={category.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
+                  <div className={`relative aspect-[4/3] overflow-hidden bg-gradient-to-br ${category.color}`}>
+                    <div className="absolute inset-0 flex items-center justify-center text-2xl font-bold text-gray-700/70">
+                      {category.title}
+                    </div>
                   </div>
                   
                   {/* Content */}
@@ -154,7 +124,7 @@ export default function ArticoliPage() {
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Guide dettagliate</h3>
               <p className="text-sm text-gray-500">
-                Articoli completi con tecniche passo passo, ideali per principianti e esperti.
+                Step-by-step playbooks for saving, budgeting, and investing basics.
               </p>
             </div>
             
@@ -166,7 +136,7 @@ export default function ArticoliPage() {
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Consigli pratici</h3>
               <p className="text-sm text-gray-500">
-                Trucchi e segreti dei professionisti che puoi applicare subito.
+                Quick wins, checklists, and examples you can apply immediately.
               </p>
             </div>
             
@@ -178,7 +148,7 @@ export default function ArticoliPage() {
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Aggiornamenti continui</h3>
               <p className="text-sm text-gray-500">
-                Nuovi articoli ogni settimana su tecniche, spot e attrezzature.
+                Fresh content weekly; refreshed when rates, rules, or products change.
               </p>
             </div>
           </div>
@@ -189,17 +159,16 @@ export default function ArticoliPage() {
       <section className="py-16 bg-gray-900">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
-            Ricevi i nuovi articoli nella tua inbox
+            Get new articles in your inbox
           </h2>
           <p className="text-gray-400 mb-8 max-w-xl mx-auto">
-            Iscriviti alla newsletter e ricevi contenuti personalizzati 
-            basati sulle tue tecniche preferite. Zero spam, solo valore.
+            Subscribe to the newsletter for practical money tips and new guides. Zero spam—just value.
           </p>
           <Link 
-            href="/registrazione"
+            href="/newsletter"
             className="inline-flex items-center px-8 py-4 bg-white text-gray-900 font-medium rounded-full hover:bg-gray-100 transition-colors"
           >
-            Iscriviti gratis
+            Subscribe free
             <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>

@@ -6,13 +6,13 @@ import Image from 'next/image';
 
 const navLinks = [
   { href: '/', label: 'Home' },
-  { href: '/articoli', label: 'Articoli' },
-  { href: '/tecniche', label: 'Tecniche' },
-  { href: '/pesci-mediterraneo', label: 'Pesci' },
-  { href: '/spot-pesca-italia', label: 'Spot' },
-  { href: '/calendario-pesca', label: 'Calendario' },
-  { href: '/trova-attrezzatura', label: '🎯 Quiz' },
-  { href: '/migliori-pesca-2026', label: '🏆 Migliori 2026', featured: true },
+  { href: '/articoli', label: 'Articles' },
+  { href: '/categoria', label: 'Categories' },
+  { href: '/pillars', label: 'Pillars' },
+  { href: '/tools', label: 'Tools' },
+  { href: '/about', label: 'About' },
+  { href: '/editorial-policy', label: 'Editorial Policy' },
+  { href: '/sources', label: 'Sources' },
 ];
 
 export default function Navbar() {
@@ -26,14 +26,14 @@ export default function Navbar() {
           <Link href="/" className="flex items-center gap-2">
             <Image
               src="/images/icononly.png"
-              alt="FishandTips"
+              alt="Money With Sense"
               width={40}
               height={40}
               className="h-10 w-10"
               priority
             />
             <span className="font-bold text-xl text-gray-900 hidden sm:block">
-              FishandTips
+              Money With Sense
             </span>
           </Link>
 
@@ -58,10 +58,10 @@ export default function Navbar() {
           <div className="flex items-center gap-3">
             {/* Newsletter Button */}
             <Link 
-              href="/registrazione"
+              href="/newsletter"
               className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors"
             >
-              Iscriviti
+              Subscribe
             </Link>
 
             {/* Mobile menu button */}
@@ -106,11 +106,11 @@ export default function Navbar() {
             {/* Mobile CTA */}
             <div className="pt-4 border-t border-gray-100 mt-4">
               <Link
-                href="/registrazione"
+                href="/newsletter"
                 onClick={() => setIsMenuOpen(false)}
                 className="block w-full text-center px-4 py-3 bg-gray-900 text-white font-medium rounded-xl hover:bg-gray-800 transition-colors"
               >
-                Iscriviti alla Newsletter
+                Subscribe to the Newsletter
               </Link>
             </div>
           </div>

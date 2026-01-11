@@ -1,5 +1,7 @@
 import { MetadataRoute } from 'next';
 
+const siteUrl = 'https://moneywithsense.com';
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
@@ -11,13 +13,13 @@ export default function robots(): MetadataRoute.Robots {
           '/admin/',
           '/dashboard/',
           '/_next/',
-          '/newsletter/disiscrizione',
+          '/newsletter/unsubscribe',
           '/*?search=',
           '/*&search=',
         ],
       },
     ],
-    sitemap: 'https://fishandtips.it/sitemap.xml',
-    host: 'https://fishandtips.it',
+    sitemap: `${siteUrl}/sitemap.xml`,
+    host: siteUrl,
   };
 }
