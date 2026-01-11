@@ -48,12 +48,12 @@ const sources = {
     {
       name: 'Investor.gov',
       url: 'https://www.investor.gov',
-      description: 'SEC's investor education resources.',
+      description: "SEC's investor education resources.",
     },
     {
       name: 'MyMoney.gov',
       url: 'https://www.mymoney.gov',
-      description: 'U.S. government's financial literacy resource.',
+      description: "U.S. government's financial literacy resource.",
     },
     {
       name: 'Federal Deposit Insurance Corporation (FDIC)',

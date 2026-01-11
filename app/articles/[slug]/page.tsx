@@ -2,7 +2,8 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { PortableText } from '@portabletext/react';
+import { PortableText, PortableTextComponents } from '@portabletext/react';
+import type { PortableTextBlock } from '@portabletext/types';
 import { sanityClient } from '../../../sanityClient';
 import RelatedArticlesCarousel from '../../../components/articles/RelatedArticlesCarousel';
 import LikeButton from '../../../components/articles/LikeButton';
@@ -15,7 +16,7 @@ interface Post {
   title: string;
   slug: string;
   excerpt: string;
-  body: unknown[];
+  body: PortableTextBlock[];
   publishedAt: string;
   mainImage?: string;
   author: string;
