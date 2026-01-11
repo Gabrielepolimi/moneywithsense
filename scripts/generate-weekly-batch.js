@@ -1,14 +1,14 @@
 /**
- * 🗓️ FishandTips Weekly Batch Generator
+ * 🗓️ MoneyWithSense Weekly Batch Generator
  * 
- * Genera batch di articoli settimanali automaticamente
- * Con sistema anti-duplicati e retry automatico
+ * Generates weekly article batches automatically
+ * With anti-duplicate system and automatic retry
  * 
- * Uso:
- *   node scripts/generate-weekly-batch.js                    # Genera 3 articoli automatici
- *   node scripts/generate-weekly-batch.js --count 5          # Genera 5 articoli
- *   node scripts/generate-weekly-batch.js --file keywords.json # Usa file keyword
- *   node scripts/generate-weekly-batch.js --dry-run          # Simula senza creare
+ * Usage:
+ *   node scripts/generate-weekly-batch.js                    # Generate 3 automatic articles
+ *   node scripts/generate-weekly-batch.js --count 5          # Generate 5 articles
+ *   node scripts/generate-weekly-batch.js --file keywords.json # Use custom keyword file
+ *   node scripts/generate-weekly-batch.js --dry-run          # Simulate without creating
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -23,185 +23,170 @@ import { checkSemanticDuplicate } from './semantic-duplicate-checker.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ===== CONFIGURAZIONE =====
+// ===== CONFIGURATION =====
 const CONFIG = {
   defaultArticleCount: 3,
-  pauseBetweenArticles: 20000, // 20 secondi (evita rate limit 429)
-  pauseBetweenDuplicateChecks: 8000, // 8 secondi tra check duplicati
+  pauseBetweenArticles: 20000, // 20 seconds (avoid rate limit 429)
+  pauseBetweenDuplicateChecks: 8000, // 8 seconds between duplicate checks
   logFile: path.join(__dirname, '..', 'data', 'generation-log.json'),
-  skipDuplicateCheck: false, // Se true, salta il pre-check dei duplicati
-  maxRetryAttempts: 3 // Quante volte provare a trovare keyword non duplicate
+  skipDuplicateCheck: false, // If true, skip pre-check for duplicates
+  maxRetryAttempts: 3 // How many times to try finding non-duplicate keywords
 };
 
 const execFileAsync = promisify(execFile);
 
-// ===== KEYWORD POOL ESTESO PER STAGIONE =====
+// ===== SEASONAL KEYWORD POOL (FINANCE) =====
 function getSeasonalKeywords() {
   const month = new Date().getMonth();
   
-  // Pool ESTESO di keyword stagionali
+  // Extended pool of seasonal finance keywords
   const seasonalKeywords = {
-    // Inverno (Dic, Gen, Feb)
+    // Winter (Dec, Jan, Feb)
     winter: [
-      { keyword: "pesca alla spigola in inverno tecniche e consigli", category: "tecniche-di-pesca" },
-      { keyword: "migliori esche per pesca invernale mare", category: "attrezzature" },
-      { keyword: "surfcasting invernale come pescare col freddo", category: "consigli" },
-      { keyword: "pesca al calamaro di notte consigli esperti", category: "tecniche-di-pesca" },
-      { keyword: "abbigliamento pesca invernale cosa indossare", category: "attrezzature" },
-      { keyword: "pesca alla seppia da riva in inverno", category: "tecniche-di-pesca" },
-      { keyword: "migliori totanare per calamaro inverno", category: "attrezzature" },
-      { keyword: "come pescare le mormore in inverno", category: "tecniche-di-pesca" },
-      { keyword: "pesca al sarago in inverno dalla scogliera", category: "tecniche-di-pesca" },
-      { keyword: "eging invernale seppie tecniche avanzate", category: "tecniche-di-pesca" },
-      { keyword: "pesca notturna invernale cosa sapere", category: "consigli" },
-      { keyword: "montature invernali surfcasting", category: "attrezzature" },
-      { keyword: "come trovare le orate in inverno", category: "consigli" },
-      { keyword: "bolognese invernale in porto", category: "tecniche-di-pesca" },
-      { keyword: "pesca alle occhiate inverno mediterraneo", category: "tecniche-di-pesca" },
-      { keyword: "guanti pesca invernale quali scegliere", category: "attrezzature" },
-      { keyword: "esche vive inverno come conservarle", category: "consigli" },
-      { keyword: "spinning invernale dalla scogliera", category: "tecniche-di-pesca" },
-      { keyword: "pesca ai polpi in inverno", category: "tecniche-di-pesca" },
-      { keyword: "condizioni meteo ideali pesca invernale", category: "consigli" },
-      { keyword: "rock fishing invernale tecniche", category: "tecniche-di-pesca" },
-      { keyword: "terminali fluorocarbon pesca invernale", category: "attrezzature" },
-      { keyword: "pesca al cefalo inverno tecniche", category: "tecniche-di-pesca" },
-      { keyword: "lampade frontali pesca notturna", category: "attrezzature" },
-      { keyword: "orari migliori pesca invernale mare", category: "consigli" }
+      { keyword: "new year financial resolutions that actually work", category: "money-psychology" },
+      { keyword: "how to recover from holiday overspending", category: "budgeting" },
+      { keyword: "tax preparation checklist for filing season", category: "taxes-tips" },
+      { keyword: "best high-yield savings accounts January 2026", category: "banking-cards" },
+      { keyword: "winter side hustles to boost income", category: "side-hustles" },
+      { keyword: "how to stick to a budget after the holidays", category: "budgeting" },
+      { keyword: "IRA contribution deadline tips", category: "investing-basics" },
+      { keyword: "how to pay off holiday credit card debt fast", category: "credit-debt" },
+      { keyword: "frugal winter activities that cost nothing", category: "saving-money" },
+      { keyword: "annual financial checkup guide", category: "budgeting" },
+      { keyword: "how to negotiate lower bills in winter", category: "saving-money" },
+      { keyword: "best cashback credit cards for groceries", category: "banking-cards" },
+      { keyword: "emergency fund building strategies for beginners", category: "saving-money" },
+      { keyword: "how to reduce heating costs this winter", category: "saving-money" },
+      { keyword: "401k contribution limits explained", category: "investing-basics" },
+      { keyword: "credit score improvement tips for new year", category: "credit-debt" },
+      { keyword: "how to create a zero-based budget", category: "budgeting" },
+      { keyword: "best money apps to download in 2026", category: "banking-cards" },
+      { keyword: "tax deductions you might be missing", category: "taxes-tips" },
+      { keyword: "how to automate your savings effectively", category: "saving-money" }
     ],
-    // Primavera (Mar, Apr, Mag)
+    // Spring (Mar, Apr, May)
     spring: [
-      { keyword: "pesca primaverile tecniche e specie target", category: "tecniche-di-pesca" },
-      { keyword: "migliori artificiali per spigola primavera", category: "attrezzature" },
-      { keyword: "surfcasting primaverile orata e mormore", category: "tecniche-di-pesca" },
-      { keyword: "spinning dalla scogliera in primavera", category: "tecniche-di-pesca" },
-      { keyword: "esche naturali primavera quali usare", category: "consigli" },
-      { keyword: "pesca alla seppia in primavera tecniche", category: "tecniche-di-pesca" },
-      { keyword: "traina costiera primaverile dentice", category: "tecniche-di-pesca" },
-      { keyword: "pesca al sarago fasciato primavera", category: "tecniche-di-pesca" },
-      { keyword: "come pescare le lecce stella primavera", category: "tecniche-di-pesca" },
-      { keyword: "bolognese primaverile sparidi", category: "tecniche-di-pesca" },
-      { keyword: "eging seppie grandi primavera", category: "tecniche-di-pesca" },
-      { keyword: "pesca a fondo primavera dalla spiaggia", category: "tecniche-di-pesca" },
-      { keyword: "migliori spot pesca primaverile", category: "consigli" },
-      { keyword: "attrezzatura light spinning primavera", category: "attrezzature" },
-      { keyword: "pesca al barracuda mediterraneo primavera", category: "tecniche-di-pesca" },
-      { keyword: "pastura per orate primavera ricetta", category: "consigli" },
-      { keyword: "pesca alle aguglie primavera", category: "tecniche-di-pesca" },
-      { keyword: "montatura scorrevole primavera orate", category: "attrezzature" },
-      { keyword: "come pescare i saraghi a primavera", category: "tecniche-di-pesca" },
-      { keyword: "pesca al sugarello primavera", category: "tecniche-di-pesca" },
-      { keyword: "artificiali top water primavera", category: "attrezzature" },
-      { keyword: "pesca alla trota lago primavera", category: "tecniche-di-pesca" },
-      { keyword: "terminali light rock fishing", category: "attrezzature" },
-      { keyword: "innesco americano primavera surfcasting", category: "consigli" },
-      { keyword: "pesca notturna primavera spigola", category: "tecniche-di-pesca" }
+      { keyword: "spring cleaning your finances guide", category: "budgeting" },
+      { keyword: "last minute tax filing tips", category: "taxes-tips" },
+      { keyword: "how to use your tax refund wisely", category: "saving-money" },
+      { keyword: "best travel credit cards for summer vacation", category: "banking-cards" },
+      { keyword: "side hustles perfect for spring and summer", category: "side-hustles" },
+      { keyword: "how to budget for a summer vacation", category: "budgeting" },
+      { keyword: "graduate student loan repayment strategies", category: "credit-debt" },
+      { keyword: "investing basics for college graduates", category: "investing-basics" },
+      { keyword: "how to start a garden to save on groceries", category: "saving-money" },
+      { keyword: "best time to buy a car money tips", category: "saving-money" },
+      { keyword: "how to negotiate salary at a new job", category: "side-hustles" },
+      { keyword: "Roth IRA vs Traditional IRA comparison", category: "investing-basics" },
+      { keyword: "spring cleaning subscriptions you dont need", category: "saving-money" },
+      { keyword: "how to build credit from scratch", category: "credit-debt" },
+      { keyword: "best balance transfer credit cards", category: "banking-cards" },
+      { keyword: "freelance tax tips for gig workers", category: "taxes-tips" },
+      { keyword: "how to save money on wedding costs", category: "saving-money" },
+      { keyword: "index funds for beginners guide", category: "investing-basics" },
+      { keyword: "debt snowball vs avalanche method", category: "credit-debt" },
+      { keyword: "how to make money with a side hustle", category: "side-hustles" }
     ],
-    // Estate (Giu, Lug, Ago)
+    // Summer (Jun, Jul, Aug)
     summer: [
-      { keyword: "pesca estiva orari migliori e tecniche", category: "consigli" },
-      { keyword: "spinning alla lampuga in estate tecniche", category: "tecniche-di-pesca" },
-      { keyword: "pesca al serra tecniche e artificiali", category: "tecniche-di-pesca" },
-      { keyword: "traina alla ricciola estate mediterraneo", category: "tecniche-di-pesca" },
-      { keyword: "pesca notturna estate consigli sicurezza", category: "consigli" },
-      { keyword: "migliori popper per spinning estate", category: "attrezzature" },
-      { keyword: "vertical jigging estate ricciola e dentice", category: "tecniche-di-pesca" },
-      { keyword: "pesca al tonno alletterato estate", category: "tecniche-di-pesca" },
-      { keyword: "come pescare la palamita in estate", category: "tecniche-di-pesca" },
-      { keyword: "pesca al leccia amia estate", category: "tecniche-di-pesca" },
-      { keyword: "shore jigging estate tecniche", category: "tecniche-di-pesca" },
-      { keyword: "pesca dalla barca estate consigli", category: "consigli" },
-      { keyword: "migliori ore pesca estiva mare", category: "consigli" },
-      { keyword: "pesca al pesce pappagallo estate", category: "tecniche-di-pesca" },
-      { keyword: "artificiali metallici estate quali usare", category: "attrezzature" },
-      { keyword: "pesca al tombarello tecniche", category: "tecniche-di-pesca" },
-      { keyword: "come affrontare il caldo in pesca", category: "consigli" },
-      { keyword: "pesca al calamaro estate notte", category: "tecniche-di-pesca" },
-      { keyword: "traina col vivo estate ricciole", category: "tecniche-di-pesca" },
-      { keyword: "pesca al bonito tecniche e attrezzatura", category: "tecniche-di-pesca" },
-      { keyword: "snorkeling fishing estate", category: "tecniche-di-pesca" },
-      { keyword: "pesca alle occhiate estate bolognese", category: "tecniche-di-pesca" },
-      { keyword: "artificiali per serra estate", category: "attrezzature" },
-      { keyword: "pesca alba estate migliori spot", category: "consigli" },
-      { keyword: "attrezzatura pesca estate cosa portare", category: "attrezzature" }
+      { keyword: "how to save money on summer vacation", category: "saving-money" },
+      { keyword: "best summer side hustles for extra income", category: "side-hustles" },
+      { keyword: "back to school budgeting tips for parents", category: "budgeting" },
+      { keyword: "how to save on air conditioning costs", category: "saving-money" },
+      { keyword: "mid-year financial checkup guide", category: "budgeting" },
+      { keyword: "best no-fee checking accounts", category: "banking-cards" },
+      { keyword: "how to teach kids about money this summer", category: "money-psychology" },
+      { keyword: "investing during market volatility guide", category: "investing-basics" },
+      { keyword: "how to save on back to school shopping", category: "saving-money" },
+      { keyword: "summer job tax tips for teenagers", category: "taxes-tips" },
+      { keyword: "how to start investing with 100 dollars", category: "investing-basics" },
+      { keyword: "credit card travel rewards maximizing tips", category: "banking-cards" },
+      { keyword: "how to budget for college students", category: "budgeting" },
+      { keyword: "passive income ideas for summer", category: "side-hustles" },
+      { keyword: "how to improve credit score fast", category: "credit-debt" },
+      { keyword: "best high-yield savings accounts summer 2026", category: "banking-cards" },
+      { keyword: "how to save for a house down payment", category: "saving-money" },
+      { keyword: "ETFs vs mutual funds for beginners", category: "investing-basics" },
+      { keyword: "how to pay off student loans faster", category: "credit-debt" },
+      { keyword: "work from home jobs that pay well", category: "side-hustles" }
     ],
-    // Autunno (Set, Ott, Nov)
+    // Autumn (Sep, Oct, Nov)
     autumn: [
-      { keyword: "pesca autunnale specie e tecniche migliori", category: "tecniche-di-pesca" },
-      { keyword: "surfcasting autunno spigola e orata", category: "tecniche-di-pesca" },
-      { keyword: "eging autunnale seppie e calamari", category: "tecniche-di-pesca" },
-      { keyword: "migliori esche autunno surfcasting", category: "attrezzature" },
-      { keyword: "pesca alla spigola autunno artificiali", category: "tecniche-di-pesca" },
-      { keyword: "spinning autunnale dalla scogliera", category: "tecniche-di-pesca" },
-      { keyword: "pesca al dentice autunno bolentino", category: "tecniche-di-pesca" },
-      { keyword: "come pescare le orate in autunno", category: "tecniche-di-pesca" },
-      { keyword: "pesca al calamaro autunno tecniche", category: "tecniche-di-pesca" },
-      { keyword: "migliori artificiali autunno spinning", category: "attrezzature" },
-      { keyword: "pesca al sarago autunno scogliera", category: "tecniche-di-pesca" },
-      { keyword: "esche arenicola autunno surfcasting", category: "consigli" },
-      { keyword: "pesca alla seppia autunno da riva", category: "tecniche-di-pesca" },
-      { keyword: "bolognese autunnale porto e scogliera", category: "tecniche-di-pesca" },
-      { keyword: "montature autunno pesca fondo", category: "attrezzature" },
-      { keyword: "pesca al luccio autunno lago", category: "tecniche-di-pesca" },
-      { keyword: "condizioni meteo pesca autunnale", category: "consigli" },
-      { keyword: "pesca notturna autunno calamari", category: "tecniche-di-pesca" },
-      { keyword: "come pescare con vento forte", category: "consigli" },
-      { keyword: "pesca alla trota torrente autunno", category: "tecniche-di-pesca" },
-      { keyword: "artificiali sinking autunno", category: "attrezzature" },
-      { keyword: "pesca al cefalo autunno tecniche", category: "tecniche-di-pesca" },
-      { keyword: "totanare fosforescenti autunno", category: "attrezzature" },
-      { keyword: "pesca al black bass autunno", category: "tecniche-di-pesca" },
-      { keyword: "orari migliori pesca autunnale mare", category: "consigli" }
+      { keyword: "how to prepare finances for holiday season", category: "budgeting" },
+      { keyword: "black friday shopping budget tips", category: "saving-money" },
+      { keyword: "year-end tax planning strategies", category: "taxes-tips" },
+      { keyword: "how to create a holiday spending budget", category: "budgeting" },
+      { keyword: "best credit cards for holiday shopping", category: "banking-cards" },
+      { keyword: "how to make money before the holidays", category: "side-hustles" },
+      { keyword: "open enrollment health insurance money tips", category: "saving-money" },
+      { keyword: "401k year-end contribution strategies", category: "investing-basics" },
+      { keyword: "how to avoid holiday debt traps", category: "credit-debt" },
+      { keyword: "gift giving on a budget ideas", category: "saving-money" },
+      { keyword: "how to negotiate holiday sales prices", category: "saving-money" },
+      { keyword: "best cash back apps for holiday shopping", category: "banking-cards" },
+      { keyword: "charitable giving tax deductions guide", category: "taxes-tips" },
+      { keyword: "how to budget for multiple holidays", category: "budgeting" },
+      { keyword: "side hustles for the holiday season", category: "side-hustles" },
+      { keyword: "how to invest your year-end bonus", category: "investing-basics" },
+      { keyword: "credit card debt payoff before new year", category: "credit-debt" },
+      { keyword: "money mindset shift for holiday spending", category: "money-psychology" },
+      { keyword: "how to save on heating bills this fall", category: "saving-money" },
+      { keyword: "financial goals to set before year end", category: "money-psychology" }
     ]
   };
   
-  // Determina la stagione
+  // Determine current season
   let season;
   if (month >= 2 && month <= 4) season = 'spring';
   else if (month >= 5 && month <= 7) season = 'summer';
   else if (month >= 8 && month <= 10) season = 'autumn';
   else season = 'winter';
   
-  console.log(`📅 Stagione corrente: ${season}`);
+  console.log(`📅 Current season: ${season}`);
   
   return { keywords: seasonalKeywords[season], season };
 }
 
-// ===== KEYWORD EVERGREEN ESTESE =====
+// ===== EVERGREEN KEYWORDS (FINANCE) =====
 const EVERGREEN_KEYWORDS = [
-  { keyword: "come scegliere la canna da pesca guida completa", category: "attrezzature" },
-  { keyword: "migliori mulinelli da spinning guida acquisto", category: "attrezzature" },
-  { keyword: "nodi da pesca essenziali tutorial illustrato", category: "consigli" },
-  { keyword: "licenza pesca in mare come ottenerla Italia", category: "consigli" },
-  { keyword: "montatura surfcasting classica come fare", category: "tecniche-di-pesca" },
-  { keyword: "montatura bolognese scorrevole tutorial", category: "tecniche-di-pesca" },
-  { keyword: "come conservare le esche vive correttamente", category: "consigli" },
-  { keyword: "pesca dalla scogliera tecniche base principianti", category: "tecniche-di-pesca" },
-  { keyword: "come leggere il mare per pescare meglio", category: "consigli" },
-  { keyword: "attrezzatura pesca per principianti cosa comprare", category: "attrezzature" },
-  { keyword: "differenza trecciato e nylon quando usarli", category: "consigli" },
-  { keyword: "come regolare la frizione del mulinello", category: "consigli" },
-  { keyword: "manutenzione canna da pesca consigli", category: "consigli" },
-  { keyword: "errori comuni pesca principianti evitare", category: "consigli" },
-  { keyword: "come scegliere gli ami da pesca", category: "attrezzature" },
-  { keyword: "pesca catch and release come fare", category: "consigli" },
-  { keyword: "come fotografare le catture pesca", category: "consigli" },
-  { keyword: "sicurezza pesca dalla scogliera", category: "consigli" },
-  { keyword: "come pulire e sfilettare il pesce", category: "consigli" },
-  { keyword: "regolamento pesca sportiva Italia 2024", category: "consigli" },
-  { keyword: "migliori app per pescatori smartphone", category: "consigli" },
-  { keyword: "come scegliere il fluorocarbon giusto", category: "attrezzature" },
-  { keyword: "guida girelle e moschettoni pesca", category: "attrezzature" },
-  { keyword: "pasturazione mare tecniche e ricette", category: "consigli" },
-  { keyword: "come interpretare le fasi lunari pesca", category: "consigli" },
-  { keyword: "migliori marche attrezzatura pesca", category: "attrezzature" },
-  { keyword: "pesca in kayak guida completa", category: "tecniche-di-pesca" },
-  { keyword: "come scegliere la barca per pesca", category: "consigli" },
-  { keyword: "elettronica pesca ecoscandaglio guida", category: "attrezzature" },
-  { keyword: "abbigliamento tecnico pesca cosa scegliere", category: "attrezzature" }
+  { keyword: "how to create a monthly budget that works", category: "budgeting" },
+  { keyword: "50 30 20 budget rule explained", category: "budgeting" },
+  { keyword: "zero based budgeting for beginners", category: "budgeting" },
+  { keyword: "envelope budgeting system guide", category: "budgeting" },
+  { keyword: "how to build an emergency fund from scratch", category: "saving-money" },
+  { keyword: "best ways to save money on groceries", category: "saving-money" },
+  { keyword: "no spend challenge rules and tips", category: "saving-money" },
+  { keyword: "sinking funds explained with examples", category: "saving-money" },
+  { keyword: "how to start investing for beginners", category: "investing-basics" },
+  { keyword: "what is dollar cost averaging", category: "investing-basics" },
+  { keyword: "compound interest explained simply", category: "investing-basics" },
+  { keyword: "how to open a brokerage account", category: "investing-basics" },
+  { keyword: "debt snowball method step by step", category: "credit-debt" },
+  { keyword: "how to improve your credit score", category: "credit-debt" },
+  { keyword: "debt consolidation pros and cons", category: "credit-debt" },
+  { keyword: "how to negotiate with creditors", category: "credit-debt" },
+  { keyword: "best side hustles from home", category: "side-hustles" },
+  { keyword: "how to start freelancing for beginners", category: "side-hustles" },
+  { keyword: "passive income ideas that actually work", category: "side-hustles" },
+  { keyword: "how to monetize your skills online", category: "side-hustles" },
+  { keyword: "tax deductions for self employed", category: "taxes-tips" },
+  { keyword: "how to file taxes as a freelancer", category: "taxes-tips" },
+  { keyword: "estimated quarterly taxes guide", category: "taxes-tips" },
+  { keyword: "tax advantaged accounts explained", category: "taxes-tips" },
+  { keyword: "best high yield savings accounts", category: "banking-cards" },
+  { keyword: "how to choose a credit card wisely", category: "banking-cards" },
+  { keyword: "credit union vs bank comparison", category: "banking-cards" },
+  { keyword: "how to maximize credit card rewards", category: "banking-cards" },
+  { keyword: "money mindset tips for financial success", category: "money-psychology" },
+  { keyword: "how to stop emotional spending", category: "money-psychology" },
+  { keyword: "financial anxiety coping strategies", category: "money-psychology" },
+  { keyword: "how to talk about money with partner", category: "money-psychology" },
+  { keyword: "common budgeting mistakes to avoid", category: "budgeting" },
+  { keyword: "how to track expenses effectively", category: "budgeting" },
+  { keyword: "pay yourself first method explained", category: "saving-money" }
 ];
 
-// ===== FUNZIONE PRINCIPALE =====
+// ===== MAIN FUNCTION =====
 async function generateWeeklyBatch(options = {}) {
   const {
     count = CONFIG.defaultArticleCount,
@@ -211,7 +196,7 @@ async function generateWeeklyBatch(options = {}) {
   } = options;
   
   console.log('\n' + '🗓️'.repeat(30));
-  console.log('GENERAZIONE BATCH SETTIMANALE');
+  console.log('WEEKLY BATCH GENERATION');
   console.log('🗓️'.repeat(30) + '\n');
   
   const startTime = Date.now();
@@ -222,88 +207,88 @@ async function generateWeeklyBatch(options = {}) {
     results: []
   };
   
-  // 1. Determina le keyword da usare
+  // 1. Determine keywords to use
   let allKeywords;
   
   if (keywordsFile) {
-    // Carica da file
+    // Load from file
     const filePath = path.join(__dirname, '..', 'data', keywordsFile);
     if (fs.existsSync(filePath)) {
       const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
       allKeywords = data.keywords || data;
-      console.log(`📂 Keyword caricate da: ${keywordsFile}`);
+      console.log(`📂 Keywords loaded from: ${keywordsFile}`);
     } else {
-      console.error(`❌ File non trovato: ${filePath}`);
+      console.error(`❌ File not found: ${filePath}`);
       return;
     }
   } else {
-    // Mix di keyword stagionali + evergreen (POOL GRANDE)
+    // Mix seasonal + evergreen keywords (LARGE POOL)
     const { keywords: seasonal } = getSeasonalKeywords();
     allKeywords = [...seasonal, ...EVERGREEN_KEYWORDS];
-    console.log('🎲 Keyword pool automatico (stagionali + evergreen)');
-    console.log(`   Pool totale: ${allKeywords.length} keyword disponibili`);
+    console.log('🎲 Automatic keyword pool (seasonal + evergreen)');
+    console.log(`   Total pool: ${allKeywords.length} keywords available`);
   }
 
-  // Shuffle tutto il pool
+  // Shuffle the entire pool
   allKeywords = shuffleArray(allKeywords);
   
-  // 2. Trova keyword non duplicate (con retry)
+  // 2. Find non-duplicate keywords (with retry)
   let safeKeywords = [];
   let checkedCount = 0;
   let skippedKeywords = [];
   
   if (!skipDuplicateCheck && !dryRun) {
     console.log('\n' + '🔍'.repeat(20));
-    console.log('FASE 1: RICERCA KEYWORD NON DUPLICATE');
+    console.log('PHASE 1: FINDING NON-DUPLICATE KEYWORDS');
     console.log('🔍'.repeat(20) + '\n');
-    console.log(`Obiettivo: trovare ${count} keyword uniche\n`);
+    console.log(`Goal: find ${count} unique keywords\n`);
     
     for (const kw of allKeywords) {
-      // Stop se abbiamo abbastanza keyword
+      // Stop if we have enough keywords
       if (safeKeywords.length >= count) break;
       
-      // Limita il numero di check per evitare rate limit
+      // Limit checks to avoid rate limiting
       if (checkedCount >= count * 3) {
-        console.log(`⚠️ Raggiunti ${checkedCount} check, uso keyword rimanenti senza check`);
+        console.log(`⚠️ Reached ${checkedCount} checks, using remaining keywords without check`);
         break;
       }
       
       checkedCount++;
-      console.log(`[${checkedCount}] Verifico: "${kw.keyword.substring(0, 50)}..."`);
+      console.log(`[${checkedCount}] Checking: "${kw.keyword.substring(0, 50)}..."`);
       
       try {
         const analysis = await checkSemanticDuplicate(kw.keyword, { verbose: false });
         
-        // ULTRA PERMISSIVO: skip SOLO se similarità >= 98% (praticamente identico)
+        // ULTRA PERMISSIVE: skip ONLY if similarity >= 98% (practically identical)
         const isRealDuplicate = analysis.isDuplicate && analysis.maxSimilarity >= 98;
         
         if (isRealDuplicate) {
-          console.log(`   🔴 SKIP - Duplicato identico (${analysis.maxSimilarity}%): "${analysis.mostSimilarArticle?.title?.substring(0, 40)}..."`);
+          console.log(`   🔴 SKIP - Identical duplicate (${analysis.maxSimilarity}%): "${analysis.mostSimilarArticle?.title?.substring(0, 40)}..."`);
           skippedKeywords.push({ ...kw, similarTo: analysis.mostSimilarArticle?.title });
         } else {
-          // Procedi SEMPRE se < 98%
-          console.log(`   ✅ OK (${analysis.maxSimilarity}% - procedo)`);
+          // Proceed ALWAYS if < 98%
+          console.log(`   ✅ OK (${analysis.maxSimilarity}% - proceeding)`);
           safeKeywords.push(kw);
         }
         
-        // Pausa tra check per rate limit
+        // Pause between checks for rate limiting
         await new Promise(r => setTimeout(r, CONFIG.pauseBetweenDuplicateChecks));
         
       } catch (error) {
-        // In caso di errore (es: rate limit), aggiungi comunque la keyword
-        console.log(`   ⚠️ Errore check: ${error.message.substring(0, 50)} - Aggiungo comunque`);
+        // On error (e.g. rate limit), add keyword anyway
+        console.log(`   ⚠️ Check error: ${error.message.substring(0, 50)} - Adding anyway`);
         safeKeywords.push(kw);
       }
     }
     
-    // Se ancora non abbiamo abbastanza, prendi dal pool senza check
+    // If we still don't have enough, take from pool without check
     if (safeKeywords.length < count) {
       const remaining = allKeywords
         .filter(kw => !safeKeywords.find(s => s.keyword === kw.keyword))
         .filter(kw => !skippedKeywords.find(s => s.keyword === kw.keyword))
         .slice(0, count - safeKeywords.length);
       
-      console.log(`\n📥 Aggiungo ${remaining.length} keyword extra senza check duplicati`);
+      console.log(`\n📥 Adding ${remaining.length} extra keywords without duplicate check`);
       safeKeywords.push(...remaining);
     }
     
@@ -314,50 +299,50 @@ async function generateWeeklyBatch(options = {}) {
     };
     
     console.log('\n' + '='.repeat(50));
-    console.log('📊 RISULTATO RICERCA KEYWORD');
+    console.log('📊 KEYWORD SEARCH RESULT');
     console.log('='.repeat(50));
-    console.log(`✅ Keyword pronte: ${safeKeywords.length}`);
-    console.log(`🔴 Keyword saltate: ${skippedKeywords.length}`);
+    console.log(`✅ Keywords ready: ${safeKeywords.length}`);
+    console.log(`🔴 Keywords skipped: ${skippedKeywords.length}`);
     console.log('='.repeat(50) + '\n');
     
   } else {
-    // Skip check, prendi le prime N keyword
+    // Skip check, take first N keywords
     safeKeywords = allKeywords.slice(0, count);
     if (skipDuplicateCheck) {
-      console.log('\n⏭️ Check duplicati saltato\n');
+      console.log('\n⏭️ Duplicate check skipped\n');
     }
   }
   
-  // Mostra keyword selezionate
-  console.log(`📝 Keyword da generare (${safeKeywords.length}):`);
+  // Show selected keywords
+  console.log(`📝 Keywords to generate (${safeKeywords.length}):`);
   safeKeywords.forEach((k, i) => {
     console.log(`   ${i + 1}. "${k.keyword.substring(0, 60)}..." [${k.category}]`);
   });
   
   if (dryRun) {
-    console.log('\n⚠️ DRY RUN - Nessun articolo verrà creato\n');
+    console.log('\n⚠️ DRY RUN - No articles will be created\n');
     return { keywords: safeKeywords, log };
   }
   
   if (safeKeywords.length === 0) {
-    console.log('\n⚠️ Nessuna keyword disponibile! Pool esaurito.\n');
+    console.log('\n⚠️ No keywords available! Pool exhausted.\n');
     return log;
   }
   
   console.log('\n' + '📝'.repeat(20));
-  console.log('FASE 2: GENERAZIONE ARTICOLI');
+  console.log('PHASE 2: ARTICLE GENERATION');
   console.log('📝'.repeat(20) + '\n');
   
-  // 3. Genera articoli
+  // 3. Generate articles
   for (let i = 0; i < safeKeywords.length; i++) {
     const { keyword, category } = safeKeywords[i];
     const articleNum = i + 1;
     
-    console.log(`\n[${articleNum}/${safeKeywords.length}] Generazione: "${keyword.substring(0, 50)}..."`);
+    console.log(`\n[${articleNum}/${safeKeywords.length}] Generating: "${keyword.substring(0, 50)}..."`);
     console.log('-'.repeat(50));
     
     try {
-      // Salta il check duplicati nella generazione (già fatto sopra)
+      // Skip duplicate check in generation (already done above)
       const result = await generateArticle(keyword, category, { skipDuplicateCheck: true });
       
       if (result?.skipped) {
@@ -380,11 +365,11 @@ async function generateWeeklyBatch(options = {}) {
           generatedAt: new Date().toISOString()
         });
 
-        // YouTube picker (post-step) se disponibile e se non dry-run
+        // YouTube picker (post-step) if available and not dry-run
         if (process.env.YOUTUBE_API_KEY) {
           const slug = result.slug?.current;
           if (slug) {
-            console.log('🎥 Avvio YouTube picker per', slug);
+            console.log('🎥 Starting YouTube picker for', slug);
             try {
               await execFileAsync('node', [path.join(__dirname, 'youtube-video-picker.js'), slug], {
                 env: {
@@ -394,18 +379,18 @@ async function generateWeeklyBatch(options = {}) {
                   GEMINI_API_KEY: process.env.GEMINI_API_KEY,
                 },
               });
-              console.log('✅ YouTube picker completato per', slug);
+              console.log('✅ YouTube picker completed for', slug);
             } catch (err) {
-              console.warn('⚠️ YouTube picker fallito per', slug, '-', err.message);
+              console.warn('⚠️ YouTube picker failed for', slug, '-', err.message);
             }
           }
         } else {
-          console.log('ℹ️ YOUTUBE_API_KEY mancante: salto video picker');
+          console.log('ℹ️ YOUTUBE_API_KEY missing: skipping video picker');
         }
       }
       
     } catch (error) {
-      console.error(`❌ Errore: ${error.message}`);
+      console.error(`❌ Error: ${error.message}`);
       log.results.push({
         keyword,
         category,
@@ -415,14 +400,14 @@ async function generateWeeklyBatch(options = {}) {
       });
     }
     
-    // Pausa tra articoli (tranne l'ultimo)
+    // Pause between articles (except last)
     if (i < safeKeywords.length - 1) {
-      console.log(`\n⏳ Pausa ${CONFIG.pauseBetweenArticles / 1000}s per rate limiting...`);
+      console.log(`\n⏳ Pausing ${CONFIG.pauseBetweenArticles / 1000}s for rate limiting...`);
       await new Promise(r => setTimeout(r, CONFIG.pauseBetweenArticles));
     }
   }
   
-  // 4. Report finale
+  // 4. Final report
   const elapsed = ((Date.now() - startTime) / 1000 / 60).toFixed(1);
   const successful = log.results.filter(r => r.success).length;
   const withImages = log.results.filter(r => r.success && r.hasImage).length;
@@ -438,15 +423,15 @@ async function generateWeeklyBatch(options = {}) {
   };
   
   console.log('\n' + '='.repeat(60));
-  console.log('📊 REPORT FINALE');
+  console.log('📊 FINAL REPORT');
   console.log('='.repeat(60));
-  console.log(`✅ Successi: ${successful}`);
-  console.log(`📸 Con immagine: ${withImages}`);
-  console.log(`❌ Errori: ${failed}`);
-  console.log(`⏱️ Durata: ${elapsed} minuti`);
+  console.log(`✅ Successful: ${successful}`);
+  console.log(`📸 With image: ${withImages}`);
+  console.log(`❌ Errors: ${failed}`);
+  console.log(`⏱️ Duration: ${elapsed} minutes`);
   
   if (successful > 0) {
-    console.log('\nArticoli creati:');
+    console.log('\nArticles created:');
     log.results.filter(r => r.success).forEach(r => {
       const imgIcon = r.hasImage ? '📸' : '📝';
       console.log(`  ${imgIcon} "${r.keyword.substring(0, 45)}..."`);
@@ -455,14 +440,14 @@ async function generateWeeklyBatch(options = {}) {
   }
   
   if (failed > 0) {
-    console.log('\nArticoli falliti:');
+    console.log('\nFailed articles:');
     log.results.filter(r => !r.success).forEach(r => {
       console.log(`  ❌ "${r.keyword.substring(0, 40)}...": ${r.error?.substring(0, 50) || r.reason}`);
     });
   }
   console.log('='.repeat(60) + '\n');
   
-  // 5. Salva log
+  // 5. Save log
   saveLog(log);
   
   return log;
@@ -481,44 +466,44 @@ function shuffleArray(array) {
 
 function saveLog(log) {
   try {
-    // Crea directory se non esiste
+    // Create directory if it doesn't exist
     const logDir = path.dirname(CONFIG.logFile);
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
     }
     
-    // Carica log esistenti
+    // Load existing logs
     let logs = [];
     if (fs.existsSync(CONFIG.logFile)) {
       logs = JSON.parse(fs.readFileSync(CONFIG.logFile, 'utf-8'));
     }
     
-    // Aggiungi nuovo log
+    // Add new log
     logs.push(log);
     
-    // Mantieni solo gli ultimi 50 log
+    // Keep only last 50 logs
     if (logs.length > 50) {
       logs = logs.slice(-50);
     }
     
     fs.writeFileSync(CONFIG.logFile, JSON.stringify(logs, null, 2), 'utf-8');
-    console.log(`💾 Log salvato in: ${CONFIG.logFile}`);
+    console.log(`💾 Log saved to: ${CONFIG.logFile}`);
   } catch (error) {
-    console.warn('⚠️ Impossibile salvare log:', error.message);
+    console.warn('⚠️ Unable to save log:', error.message);
   }
 }
 
-// ===== FUNZIONE PER CREARE FILE KEYWORD PERSONALIZZATO =====
+// ===== FUNCTION TO CREATE CUSTOM KEYWORD FILE =====
 export async function createKeywordsFile(keywords, filename = 'custom-keywords.json') {
   const filePath = path.join(__dirname, '..', 'data', filename);
   const data = {
     createdAt: new Date().toISOString(),
-    description: 'Keyword personalizzate per generazione batch',
+    description: 'Custom keywords for batch generation',
     keywords
   };
   
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
-  console.log(`✅ File keyword creato: ${filename}`);
+  console.log(`✅ Keyword file created: ${filename}`);
   return filePath;
 }
 
@@ -532,7 +517,7 @@ async function main() {
     skipDuplicateCheck: false
   };
   
-  // Parse argomenti
+  // Parse arguments
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--count' && args[i + 1]) {
       options.count = parseInt(args[i + 1]);
@@ -546,33 +531,33 @@ async function main() {
       options.skipDuplicateCheck = true;
     } else if (args[i] === '--help') {
       console.log(`
-🗓️ FishandTips Weekly Batch Generator
-======================================
+🗓️ MoneyWithSense Weekly Batch Generator
+=========================================
 
-Genera automaticamente un batch di articoli per la settimana.
-Include sistema ANTI-DUPLICATI con retry automatico.
+Automatically generates a batch of articles for the week.
+Includes ANTI-DUPLICATE system with automatic retry.
 
-Uso:
-  node scripts/generate-weekly-batch.js [opzioni]
+Usage:
+  node scripts/generate-weekly-batch.js [options]
 
-Opzioni:
-  --count <n>        Numero di articoli da generare (default: 3)
-  --file <nome.json> Usa file keyword personalizzato dalla cartella data/
-  --dry-run          Mostra keyword senza generare articoli
-  --skip-check       Salta il check dei duplicati semantici
-  --help             Mostra questo messaggio
+Options:
+  --count <n>        Number of articles to generate (default: 3)
+  --file <name.json> Use custom keyword file from data/ folder
+  --dry-run          Show keywords without generating articles
+  --skip-check       Skip semantic duplicate check
+  --help             Show this message
 
-Esempi:
+Examples:
   node scripts/generate-weekly-batch.js
   node scripts/generate-weekly-batch.js --count 5
   node scripts/generate-weekly-batch.js --file keywords-custom.json
   node scripts/generate-weekly-batch.js --count 10 --dry-run
   node scripts/generate-weekly-batch.js --count 5 --skip-check
 
-Sistema Anti-Duplicati:
-  Cerca automaticamente keyword uniche dal pool di 55+ keyword.
-  Se trova duplicati, prova altre keyword fino a trovarne abbastanza.
-  Le immagini vengono cercate automaticamente su Unsplash.
+Anti-Duplicate System:
+  Automatically searches for unique keywords from a pool of 55+ keywords.
+  If duplicates are found, tries other keywords until enough are found.
+  Images are automatically searched on Unsplash.
 `);
       return;
     }
@@ -581,7 +566,7 @@ Sistema Anti-Duplicati:
   try {
     await generateWeeklyBatch(options);
   } catch (error) {
-    console.error('\n❌ ERRORE FATALE:', error.message);
+    console.error('\n❌ FATAL ERROR:', error.message);
     process.exit(1);
   }
 }

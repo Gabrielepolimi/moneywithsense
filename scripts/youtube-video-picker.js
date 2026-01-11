@@ -105,19 +105,19 @@ async function getRelevanceViaGemini(article, video) {
   try {
     const model = gem.getGenerativeModel({ model: 'gemini-2.0-flash' });
     const prompt = `
-Sei un assistente per la pesca. Valuta quanto è rilevante questo video per l'articolo.
-Rispondi SOLO JSON: {"relevance":0-1,"reason":"...","takeaways":["...","...","..."]} senza testo extra.
+You are a personal finance assistant. Evaluate how relevant this video is for the article.
+Reply ONLY with JSON: {"relevance":0-1,"reason":"...","takeaways":["...","...","..."]} without any extra text.
 
-Articolo:
-- Titolo: ${article.title}
-- Estratto: ${article.excerpt || ''}
+Article:
+- Title: ${article.title}
+- Excerpt: ${article.excerpt || ''}
 - Headings: ${article.headings.join(' | ')}
-- Categorie/tecniche: ${[...article.categories, ...article.techniques].join(', ')}
+- Categories/topics: ${[...article.categories, ...article.techniques].join(', ')}
 
 Video:
-- Titolo: ${video.title}
-- Descrizione: ${video.description || ''}
-- Durata: ${video.durationSeconds}s
+- Title: ${video.title}
+- Description: ${video.description || ''}
+- Duration: ${video.durationSeconds}s
 - Views: ${video.views}
     `;
     const res = await model.generateContent(prompt);
@@ -180,16 +180,16 @@ function buildQueries(article) {
   const base = article.title;
   q.add(base);
   (article.headings || []).slice(0, 3).forEach(h => q.add(h));
-  (article.categories || []).forEach(c => q.add(`${c} pesca`));
-  (article.techniques || []).forEach(t => q.add(`${t} pesca`));
+  (article.categories || []).forEach(c => q.add(`${c} personal finance`));
+  (article.techniques || []).forEach(t => q.add(`${t} money tips`));
 
-  // versioni con tutorial
+  // tutorial versions
   const mainTech = article.techniques[0] || '';
   const mainCat = article.categories[0] || '';
-  if (mainTech) q.add(`${mainTech} tutorial pesca`);
-  if (mainTech && article.title.toLowerCase().includes('montatura')) q.add(`${mainTech} montatura tutorial`);
+  if (mainTech) q.add(`${mainTech} tutorial money`);
+  if (mainTech && article.title.toLowerCase().includes('budget')) q.add(`${mainTech} budgeting tutorial`);
 
-  // pulizia
+  // cleanup
   const queries = Array.from(q)
     .map(s => s.trim())
     .filter(s => s.length > 8)
@@ -524,7 +524,7 @@ async function main() {
       channelTitle: winner.channelTitle,
       url: `https://www.youtube.com/watch?v=${winner.id}`,
       embedUrl: `https://www.youtube.com/embed/${winner.id}`,
-      reason: winner.reason || `Abbiamo scelto questo video perché spiega bene ${article.title.toLowerCase()}.`,
+      reason: winner.reason || `We chose this video because it explains ${article.title.toLowerCase()} well.`,
       takeaways: winner.takeaways && winner.takeaways.length > 0
         ? winner.takeaways.slice(0, 3)
         : undefined,
