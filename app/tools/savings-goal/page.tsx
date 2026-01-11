@@ -23,7 +23,6 @@ export default function SavingsGoalCalculator() {
 
         <form
           className="space-y-4 rounded-2xl border border-gray-100 bg-gray-50 p-5"
-          onSubmit={(e) => e.preventDefault()}
           id="savings-form"
         >
           <div className="grid sm:grid-cols-2 gap-4">

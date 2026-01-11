@@ -1,13 +1,12 @@
 /**
- * 🤖 FishandTips - AI Content Generator con Unsplash + Fallback
- * 
+ * 🤖 MoneyWithSense - AI Content Generator con Unsplash + Fallback
+ *
  * Genera articoli completi usando Gemini AI con immagini da Unsplash
  * e fallback su cartella locale se Unsplash non disponibile
- * 
+ *
  * Funzionalità:
  * - Generazione testo con Google Gemini
  * - Immagine principale da Unsplash (con fallback locale)
- * - Auto-linking prodotti Amazon nel testo
  * - SEO ottimizzato automaticamente
  * - Pubblicazione diretta su Sanity CMS
  */
@@ -37,14 +36,13 @@ const CONFIG = {
   geminiModel: 'gemini-2.0-flash',
   maxTokens: 8000,
   temperature: 0.7,
-  amazonAffiliateTag: process.env.AMAZON_AFFILIATE_TAG || 'fishandtips-21',
   publishImmediately: true,
   readingTimeMin: 5,
   readingTimeMax: 12,
-  initialLikesMin: 750,
-  initialLikesMax: 2500,
-  // Cartella immagini fallback
-  fallbackImagesDir: path.join(__dirname, '..', 'public', 'images', 'fallback-fishing'),
+  initialLikesMin: 120,
+  initialLikesMax: 520,
+  // Cartella immagini fallback (finance)
+  fallbackImagesDir: path.join(__dirname, '..', 'public', 'images', 'fallback-finance'),
   // Retry config per Unsplash
   unsplashMaxRetries: 2,
   unsplashRetryDelay: 2000 // 2 secondi
@@ -52,7 +50,7 @@ const CONFIG = {
 
 // Sanity Client
 const sanityClient = createClient({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '3nnnl6gi',
+  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || 'z0g6hj8g',
   dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
   apiVersion: '2024-08-10',
   useCdn: false,
@@ -246,7 +244,7 @@ async function getImageWithFallback(keyword, categorySlug, finalSlug, articleTit
       mainImageAsset = await uploadLocalImageToSanity(
         fallbackImage,
         finalSlug,
-        `${articleTitle} - FishandTips`
+        `${articleTitle} - Money With Sense`
       );
       
       if (mainImageAsset) {
@@ -262,124 +260,60 @@ async function getImageWithFallback(keyword, categorySlug, finalSlug, articleTit
   return { mainImageAsset, imageCredit, imageSource };
 }
 
-// ===== AUTO-LINKING PRODOTTI AMAZON =====
+// ===== PROMPT TEMPLATE (Finance, EN) =====
+const ARTICLE_PROMPT = `You are a personal finance editor and SEO copywriter. 
+Write a clear, practical, long-form article about: "{keyword}"
 
-/**
- * Genera URL Amazon affiliato per un prodotto
- */
-function generateAmazonUrl(productName) {
-  const searchQuery = productName
-    .replace(/[^\w\s]/g, '') // Rimuovi caratteri speciali
-    .trim();
-  return `https://www.amazon.it/s?k=${encodeURIComponent(searchQuery)}&tag=${CONFIG.amazonAffiliateTag}`;
-}
-
-/**
- * Inserisce link Amazon nel testo markdown per ogni prodotto menzionato
- * Trasforma "Shimano Sedona FI 2500" in "[Shimano Sedona FI 2500](amazon-url)"
- */
-function insertAmazonLinksInContent(content, products) {
-  if (!products || products.length === 0) {
-    return content;
-  }
-  
-  let linkedContent = content;
-  const linkedProducts = [];
-  
-  for (const product of products) {
-    const productName = product.name;
-    if (!productName || productName.length < 5) continue;
-    
-    // Crea pattern per trovare il nome del prodotto (case insensitive)
-    // Evita di linkare se già dentro un link markdown
-    const escapedName = productName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const pattern = new RegExp(
-      `(?<!\\[)(?<!\\]\\()\\b(${escapedName})\\b(?!\\])(?!\\))`,
-      'i'
-    );
-    
-    // Verifica se il prodotto è menzionato nel testo
-    if (pattern.test(linkedContent)) {
-      const amazonUrl = generateAmazonUrl(productName);
-      
-      // Sostituisci solo la PRIMA occorrenza con il link
-      linkedContent = linkedContent.replace(
-        pattern,
-        `[$1](${amazonUrl})`
-      );
-      
-      linkedProducts.push(productName);
-    }
-  }
-  
-  if (linkedProducts.length > 0) {
-    console.log(`   🔗 Auto-linked ${linkedProducts.length} prodotti: ${linkedProducts.join(', ')}`);
-  }
-  
-  return linkedContent;
-}
-
-// ===== PROMPT TEMPLATE =====
-const ARTICLE_PROMPT = `Sei un esperto pescatore italiano e copywriter SEO. 
-Scrivi un articolo completo e dettagliato su: "{keyword}"
-
-REQUISITI OBBLIGATORI:
-1. TITOLO: Massimo 55 caratteri, accattivante e SEO-friendly (senza virgolette)
-2. EXCERPT: Descrizione di 150-155 caratteri per meta description
-3. CONTENUTO: 
-   - Minimo 1500 parole, massimo 2500
-   - Struttura con H2 e H3
-   - Paragrafi brevi (3-4 frasi)
-   - Almeno 5 sezioni principali
-   - Consigli pratici basati su esperienza reale
-   - Linguaggio coinvolgente in prima persona plurale (noi pescatori)
-
-4. SEO:
-   - 5-7 keyword correlate (separate da virgola)
-   - Inserisci la keyword principale naturalmente nel testo
-   - Usa sinonimi e variazioni della keyword
-
-5. PRODOTTI AMAZON AFFILIATI (MOLTO IMPORTANTE):
-   - Suggerisci 3-4 prodotti REALI correlati all'argomento
-   - Devono essere prodotti SPECIFICI acquistabili su Amazon.it (es: "Shimano Sedona FI 2500" non "un buon mulinello")
-   - Per ogni prodotto: nome ESATTO del prodotto, breve descrizione (max 80 car), prezzo indicativo realistico
-   - MENZIONA I PRODOTTI NEL TESTO usando il nome ESATTO che specifichi nella sezione PRODOTTI
-   - Esempio nel testo: "Per questa tecnica vi consigliamo il mulinello Shimano Sedona FI 2500, perfetto per..."
-   - I nomi dei prodotti verranno automaticamente convertiti in link Amazon
-
-6. FORMATO OUTPUT (RISPETTA ESATTAMENTE QUESTA STRUTTURA):
----TITOLO---
-[Il titolo qui]
+STRICT REQUIREMENTS:
+1) TITLE: max 60 chars, compelling and SEO-friendly (no quotes).
+2) EXCERPT: 150-160 chars for meta description.
+3) CONTENT:
+   - 900-1500 words, H2/H3 structure, short paragraphs (2-4 sentences)
+   - Sections (must appear, in order):
+     • Practical intro (set context, audience, promise)
+     • Why it matters
+     • Actionable steps (numbered or bullets)
+     • Common mistakes to avoid
+     • Quick checklist (bullets, 5-8 items)
+     • FAQ (3 Q&A, concise)
+     • Sources & references (authoritative, 3-5 bullets)
+     • Conclusion with a useful CTA
+   - Add a short financial disclaimer at the end: "This content is for informational purposes only. Not financial advice."
+   - Tone: simple, trustworthy, global English; avoid jargon or, if needed, explain it.
+   - Include 1 primary keyword and 4-6 related keywords naturally.
+4) AFFILIATES / PRODUCTS (generic, no fake claims):
+   - Suggest 2-3 real products/services/tools relevant to the topic (global, no region-specific unless obvious).
+   - For each: exact name, brief benefit (max 80 chars), realistic price range or “varies”.
+   - Mention them naturally in the content using the exact names listed.
+5) OUTPUT FORMAT (EXACTLY):
+---TITLE---
+[Title here]
 ---EXCERPT---
-[La meta description qui]
+[Meta description here]
 ---KEYWORDS---
-[keyword1, keyword2, keyword3, ...]
----PRODOTTI---
-PRODOTTO1: Nome ESATTO prodotto | Descrizione breve | €XX
-PRODOTTO2: Nome ESATTO prodotto | Descrizione breve | €XX
-PRODOTTO3: Nome ESATTO prodotto | Descrizione breve | €XX
-PRODOTTO4: Nome ESATTO prodotto | Descrizione breve | €XX
----CONTENUTO---
-[Il contenuto markdown qui con ## per H2 e ### per H3]
-[IMPORTANTE: Menziona i prodotti usando ESATTAMENTE i nomi specificati sopra]
----FINE---
+[primary keyword, related keyword 1, related keyword 2, ...]
+---PRODUCTS---
+PRODUCT1: Exact product/service name | Brief benefit | $XX or "varies"
+PRODUCT2: Exact product/service name | Brief benefit | $XX or "varies"
+PRODUCT3: Exact product/service name | Brief benefit | $XX or "varies"
+---CONTENT---
+[Markdown content with ## for H2 and ### for H3. Must contain all required sections in order. Include the disclaimer line at the end.]
+---END---
 
-CATEGORIA ARTICOLO: {category}
-STAGIONE CORRENTE: {season}
+CATEGORY: {category}
+SEASON: {season}
 
-Scrivi contenuto originale, utile e basato su vera esperienza di pesca. 
-Non inventare statistiche o dati. Usa il "noi" per creare connessione con il lettore.
-RICORDA: I prodotti devono essere REALI e SPECIFICI (marca + modello) e MENZIONATI nel testo!`;
+Write original, practical, and accurate content. Do not invent statistics. Keep language simple and globally understandable.`;
 
 // ===== FUNZIONE PRINCIPALE =====
-export async function generateArticle(keyword, categorySlug = 'consigli', options = {}) {
+export async function generateArticle(keyword, categorySlug = 'personal-finance', options = {}) {
   const { skipDuplicateCheck = false, verbose = true } = options;
   
   const log = (msg) => verbose && console.log(msg);
   
-  log('\n' + '🎣'.repeat(25));
-  log(`GENERAZIONE ARTICOLO: "${keyword}"`);
-  log('🎣'.repeat(25) + '\n');
+  log('\n' + '💰'.repeat(18));
+  log(`GENERATING ARTICLE: "${keyword}"`);
+  log('💰'.repeat(18) + '\n');
 
   // 1. Check duplicati semantici (se non saltato)
   if (!skipDuplicateCheck) {
@@ -471,11 +405,7 @@ export async function generateArticle(keyword, categorySlug = 'consigli', option
   log(`   Keywords: ${parsed.keywords?.length || 0}`);
   log(`   Prodotti: ${parsed.products?.length || 0}`);
 
-  // 5. AUTO-LINK: Inserisci link Amazon nel contenuto
-  log('🔗 Inserimento link Amazon nel testo...');
-  const contentWithLinks = insertAmazonLinksInContent(parsed.content, parsed.products);
-
-  // 6. Cerca immagine (Unsplash + fallback locale)
+  // 5. Cerca immagine (Unsplash + fallback locale)
   log('📸 Ricerca immagine...');
   const { mainImageAsset, imageCredit, imageSource } = await getImageWithFallback(
     keyword, 
@@ -485,7 +415,7 @@ export async function generateArticle(keyword, categorySlug = 'consigli', option
     log
   );
 
-  // 7. Prepara documento Sanity
+  // 6. Prepara documento Sanity
   log('📄 Preparazione documento Sanity...');
   
   const authorId = await getDefaultAuthorId();
@@ -495,8 +425,8 @@ export async function generateArticle(keyword, categorySlug = 'consigli', option
     throw new Error('Nessun autore trovato in Sanity. Crea prima un autore.');
   }
 
-  // Converti markdown (con link Amazon) in block content
-  const bodyBlocks = markdownToBlockContent(contentWithLinks);
+  // Converti markdown in block content
+  const bodyBlocks = markdownToBlockContent(parsed.content);
 
   // Calcola reading time e likes random
   const wordCount = parsed.content.split(/\s+/).length;
@@ -606,20 +536,20 @@ function parseGeneratedContent(content) {
   };
 
   try {
-    // Estrai titolo
-    const titleMatch = content.match(/---TITOLO---\s*([\s\S]*?)(?=---EXCERPT---|$)/);
+    // Title
+    const titleMatch = content.match(/---TITLE---\s*([\s\S]*?)(?=---EXCERPT---|$)/i);
     if (titleMatch) {
       result.title = titleMatch[1].trim().replace(/^["']|["']$/g, '').substring(0, 60);
     }
 
-    // Estrai excerpt
-    const excerptMatch = content.match(/---EXCERPT---\s*([\s\S]*?)(?=---KEYWORDS---|$)/);
+    // Excerpt
+    const excerptMatch = content.match(/---EXCERPT---\s*([\s\S]*?)(?=---KEYWORDS---|$)/i);
     if (excerptMatch) {
       result.excerpt = excerptMatch[1].trim().substring(0, 160);
     }
 
-    // Estrai keywords
-    const keywordsMatch = content.match(/---KEYWORDS---\s*([\s\S]*?)(?=---PRODOTTI---|$)/);
+    // Keywords
+    const keywordsMatch = content.match(/---KEYWORDS---\s*([\s\S]*?)(?=---PRODUCTS---|$)/i);
     if (keywordsMatch) {
       result.keywords = keywordsMatch[1]
         .trim()
@@ -629,35 +559,35 @@ function parseGeneratedContent(content) {
         .slice(0, 10);
     }
 
-    // Estrai prodotti
-    const productsMatch = content.match(/---PRODOTTI---\s*([\s\S]*?)(?=---CONTENUTO---|$)/);
+    // Products
+    const productsMatch = content.match(/---PRODUCTS---\s*([\s\S]*?)(?=---CONTENT---|$)/i);
     if (productsMatch) {
       const productLines = productsMatch[1].trim().split('\n').filter(l => l.includes('|'));
       result.products = productLines.map(line => {
-        const parts = line.replace(/^PRODOTTO\d*:\s*/i, '').split('|').map(p => p.trim());
+        const parts = line.replace(/^PRODUCT\d*:\s*/i, '').split('|').map(p => p.trim());
         return {
-          name: parts[0] || 'Prodotto Pesca',
+          name: parts[0] || 'Finance Tool',
           description: parts[1] || '',
-          price: parts[2] || '€29'
+          price: parts[2] || '$29'
         };
       }).slice(0, 4);
     }
 
-    // Estrai contenuto
-    const contentMatch = content.match(/---CONTENUTO---\s*([\s\S]*?)(?=---FINE---|$)/);
+    // Content
+    const contentMatch = content.match(/---CONTENT---\s*([\s\S]*?)(?=---END---|$)/i);
     if (contentMatch) {
       result.content = contentMatch[1].trim();
     } else {
-      const fallbackMatch = content.match(/---CONTENUTO---\s*([\s\S]*)/);
+      const fallbackMatch = content.match(/---CONTENT---\s*([\s\S]*)/i);
       if (fallbackMatch) {
-        result.content = fallbackMatch[1].trim().replace(/---FINE---[\s\S]*$/, '');
+        result.content = fallbackMatch[1].trim().replace(/---END---[\s\S]*$/i, '');
       }
     }
 
-    // Se non trova i marcatori, usa euristica
+    // Fallback heuristic
     if (!result.title && !result.content) {
       const lines = content.split('\n').filter(l => l.trim());
-      result.title = lines[0]?.replace(/^#\s*/, '').substring(0, 60) || 'Articolo di Pesca';
+      result.title = lines[0]?.replace(/^#\s*/, '').substring(0, 60) || 'Finance Article';
       result.content = lines.slice(1).join('\n');
     }
 
@@ -673,24 +603,33 @@ function parseGeneratedContent(content) {
  */
 function extractImageKeywords(keyword, category) {
   const categoryImages = {
-    'tecniche-di-pesca': 'fishing technique',
-    'attrezzature': 'fishing gear equipment',
-    'consigli': 'fishing tips',
-    'spot-di-pesca': 'fishing spot sea'
+    'personal-finance': 'personal finance planning money management',
+    'saving-money': 'saving money budgeting frugal living',
+    'investing-basics': 'investing stocks bonds etf finance',
+    'passive-income': 'passive income cash flow finance',
+    'budgeting': 'budgeting planner money tracker',
+    'credit-debt': 'credit score debt payoff finance',
+    'credit-and-debt': 'credit score debt payoff finance',
+    'banking-cards': 'online banking credit card finance',
+    'banking-and-cards': 'online banking credit card finance',
+    'taxes-finance-tips': 'tax finance documents calculator',
+    'taxes-and-finance-tips': 'tax finance documents calculator',
+    'side-hustles': 'side hustle freelance remote work',
+    'money-psychology': 'money mindset financial habits'
   };
-  
+
   const mainWords = keyword
     .toLowerCase()
-    .replace(/come|guida|completa|migliori|consigli|tecniche|per|la|il|di|da|in|con|a/gi, '')
+    .replace(/guide|how to|best|tips|basics|for|the|a|an|of|and|in|with/gi, '')
     .trim()
     .split(/\s+/)
     .filter(w => w.length > 3)
     .slice(0, 3)
     .join(' ');
-  
-  const categoryKeyword = categoryImages[category] || 'fishing';
-  
-  return `${mainWords} ${categoryKeyword} mediterranean`.trim();
+
+  const categoryKeyword = categoryImages[category] || 'personal finance';
+
+  return `${mainWords} ${categoryKeyword} clean minimal`.trim();
 }
 
 /**
@@ -698,10 +637,10 @@ function extractImageKeywords(keyword, category) {
  */
 function getCurrentSeason() {
   const month = new Date().getMonth();
-  if (month >= 2 && month <= 4) return 'primavera';
-  if (month >= 5 && month <= 7) return 'estate';
-  if (month >= 8 && month <= 10) return 'autunno';
-  return 'inverno';
+  if (month >= 2 && month <= 4) return 'spring';
+  if (month >= 5 && month <= 7) return 'summer';
+  if (month >= 8 && month <= 10) return 'autumn';
+  return 'winter';
 }
 
 // ===== EXPORT =====
