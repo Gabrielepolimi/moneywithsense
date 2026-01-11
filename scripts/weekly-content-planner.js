@@ -1,8 +1,6 @@
 /**
- * 📅 FishandTips - Weekly Content Planner
- * 
- * Genera automaticamente un piano editoriale settimanale
- * con contenuti diversificati per tono e tipo
+ * 📅 MoneyWithSense - Weekly Content Planner (finance, EN)
+ * Genera automaticamente un piano editoriale settimanale con contenuti diversificati per tono e tipo.
  */
 
 import dotenv from 'dotenv';
@@ -17,64 +15,15 @@ import { generateAdvancedCarousel } from './advanced-carousel-generator.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ===== PIANO EDITORIALE SETTIMANALE =====
+// ===== WEEKLY PLAN (FINANCE) =====
 const WEEKLY_PLAN = [
-  {
-    day: 'Lunedì',
-    dayNumber: 1,
-    contentType: 'tutorial',
-    tone: 'expert',
-    description: 'Tutorial tecnico per iniziare la settimana',
-    bestTime: '07:00'
-  },
-  {
-    day: 'Martedì',
-    dayNumber: 2,
-    contentType: 'meme',
-    tone: 'funny',
-    description: 'Contenuto divertente per engagement',
-    bestTime: '12:30'
-  },
-  {
-    day: 'Mercoledì',
-    dayNumber: 3,
-    contentType: 'mistakes',
-    tone: 'provocative',
-    description: 'Errori comuni - contenuto virale',
-    bestTime: '19:00'
-  },
-  {
-    day: 'Giovedì',
-    dayNumber: 4,
-    contentType: 'quiz',
-    tone: 'friendly',
-    description: 'Quiz interattivo per engagement',
-    bestTime: '12:30'
-  },
-  {
-    day: 'Venerdì',
-    dayNumber: 5,
-    contentType: 'comparison',
-    tone: 'expert',
-    description: 'Confronto prodotti/tecniche',
-    bestTime: '07:00'
-  },
-  {
-    day: 'Sabato',
-    dayNumber: 6,
-    contentType: 'toplist',
-    tone: 'friendly',
-    description: 'Top 5/Lista weekend',
-    bestTime: '10:00'
-  },
-  {
-    day: 'Domenica',
-    dayNumber: 7,
-    contentType: 'story',
-    tone: 'storytelling',
-    description: 'Storia emotiva per chiudere settimana',
-    bestTime: '18:00'
-  }
+  { day: 'Monday', dayNumber: 1, contentType: 'howto', tone: 'expert', description: 'How-to guide to start the week', bestTime: '07:00' },
+  { day: 'Tuesday', dayNumber: 2, contentType: 'checklist', tone: 'friendly', description: 'Short checklist for quick wins', bestTime: '12:30' },
+  { day: 'Wednesday', dayNumber: 3, contentType: 'mistakes', tone: 'provocative', description: 'Common mistakes to avoid', bestTime: '19:00' },
+  { day: 'Thursday', dayNumber: 4, contentType: 'faq', tone: 'clear', description: 'FAQ/QA on a key topic', bestTime: '12:30' },
+  { day: 'Friday', dayNumber: 5, contentType: 'comparison', tone: 'expert', description: 'Comparison (accounts/cards/tools)', bestTime: '07:00' },
+  { day: 'Saturday', dayNumber: 6, contentType: 'toplist', tone: 'friendly', description: 'Top list / ideas for the weekend', bestTime: '10:00' },
+  { day: 'Sunday', dayNumber: 7, contentType: 'story', tone: 'storytelling', description: 'Story/Case study with lessons', bestTime: '18:00' },
 ];
 
 // ===== BANCA TOPIC PER TIPO =====
@@ -132,36 +81,37 @@ const TOPIC_BANK = {
   },
   
   toplist: [
-    'esche per la spigola',
-    'spot di pesca in Italia',
-    'mulinelli sotto i 100€',
-    'canne da spinning',
-    'pesci più combattivi del mediterraneo',
-    'tecniche per principianti',
-    'errori che rovinano la giornata di pesca',
-    'accessori indispensabili'
+    'Best low-effort side hustles for weekends',
+    'Best budgeting methods (50/30/20, zero-based, envelope)',
+    'Best ways to cut fixed costs without downgrading life',
+    'Best simple ETF portfolio ideas for beginners'
   ],
-  
-  meme: [
-    'la vita del pescatore',
-    'pescatori vs fidanzate',
-    'quando il pesce scappa',
-    'la sveglia alle 4 di mattina',
-    'il meteo del pescatore',
-    'aspettative vs realtà in pesca',
-    'quando dici solo 5 minuti',
-    'il pescatore e il suo portafoglio'
-  ],
-  
+
   story: [
-    'La mia prima cattura importante',
-    'Quella volta che ho perso il pesce della vita',
-    'Una giornata di pesca indimenticabile',
-    'Il consiglio del vecchio pescatore',
-    'Quando la pesca mi ha insegnato la pazienza',
-    'La cattura che non dimenticherò mai',
-    'Pesca in tempesta: la mia avventura',
-    'Il pesce che mi ha fatto piangere'
+    'Case: from paycheck-to-paycheck to 3-month buffer in 9 months',
+    'Case: paying off $5k card debt with a 12-month plan',
+    'Case: first-time investor building a $10k starter portfolio'
+  ],
+
+  quiz: [
+    'ETFs vs mutual funds basics',
+    'Credit score factors',
+    'Emergency fund rules of thumb',
+    'Debt payoff methods overview'
+  ],
+
+  checklist: [
+    'Monthly money review: cash flow, debt, savings rate',
+    'Pre-payday checklist: bills, buffers, transfers',
+    'Starter investing checklist for beginners',
+    'Debt payoff checklist (snowball/avalanche)'
+  ],
+
+  faq: [
+    'ETF vs mutual fund: what’s the difference?',
+    'What credit score matters and how to improve it?',
+    'How much emergency fund should I keep?',
+    'Should I pay debt first or invest first?'
   ]
 };
 
@@ -322,26 +272,26 @@ async function main() {
   
   if (args.length === 0 || args[0] === '--help') {
     console.log(`
-📅 FishandTips Weekly Content Planner
-======================================
+📅 MoneyWithSense Weekly Content Planner (finance)
+=================================================
 
-Genera automaticamente un piano editoriale settimanale.
+Genera automaticamente un piano editoriale settimanale (EN).
 
-Uso:
-  node scripts/weekly-content-planner.js --plan              Mostra piano della settimana
-  node scripts/weekly-content-planner.js --generate          Genera tutti i contenuti
-  node scripts/weekly-content-planner.js --generate-day <n>  Genera contenuto per giorno specifico (1-7)
+Usage:
+  node scripts/weekly-content-planner.js --plan              Show weekly plan
+  node scripts/weekly-content-planner.js --generate          Generate all content
+  node scripts/weekly-content-planner.js --generate-day <n>  Generate content for day (1-7)
 
-Piano settimanale standard:
-  Lunedì    - 🎓 Tutorial (Esperto) @ 07:00
-  Martedì   - 😂 Meme (Divertente) @ 12:30
-  Mercoledì - ❌ Errori (Provocatorio) @ 19:00
-  Giovedì   - 🧠 Quiz (Amico) @ 12:30
-  Venerdì   - 🆚 Confronto (Esperto) @ 07:00
-  Sabato    - 🏆 Top 5 (Amico) @ 10:00
-  Domenica  - 📖 Storia (Storytelling) @ 18:00
+Standard weekly plan:
+  Monday    - 🛠 How-to (Expert) @ 07:00
+  Tuesday   - ✅ Checklist (Friendly) @ 12:30
+  Wednesday - ❌ Mistakes (Provocative) @ 19:00
+  Thursday  - ❓ FAQ (Clear) @ 12:30
+  Friday    - 🆚 Comparison (Expert) @ 07:00
+  Saturday  - 🏆 Top list (Friendly) @ 10:00
+  Sunday    - 📖 Story/Case (Storytelling) @ 18:00
 
-Esempi:
+Examples:
   node scripts/weekly-content-planner.js --plan
   node scripts/weekly-content-planner.js --generate
   node scripts/weekly-content-planner.js --generate-day 1
