@@ -671,37 +671,46 @@ function parseGeneratedContent(content) {
 }
 
 /**
- * Estrai keyword per ricerca immagine
+ * Estrai keyword per ricerca immagine - IMPROVED VERSION
+ * Uses full words and varied search queries for better Unsplash results
  */
 function extractImageKeywords(keyword, category) {
-  const categoryImages = {
-    'personal-finance': 'personal finance planning money management',
-    'saving-money': 'saving money budgeting frugal living',
-    'investing-basics': 'investing stocks bonds etf finance',
-    'passive-income': 'passive income cash flow finance',
-    'budgeting': 'budgeting planner money tracker',
-    'credit-debt': 'credit score debt payoff finance',
-    'credit-and-debt': 'credit score debt payoff finance',
-    'banking-cards': 'online banking credit card finance',
-    'banking-and-cards': 'online banking credit card finance',
-    'taxes-tips': 'tax finance documents calculator',
-    'taxes-and-tips': 'tax finance documents calculator',
-    'side-hustles': 'side hustle freelance remote work',
-    'money-psychology': 'money mindset financial habits'
+  // Topic-specific image queries for variety
+  const topicQueries = {
+    'saving': ['piggy bank savings', 'money jar coins', 'savings account'],
+    'budget': ['budget planner notebook', 'expense tracking', 'financial planning desk'],
+    'retire': ['retirement planning', 'senior couple finances', 'pension savings'],
+    'baby': ['family budget planning', 'baby savings jar', 'new parents finances'],
+    'expat': ['international money', 'travel finances', 'world currency'],
+    'freelance': ['freelancer workspace', 'home office laptop', 'self employed'],
+    'debt': ['debt free celebration', 'credit card payment', 'financial freedom'],
+    'invest': ['investment growth chart', 'stock market', 'portfolio analysis'],
+    'income': ['multiple income streams', 'passive income', 'money growth'],
+    'mistake': ['financial planning mistakes', 'money stress', 'budget review'],
+    'checklist': ['checklist notepad', 'financial checklist', 'planning notebook'],
+    'couple': ['couple finances', 'joint budget', 'partners money talk'],
+    'student': ['student budget', 'college finances', 'young adult money'],
+    'expense': ['expense tracking', 'receipt organization', 'spending analysis'],
+    'track': ['money tracking app', 'budget spreadsheet', 'financial dashboard']
   };
-
-  const mainWords = keyword
-    .toLowerCase()
-    .replace(/guide|how to|best|tips|basics|for|the|a|an|of|and|in|with/gi, '')
-    .trim()
-    .split(/\s+/)
-    .filter(w => w.length > 3)
-    .slice(0, 3)
-    .join(' ');
-
-  const categoryKeyword = categoryImages[category] || 'personal finance';
-
-  return `${mainWords} ${categoryKeyword} clean minimal`.trim();
+  
+  // Find matching topic
+  const keywordLower = keyword.toLowerCase();
+  let searchQuery = 'personal finance money management'; // default
+  
+  for (const [topic, queries] of Object.entries(topicQueries)) {
+    if (keywordLower.includes(topic)) {
+      // Pick random query from options for variety
+      searchQuery = queries[Math.floor(Math.random() * queries.length)];
+      break;
+    }
+  }
+  
+  // Add some randomization to avoid same images
+  const suffixes = ['minimal', 'clean', 'professional', 'modern', 'aesthetic'];
+  const randomSuffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+  
+  return `${searchQuery} ${randomSuffix}`.trim();
 }
 
 /**

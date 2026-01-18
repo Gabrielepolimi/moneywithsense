@@ -28,10 +28,10 @@ const YT_VIDEOS_URL = 'https://www.googleapis.com/youtube/v3/videos';
 const CACHE_TTL_DAYS = 90;
 
 // Threshold (MoneyWithSense Quality Standards)
-// Minimum 50K views for generic topics, 20K for niche
-const VIEWS_MIN_GENERIC = 50000;  // Standard quality threshold
-const VIEWS_MIN_NICHE = 20000;    // Niche topics can have lower views
-const VIEWS_HARD_FLOOR = 10000;   // Absolute minimum
+// Adjusted for better video discovery in niche finance topics
+const VIEWS_MIN_GENERIC = 10000;  // Standard quality threshold
+const VIEWS_MIN_NICHE = 5000;     // Niche topics can have lower views
+const VIEWS_HARD_FLOOR = 2000;    // Absolute minimum
 const MIN_DURATION_SEC = 180;     // 3 min minimum
 const SHORTS_MAX_SEC = 60;        // Exclude shorts
 
