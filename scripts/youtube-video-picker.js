@@ -435,8 +435,8 @@ async function main() {
       c._dropReason = reason;
       return false;
     }
-    // lingua: accetta solo it/en
-    if (c.lang && !(c.lang.startsWith('it') || c.lang.startsWith('en'))) {
+    // Language: accept only English for MoneyWithSense
+    if (c.lang && !c.lang.startsWith('en')) {
       c._dropReason = 'lang';
       return false;
     }
@@ -475,8 +475,8 @@ async function main() {
       vid.reason = '';
       vid.takeaways = [];
     }
-    // language preference: penalty if not it/en
-    if (vid.lang && !vid.lang.startsWith('it') && vid.lang !== 'en') {
+    // Language preference: slight penalty if not English
+    if (vid.lang && !vid.lang.startsWith('en')) {
       vid.relevance *= 0.85;
     }
     vid.score = computeScores(vid, vid.relevance, niche);

@@ -612,8 +612,8 @@ function extractImageKeywords(keyword, category) {
     'credit-and-debt': 'credit score debt payoff finance',
     'banking-cards': 'online banking credit card finance',
     'banking-and-cards': 'online banking credit card finance',
-    'taxes-finance-tips': 'tax finance documents calculator',
-    'taxes-and-finance-tips': 'tax finance documents calculator',
+    'taxes-tips': 'tax finance documents calculator',
+    'taxes-and-tips': 'tax finance documents calculator',
     'side-hustles': 'side hustle freelance remote work',
     'money-psychology': 'money mindset financial habits'
   };
