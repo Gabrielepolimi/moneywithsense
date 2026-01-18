@@ -27,15 +27,19 @@ const YT_VIDEOS_URL = 'https://www.googleapis.com/youtube/v3/videos';
 
 const CACHE_TTL_DAYS = 90;
 
-// Threshold (user choice: "looser")
-const VIEWS_MIN_GENERIC = 5000;
-const VIEWS_MIN_NICHE = 1500;
-const VIEWS_HARD_FLOOR = 800;
-const MIN_DURATION_SEC = 180; // 3 min
-const SHORTS_MAX_SEC = 60;
+// Threshold (MoneyWithSense Quality Standards)
+// Minimum 50K views for generic topics, 20K for niche
+const VIEWS_MIN_GENERIC = 50000;  // Standard quality threshold
+const VIEWS_MIN_NICHE = 20000;    // Niche topics can have lower views
+const VIEWS_HARD_FLOOR = 10000;   // Absolute minimum
+const MIN_DURATION_SEC = 180;     // 3 min minimum
+const SHORTS_MAX_SEC = 60;        // Exclude shorts
 
 const N_MAX_SEARCH_RESULTS = 30;
-const MAX_CANDIDATES_FOR_LLM = 12; // limita chiamate LLM
+const MAX_CANDIDATES_FOR_LLM = 12; // limit LLM calls
+
+// Video intro text (MoneyWithSense editorial style)
+const VIDEO_INTRO_TEXT = "Online there are many videos on this topic, but this one explains the concept clearly and practically. It's a useful visual reference to better understand this approach.";
 
 // ====== Clients ======
 const sanityClient = createClient({
@@ -548,7 +552,7 @@ async function main() {
     showYouTubeVideo: true,
     youtubeUrl: winner.id,
     youtubeTitle: winner.title,
-    youtubeDescription: winner.reason || 'A recommended video to help you understand this topic better.',
+    youtubeDescription: VIDEO_INTRO_TEXT,
   };
 
   console.log('\n🏆 Video scelto:', winner.id, '-', winner.title);

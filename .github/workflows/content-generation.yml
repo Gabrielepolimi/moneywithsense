@@ -2,13 +2,15 @@ name: AI Content Generation
 
 on:
   schedule:
-    - cron: '0 8 * * 2,4,6'
+    # Phase 1 (first 3 months): 1 article/day at 8 AM UTC
+    # Phase 2 (after stable indexing): change to 2 articles/day
+    - cron: '0 8 * * *'  # Daily at 8:00 AM UTC
   workflow_dispatch:
     inputs:
       article_count:
-        description: 'Numero di articoli da generare'
+        description: 'Number of articles to generate'
         required: false
-        default: '2'
+        default: '1'
         type: choice
         options:
           - '1'
@@ -16,7 +18,7 @@ on:
           - '3'
           - '5'
       dry_run:
-        description: 'Dry run (solo test, non crea articoli)'
+        description: 'Dry run (test only, no articles created)'
         required: false
         default: false
         type: boolean

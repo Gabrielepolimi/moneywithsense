@@ -260,50 +260,107 @@ async function getImageWithFallback(keyword, categorySlug, finalSlug, articleTit
   return { mainImageAsset, imageCredit, imageSource };
 }
 
-// ===== PROMPT TEMPLATE (Finance, EN) =====
-const ARTICLE_PROMPT = `You are a personal finance editor and SEO copywriter. 
-Write a clear, practical, long-form article about: "{keyword}"
+// ===== PROMPT TEMPLATE (MoneyWithSense Content Strategy) =====
+const ARTICLE_PROMPT = `You are a personal finance editor writing for MoneyWithSense.com.
 
-STRICT REQUIREMENTS:
-1) TITLE: max 60 chars, compelling and SEO-friendly (no quotes).
-2) EXCERPT: 150-160 chars for meta description.
-3) CONTENT:
-   - 900-1500 words, H2/H3 structure, short paragraphs (2-4 sentences)
-   - Sections (must appear, in order):
-     • Practical intro (set context, audience, promise)
-     • Why it matters
-     • Actionable steps (numbered or bullets)
-     • Common mistakes to avoid
-     • Quick checklist (bullets, 5-8 items)
-     • FAQ (3 Q&A, concise)
-     • Sources & references (authoritative, 3-5 bullets)
-     • Conclusion with a useful CTA
-   - Add a short financial disclaimer at the end: "This content is for informational purposes only. Not financial advice."
-   - Tone: simple, trustworthy, global English; avoid jargon or, if needed, explain it.
-   - Include 1 primary keyword and 4-6 related keywords naturally.
-4) AFFILIATES / PRODUCTS (generic, no fake claims):
-   - Suggest 2-3 real products/services/tools relevant to the topic (global, no region-specific unless obvious).
-   - For each: exact name, brief benefit (max 80 chars), realistic price range or “varies”.
-   - Mention them naturally in the content using the exact names listed.
-5) OUTPUT FORMAT (EXACTLY):
----TITLE---
-[Title here]
----EXCERPT---
-[Meta description here]
----KEYWORDS---
-[primary keyword, related keyword 1, related keyword 2, ...]
----PRODUCTS---
-PRODUCT1: Exact product/service name | Brief benefit | $XX or "varies"
-PRODUCT2: Exact product/service name | Brief benefit | $XX or "varies"
-PRODUCT3: Exact product/service name | Brief benefit | $XX or "varies"
----CONTENT---
-[Markdown content with ## for H2 and ### for H3. Must contain all required sections in order. Include the disclaimer line at the end.]
----END---
-
+TOPIC: "{keyword}"
 CATEGORY: {category}
 SEASON: {season}
 
-Write original, practical, and accurate content. Do not invent statistics. Keep language simple and globally understandable.`;
+=== WRITING STYLE ===
+- Simple, global English (readable by US, UK, AU, CA, EU audiences)
+- No heavy American slang
+- Short sentences (max 20 words average)
+- No guru tone or hype
+- Practical, calm, trustworthy voice
+- Never clickbait or sensationalist
+
+=== STRICT REQUIREMENTS ===
+
+1) TITLE: max 60 characters, SEO-friendly, no quotes, practical focus
+
+2) EXCERPT: 150-160 characters for meta description
+
+3) CONTENT STRUCTURE (must follow this exact order):
+   
+   a) INTRO (practical)
+      - Real problem, simple language
+      - Who this is for
+      - What they'll learn
+   
+   b) WHY IT MATTERS
+      - Real-life impact on everyday finances
+      - Keep it grounded, no exaggeration
+   
+   c) MAIN CONTENT (3-6 sections with ## H2 headers)
+      - Actionable advice with concrete examples
+      - Use bullet points or numbered lists
+      - Include specific numbers/amounts when helpful
+   
+   d) COMMON MISTAKES
+      - 3-5 typical errors related to the topic
+      - Brief explanation of why each is problematic
+   
+   e) QUICK CHECKLIST / TAKEAWAYS
+      - Bullet list, 5-8 items
+      - Easy to save or screenshot
+   
+   f) FAQ (optional, only if adds SEO value)
+      - 2-4 common questions with brief answers
+      - Use ### for each question
+   
+   g) CONCLUSION
+      - Practical summary
+      - Soft call-to-action (reflect, take one step)
+   
+   h) DISCLAIMER (required at end)
+      - "This content is for informational purposes only and does not constitute financial advice. Always consult a qualified professional for personalized guidance."
+
+4) INTERNAL LINKS (required):
+   - Include 1 link to pillar guide: [related pillar topic](/guides/{pillar-slug})
+   - Include 2 links to related articles: [anchor text](/articles/{article-topic-slug})
+   - Use natural anchor text, not exact match keywords
+   
+   Available pillar guides:
+   - /guides/saving-money-guide
+   - /guides/budgeting-guide
+   - /guides/investing-basics-guide
+   - /guides/side-hustles-guide
+   - /guides/credit-debt-guide
+   - /guides/money-psychology-guide
+
+5) LENGTH: 1,200-1,600 words (minimum 900, never below 800)
+
+6) SEO:
+   - Include primary keyword in first 100 words
+   - Use 4-6 related keywords naturally throughout
+   - One H1 (the title), multiple H2, H3 for sub-sections
+
+7) PRODUCTS (for potential affiliate, optional):
+   - 2-3 real, globally available tools/apps/services
+   - No fake claims, realistic benefits only
+   - Include price range or "free/freemium"
+
+=== OUTPUT FORMAT (EXACTLY) ===
+
+---TITLE---
+[Title here, max 60 chars]
+---EXCERPT---
+[Meta description, 150-160 chars]
+---KEYWORDS---
+[primary keyword, related keyword 1, related keyword 2, ...]
+---PRODUCTS---
+PRODUCT1: Exact name | Brief benefit | Price/free
+PRODUCT2: Exact name | Brief benefit | Price/free
+PRODUCT3: Exact name | Brief benefit | Price/free
+---CONTENT---
+[Full markdown article following the structure above. Use ## for H2, ### for H3. Include internal links and disclaimer.]
+---END---
+
+=== EXCLUSIONS ===
+Do NOT write about: trading, crypto, stock picking, specific investment advice, market predictions, or anything requiring professional licensing.
+
+Write original, practical, and helpful content. No invented statistics. Focus on real, actionable advice that helps everyday people manage money better.`;
 
 // ===== FUNZIONE PRINCIPALE =====
 export async function generateArticle(keyword, categorySlug = 'personal-finance', options = {}) {
