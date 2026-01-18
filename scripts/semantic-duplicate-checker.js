@@ -1,12 +1,12 @@
 /**
- * 🔍 FishandTips - Semantic Duplicate Checker
+ * 🔍 MoneyWithSense - Semantic Duplicate Checker
  * 
- * Analizza semanticamente le keyword per evitare:
- * - Keyword Cannibalization (articoli che competono per le stesse keyword)
- * - Contenuti duplicati (stesso argomento con titoli diversi)
- * - Sprechi di risorse AI
+ * Semantically analyzes keywords to avoid:
+ * - Keyword Cannibalization (articles competing for the same keywords)
+ * - Duplicate content (same topic with different titles)
+ * - Wasted AI resources
  * 
- * Usa Google Gemini per analisi semantica intelligente
+ * Uses Google Gemini for intelligent semantic analysis
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -14,10 +14,10 @@ import { getAllArticlesForDuplicateCheck } from './sanity-helpers.js';
 
 // ===== CONFIGURAZIONE =====
 const CONFIG = {
-  // Soglia di similarità per considerare un articolo duplicato (0-100)
-  // NOTA: Impostato MOLTO alto (98) - blocca SOLO duplicati praticamente identici
-  // Es: "come pescare la spigola" vs "come pescare la spigola" = duplicato
-  // Es: "pesca spigola inverno" vs "pesca spigola estate" = OK, sono diversi!
+  // Similarity threshold to consider an article duplicate (0-100)
+  // NOTE: Set VERY high (98) - blocks ONLY nearly identical duplicates
+  // Ex: "how to budget money" vs "how to budget money" = duplicate
+  // Ex: "budgeting for beginners" vs "budgeting for families" = OK, different!
   similarityThreshold: 98,
   // Numero massimo di articoli da confrontare (per ottimizzare costi/tempo)
   maxArticlesToCompare: 30,
@@ -43,44 +43,44 @@ function initGemini() {
  * Prompt per l'analisi semantica dei duplicati
  */
 const DUPLICATE_CHECK_PROMPT = (newKeyword, existingArticles) => `
-Sei un esperto SEO italiano specializzato nella nicchia della pesca sportiva.
-Devi analizzare se una NUOVA KEYWORD è semanticamente duplicata rispetto ad articoli esistenti.
+You are an SEO expert specialized in the personal finance niche.
+Analyze if a NEW KEYWORD is semantically duplicated compared to existing articles.
 
-=== NUOVA KEYWORD DA ANALIZZARE ===
+=== NEW KEYWORD TO ANALYZE ===
 "${newKeyword}"
 
-=== ARTICOLI ESISTENTI SUL SITO ===
+=== EXISTING ARTICLES ON SITE ===
 ${existingArticles.map((a, i) => `
-${i + 1}. Titolo: "${a.title}"
+${i + 1}. Title: "${a.title}"
    Slug: ${a.slug}
    Excerpt: ${a.excerpt || 'N/A'}
-   Keywords SEO: ${(a.seoKeywords || []).join(', ') || 'N/A'}
+   SEO Keywords: ${(a.seoKeywords || []).join(', ') || 'N/A'}
 `).join('\n')}
 
-=== ANALISI RICHIESTA ===
-Per ogni articolo esistente, valuta:
-1. TOPIC OVERLAP: La nuova keyword tratta lo stesso argomento principale?
-2. SEARCH INTENT: L'utente che cerca la nuova keyword troverebbe soddisfacente l'articolo esistente?
-3. KEYWORD CANNIBALIZATION: I due contenuti competerebbero per le stesse query su Google?
+=== ANALYSIS REQUIRED ===
+For each existing article, evaluate:
+1. TOPIC OVERLAP: Does the new keyword cover the same main topic?
+2. SEARCH INTENT: Would a user searching for the new keyword be satisfied with the existing article?
+3. KEYWORD CANNIBALIZATION: Would both contents compete for the same Google queries?
 
-=== REGOLE - SII ESTREMAMENTE PERMISSIVO ===
-- Similarità 98-100%: DUPLICATO - SOLO se titolo e argomento sono IDENTICI
-- Similarità 0-97%: PROCEDI SEMPRE - anche se correlati, sono articoli diversi
+=== RULES - BE EXTREMELY PERMISSIVE ===
+- Similarity 98-100%: DUPLICATE - ONLY if title and topic are IDENTICAL
+- Similarity 0-97%: ALWAYS PROCEED - even if related, they are different articles
 
-REGOLA D'ORO: Blocca SOLO se qualcuno cercando su Google troverebbe ESATTAMENTE lo stesso contenuto.
+GOLDEN RULE: Block ONLY if someone searching on Google would find EXACTLY the same content.
 
-ESEMPI DI NON-DUPLICATI (PROCEDI SEMPRE):
-- "pesca spigola inverno" vs "pesca spigola estate" = DIVERSI (stagione diversa)
-- "spinning spigola" vs "surfcasting spigola" = DIVERSI (tecnica diversa)
-- "pesca orata" vs "pesca spigola" = DIVERSI (pesce diverso)
-- "migliori esche mare" vs "migliori esche lago" = DIVERSI (ambiente diverso)
-- "attrezzatura principianti" vs "attrezzatura esperti" = DIVERSI (livello diverso)
-- "pesca Sicilia" vs "pesca Sardegna" = DIVERSI (luogo diverso)
+EXAMPLES OF NON-DUPLICATES (ALWAYS PROCEED):
+- "budgeting for beginners" vs "budgeting for families" = DIFFERENT (audience different)
+- "investing in stocks" vs "investing in bonds" = DIFFERENT (investment type different)
+- "401k guide" vs "IRA guide" = DIFFERENT (account type different)
+- "credit card debt tips" vs "student loan tips" = DIFFERENT (debt type different)
+- "saving money 2025" vs "saving money 2024" = DIFFERENT (year different)
+- "retirement planning 30s" vs "retirement planning 50s" = DIFFERENT (age group different)
 
-ESEMPI DI DUPLICATI (BLOCCA SOLO QUESTI):
-- "come pescare la spigola guida" vs "guida pesca alla spigola" = STESSO IDENTICO ARTICOLO
+EXAMPLES OF DUPLICATES (BLOCK ONLY THESE):
+- "how to budget guide" vs "budgeting guide tutorial" = SAME IDENTICAL ARTICLE
 
-Nel dubbio, rispondi SEMPRE con isDuplicate: false e recommendation: "proceed".
+When in doubt, ALWAYS respond with isDuplicate: false and recommendation: "proceed".
 
 Rispondi SOLO con questo JSON (senza markdown code blocks):
 {
@@ -309,27 +309,27 @@ async function main() {
 
   if (args.length === 0 || args[0] === '--help') {
     console.log(`
-🔍 FishandTips Semantic Duplicate Checker
-==========================================
+🔍 MoneyWithSense Semantic Duplicate Checker
+=============================================
 
-Verifica se una keyword è semanticamente duplicata rispetto agli articoli esistenti.
+Checks if a keyword is semantically duplicated compared to existing articles.
 
-Uso:
-  node scripts/semantic-duplicate-checker.js "keyword da verificare"
+Usage:
+  node scripts/semantic-duplicate-checker.js "keyword to check"
   node scripts/semantic-duplicate-checker.js --batch "keyword1" "keyword2" "keyword3"
 
-Esempi:
-  node scripts/semantic-duplicate-checker.js "come pescare la spigola"
-  node scripts/semantic-duplicate-checker.js --batch "esche per orata" "montatura surfcasting" "pesca notturna"
+Examples:
+  node scripts/semantic-duplicate-checker.js "budgeting for beginners"
+  node scripts/semantic-duplicate-checker.js --batch "investing 401k" "credit card tips" "emergency fund"
 
-Raccomandazioni output:
-  - proceed: Keyword sicura, nessun duplicato
-  - modify_angle: Esiste articolo simile, considera un angolo diverso
-  - skip: Duplicato certo, salta questa keyword
+Output recommendations:
+  - proceed: Safe keyword, no duplicate
+  - modify_angle: Similar article exists, consider different angle
+  - skip: Certain duplicate, skip this keyword
 
-Prerequisiti:
-  - GEMINI_API_KEY configurata
-  - SANITY_API_TOKEN per leggere gli articoli esistenti
+Prerequisites:
+  - GEMINI_API_KEY configured
+  - SANITY_API_TOKEN to read existing articles
 `);
     return;
   }

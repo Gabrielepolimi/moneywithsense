@@ -53,7 +53,7 @@ export async function getAllAuthors() {
 
 /**
  * Recupera l'ID di una categoria per slug
- * @param {string} slug - Lo slug della categoria (es: "attrezzature", "tecniche-di-pesca")
+ * @param {string} slug - Category slug (e.g., "budgeting", "investing")
  * @returns {Promise<string|null>} ID della categoria o null se non trovata
  */
 export async function getCategoryIdBySlug(slug) {
