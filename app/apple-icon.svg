@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" fill="none">
+  <!-- Background with gradient -->
+  <defs>
+    <linearGradient id="appleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981"/>
+      <stop offset="100%" style="stop-color:#059669"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Rounded rectangle background -->
+  <rect width="180" height="180" rx="40" fill="url(#appleGrad)"/>
+  
+  <!-- Dollar sign - scaled up -->
+  <path d="M90 35v10" stroke="white" stroke-width="12" stroke-linecap="round"/>
+  <path d="M90 135v10" stroke="white" stroke-width="12" stroke-linecap="round"/>
+  
+  <!-- S curve -->
+  <path d="M65 60c0-12 11-17 25-17s25 5 25 17c0 15-25 15-25 30s25 15 25 30c0 12-11 17-25 17s-25-5-25-17" 
+        stroke="white" 
+        stroke-width="12" 
+        stroke-linecap="round"
+        fill="none"/>
+</svg>

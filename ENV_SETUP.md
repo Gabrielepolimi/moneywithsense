@@ -22,6 +22,11 @@ SANITY_API_TOKEN=your_sanity_token_here
 NEXT_PUBLIC_SANITY_PROJECT_ID=z0g6hj8g
 NEXT_PUBLIC_SANITY_DATASET=production
 
+# ----- NEWSLETTER -----
+
+# Google Sheets Webhook (per salvare iscrizioni newsletter)
+GOOGLE_SHEETS_WEBHOOK_URL=your_google_apps_script_url_here
+
 # ----- OPZIONALI -----
 
 # Unsplash (per immagini di qualità)
@@ -91,10 +96,101 @@ Per la produzione, aggiungi le variabili su Vercel:
 
 ---
 
+---
+
+### 5. GOOGLE_SHEETS_WEBHOOK_URL (Newsletter)
+
+Per salvare le iscrizioni alla newsletter su Google Sheets:
+
+#### Step 1: Crea il Google Sheet
+
+1. Vai su [Google Sheets](https://sheets.google.com)
+2. Crea un nuovo foglio chiamato `MoneyWithSense Newsletter`
+3. Nella prima riga, crea queste colonne:
+   - A1: `Timestamp`
+   - B1: `First Name`
+   - C1: `Last Name`
+   - D1: `Email`
+   - E1: `Interests`
+   - F1: `Topics`
+   - G1: `Subscription Date`
+
+#### Step 2: Crea il Google Apps Script
+
+1. Nel foglio, vai su **Extensions** → **Apps Script**
+2. Cancella il codice esistente e incolla questo:
+
+```javascript
+function doPost(e) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    const data = JSON.parse(e.postData.contents);
+    
+    sheet.appendRow([
+      new Date(),                    // Timestamp
+      data.firstName || '',          // First Name
+      data.lastName || '',           // Last Name
+      data.email || '',              // Email
+      data.interests || '',          // Interests
+      data.topics || '',             // Topics
+      data.subscriptionDate || ''    // Subscription Date
+    ]);
+    
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: true }))
+      .setMimeType(ContentService.MimeType.JSON);
+      
+  } catch (error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ error: error.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  return ContentService
+    .createTextOutput(JSON.stringify({ status: 'Newsletter webhook is active' }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+```
+
+3. Salva il progetto (Ctrl+S)
+
+#### Step 3: Deploy come Web App
+
+1. Clicca **Deploy** → **New deployment**
+2. Tipo: **Web app**
+3. Impostazioni:
+   - Description: `Newsletter Webhook`
+   - Execute as: `Me`
+   - Who has access: `Anyone`
+4. Clicca **Deploy**
+5. Copia l'**URL** del deployment
+
+#### Step 4: Configura l'environment variable
+
+Usa l'URL copiato come valore per `GOOGLE_SHEETS_WEBHOOK_URL`:
+
+```bash
+GOOGLE_SHEETS_WEBHOOK_URL=https://script.google.com/macros/s/xxx.../exec
+```
+
+**Aggiungi questa variabile anche su Vercel** per la produzione.
+
+---
+
 ## Test
 
 Dopo aver configurato, testa con:
 
 ```bash
 node scripts/ai-content-generator.js --test
+```
+
+### Test Newsletter (manuale)
+
+```bash
+curl -X POST https://moneywithsense.com/api/newsletter/subscribe \
+  -H "Content-Type: application/json" \
+  -d '{"firstName":"Test","lastName":"User","email":"test@example.com","interests":["saving"],"topics":[]}'
 ```
