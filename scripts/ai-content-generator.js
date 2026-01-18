@@ -292,7 +292,9 @@ SEASON: {season}
       - Real-life impact on everyday finances
       - Keep it grounded, no exaggeration
    
-   c) MAIN CONTENT (3-6 sections with ## H2 headers)
+   c) MAIN CONTENT (3-6 sections)
+      - Use ## for section titles (NOT "H2:" text!)
+      - Example: ## How to Start Saving Today
       - Actionable advice with concrete examples
       - Use bullet points or numbered lists
       - Include specific numbers/amounts when helpful
@@ -331,10 +333,13 @@ SEASON: {season}
 
 5) LENGTH: 1,200-1,600 words (minimum 900, never below 800)
 
-6) SEO:
+6) SEO & FORMATTING:
    - Include primary keyword in first 100 words
    - Use 4-6 related keywords naturally throughout
-   - One H1 (the title), multiple H2, H3 for sub-sections
+   - IMPORTANT: Use proper markdown syntax for headers:
+     * ## Section Title (for H2)
+     * ### Subsection Title (for H3)
+     * NEVER write "H2:" or "H3:" as text!
 
 7) PRODUCTS (for potential affiliate, optional):
    - 2-3 real, globally available tools/apps/services
@@ -354,7 +359,17 @@ PRODUCT1: Exact name | Brief benefit | Price/free
 PRODUCT2: Exact name | Brief benefit | Price/free
 PRODUCT3: Exact name | Brief benefit | Price/free
 ---CONTENT---
-[Full markdown article following the structure above. Use ## for H2, ### for H3. Include internal links and disclaimer.]
+[Full markdown article. CRITICAL: Use proper markdown headers:
+- ## for main sections (NOT "H2:" as text!)
+- ### for subsections (NOT "H3:" as text!)
+Example:
+## Why Saving Money Matters
+Content here...
+
+### Start With Small Steps
+More content...
+
+Include internal links and disclaimer at the end.]
 ---END---
 
 === EXCLUSIONS ===
