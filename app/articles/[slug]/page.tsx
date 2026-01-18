@@ -8,7 +8,8 @@ import { sanityClient } from '../../../sanityClient';
 import RelatedArticlesCarousel from '../../../components/articles/RelatedArticlesCarousel';
 import LikeButton from '../../../components/articles/LikeButton';
 import YouTubeEmbed from '../../../components/articles/YouTubeEmbed';
-import AdPlaceholder from '../../../components/ads/AdPlaceholder';
+// AdPlaceholder temporarily disabled
+// import AdPlaceholder from '../../../components/ads/AdPlaceholder';
 import AuthorBox from '../../../components/articles/AuthorBox';
 
 interface Post {
@@ -367,16 +368,16 @@ export default async function PostPage({ params }: Props) {
           </div>
         )}
 
-        {/* Ad placeholder after intro */}
-        <AdPlaceholder type="inline" />
+        {/* Ad placeholder temporarily disabled */}
+        {/* <AdPlaceholder type="inline" /> */}
 
         {/* Content */}
         <div className="prose prose-lg max-w-none prose-headings:text-secondary-900 prose-p:text-secondary-700 prose-li:text-secondary-700 prose-a:text-primary-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-secondary-900">
           <PortableText value={post.body} />
         </div>
 
-        {/* Ad placeholder mid-content */}
-        <AdPlaceholder type="inline" />
+        {/* Ad placeholder temporarily disabled */}
+        {/* <AdPlaceholder type="inline" /> */}
 
         {/* Author Box */}
         <AuthorBox className="mt-12" />
