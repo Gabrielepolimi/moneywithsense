@@ -117,7 +117,7 @@ Article:
 - Title: ${article.title}
 - Excerpt: ${article.excerpt || ''}
 - Headings: ${article.headings.join(' | ')}
-- Categories/topics: ${[...article.categories, ...article.techniques].join(', ')}
+- Categories/topics: ${[...article.categories, ...(article.topics || [])].join(', ')}
 
 Video:
 - Title: ${video.title}
