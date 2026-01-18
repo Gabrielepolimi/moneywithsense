@@ -459,17 +459,32 @@ async function generateDailyBatch(options = {}) {
           if (slug) {
             console.log('🎥 Starting YouTube picker...');
             try {
-              await execFileAsync('node', [path.join(__dirname, 'youtube-video-picker.js'), slug], {
+              const { stdout, stderr } = await execFileAsync('node', [path.join(__dirname, 'youtube-video-picker.js'), slug], {
                 env: {
                   ...process.env,
                   YOUTUBE_API_KEY: process.env.YOUTUBE_API_KEY,
                   SANITY_API_TOKEN: process.env.SANITY_API_TOKEN,
                   GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+                  NEXT_PUBLIC_SANITY_PROJECT_ID: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
                 },
+                maxBuffer: 10 * 1024 * 1024, // 10MB buffer
               });
+              // Show YouTube picker output
+              if (stdout) {
+                const lines = stdout.trim().split('\n');
+                // Show key lines: winner selection or no winner
+                lines.forEach(line => {
+                  if (line.includes('🏆') || line.includes('⚠️') || line.includes('❌') || line.includes('✅ Salvato')) {
+                    console.log('   ' + line);
+                  }
+                });
+              }
+              if (stderr) console.warn('   YouTube stderr:', stderr);
               console.log('✅ YouTube picker completed');
             } catch (err) {
               console.warn('⚠️ YouTube picker failed:', err.message);
+              if (err.stdout) console.log('   stdout:', err.stdout.slice(-500));
+              if (err.stderr) console.log('   stderr:', err.stderr.slice(-500));
             }
           }
         }

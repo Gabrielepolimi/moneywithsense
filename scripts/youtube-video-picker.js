@@ -432,11 +432,16 @@ async function main() {
   });
 
   const niche = isNiche([article.title, ...safeHeadings, ...safeCategories, ...safeTopics]);
+  console.log(`📊 Candidati totali trovati: ${candidates.length}, isNiche: ${niche}`);
+  
+  // Log drop reasons
+  const dropReasons = {};
   const mainKeyword = extractMainKeyword(articleData);
   const filtered = candidates.filter(c => {
     const reason = applyHardFilters(c, niche);
     if (reason) {
       c._dropReason = reason;
+      dropReasons[reason] = (dropReasons[reason] || 0) + 1;
       return false;
     }
     // Language: accept only English for MoneyWithSense
@@ -451,6 +456,15 @@ async function main() {
     }
     return true;
   });
+
+  // Log why videos were dropped
+  if (Object.keys(dropReasons).length > 0) {
+    console.log('📉 Motivi di esclusione:');
+    Object.entries(dropReasons).forEach(([reason, count]) => {
+      console.log(`   - ${reason}: ${count} video`);
+    });
+  }
+  console.log(`✅ Video che passano i filtri: ${filtered.length}`);
 
   if (filtered.length === 0) {
     console.log('⚠️ Nessun candidato supera i filtri minimi');
@@ -486,10 +500,16 @@ async function main() {
     vid.score = computeScores(vid, vid.relevance, niche);
   }
 
-  // scarta se relevance < 0.85 (strict, e non salvare se nessuno supera)
-  const strong = limited.filter(v => (v.relevance || 0) >= 0.85);
+  // Log candidate stats before filtering
+  console.log(`📊 Candidati prima del filtro relevance: ${limited.length}`);
+  limited.forEach(v => {
+    console.log(`   - "${v.title?.substring(0, 40)}..." views=${v.views} rel=${(v.relevance || 0).toFixed(2)}`);
+  });
+
+  // Filter by relevance >= 0.6 (lowered from 0.85 for better results)
+  const strong = limited.filter(v => (v.relevance || 0) >= 0.6);
   if (strong.length === 0) {
-    console.log('⚠️ Nessun candidato supera la soglia di rilevanza (0.65)');
+    console.log('⚠️ Nessun candidato supera la soglia di rilevanza (0.6)');
     if (!dryRun) {
       await sanityClient.patch(article._id).set({
         youtube: null,
