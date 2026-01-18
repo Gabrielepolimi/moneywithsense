@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     locale: 'en_US',
     images: [
       {
-        url: `${siteUrl}/og-image.jpg`,
+        url: `${siteUrl}/images/og-image.jpg`,
         width: 1200,
         height: 630,
         alt: `${siteName} - Personal finance education`,
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
     creator: '@moneywithsense',
     title: `${siteName} - Practical Money Education`,
     description: 'Actionable tips to save, budget, invest, and build income.',
-    images: [`${siteUrl}/og-image.jpg`],
+    images: [`${siteUrl}/images/og-image.jpg`],
   },
 }
 
@@ -79,11 +79,9 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://cdn.sanity.io" />
         <link rel="alternate" type="application/rss+xml" title="MoneyWithSense RSS Feed" href="/feed.xml" />
         
-        {/* Favicon */}
-        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png" />
-        <link rel="apple-touch-icon" href="/favicon.png" />
+        {/* Favicon - SVG with fallback */}
+        <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+        <link rel="apple-touch-icon" href="/apple-icon.svg" />
         
         {/* Google Search Console Verification */}
         {gscVerification ? (

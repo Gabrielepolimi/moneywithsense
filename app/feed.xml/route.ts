@@ -28,7 +28,7 @@ export async function GET() {
     <category>Finance</category>
     <category>Education</category>
     <image>
-      <url>${siteUrl}/images/logo.png</url>
+      <url>${siteUrl}/images/og-image.jpg</url>
       <title>MoneyWithSense</title>
       <link>${siteUrl}</link>
     </image>
