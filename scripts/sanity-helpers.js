@@ -1,15 +1,15 @@
 /**
- * 🎣 FishandTips - Sanity Helpers
+ * 💰 MoneyWithSense - Sanity Helpers
  * 
- * Funzioni helper per interagire con Sanity CMS
- * Recupero ID autori, categorie e validazione documenti
+ * Helper functions for interacting with Sanity CMS
+ * Author ID retrieval, categories, and document validation
  */
 
 import { createClient } from '@sanity/client';
 
-// ===== CONFIGURAZIONE SANITY =====
+// ===== SANITY CONFIGURATION =====
 const sanityClient = createClient({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '3nnnl6gi',
+  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || 'z0g6hj8g',
   dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
   apiVersion: '2024-08-10',
   useCdn: false,
@@ -95,21 +95,21 @@ export async function getAllCategories() {
 }
 
 /**
- * Recupera tutte le tecniche di pesca disponibili
- * @returns {Promise<Array>} Lista delle tecniche
+ * Retrieve all finance topics available
+ * @returns {Promise<Array>} List of topics
  */
-export async function getAllFishingTechniques() {
+export async function getAllFinanceTopics() {
   try {
-    const techniques = await sanityClient.fetch(`
-      *[_type == "fishingTechnique"]{ 
+    const topics = await sanityClient.fetch(`
+      *[_type == "financeTopic"]{ 
         _id, 
         title, 
         "slug": slug.current 
       } | order(title asc)
     `);
-    return techniques || [];
+    return topics || [];
   } catch (error) {
-    console.error('❌ Errore nel recupero tecniche:', error.message);
+    console.error('❌ Error fetching topics:', error.message);
     return [];
   }
 }
@@ -472,26 +472,26 @@ export function slugify(text) {
 }
 
 /**
- * Stampa un report delle risorse disponibili in Sanity
+ * Print a report of available resources in Sanity
  */
 export async function printSanityReport() {
-  console.log('\n📊 REPORT RISORSE SANITY\n');
+  console.log('\n📊 SANITY RESOURCES REPORT\n');
   console.log('='.repeat(50));
 
-  // Autori
+  // Authors
   const authors = await getAllAuthors();
-  console.log(`\n👤 AUTORI (${authors.length}):`);
+  console.log(`\n👤 AUTHORS (${authors.length}):`);
   authors.forEach(a => console.log(`   - ${a.name} [${a._id}]`));
 
-  // Categorie
+  // Categories
   const categories = await getAllCategories();
-  console.log(`\n📁 CATEGORIE (${categories.length}):`);
+  console.log(`\n📁 CATEGORIES (${categories.length}):`);
   categories.forEach(c => console.log(`   - ${c.title} (${c.slug}) [${c._id}]`));
 
-  // Tecniche
-  const techniques = await getAllFishingTechniques();
-  console.log(`\n🎣 TECNICHE DI PESCA (${techniques.length}):`);
-  techniques.forEach(t => console.log(`   - ${t.title} (${t.slug}) [${t._id}]`));
+  // Finance Topics
+  const topics = await getAllFinanceTopics();
+  console.log(`\n💰 FINANCE TOPICS (${topics.length}):`);
+  topics.forEach(t => console.log(`   - ${t.title} (${t.slug}) [${t._id}]`));
 
   console.log('\n' + '='.repeat(50));
 }
@@ -503,7 +503,7 @@ export default {
   getAllAuthors,
   getCategoryIdBySlug,
   getAllCategories,
-  getAllFishingTechniques,
+  getAllFinanceTopics,
   articleExistsBySlug,
   getArticleBySlug,
   getLatestArticles,

@@ -58,7 +58,8 @@ const tools = [
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Get all published articles
-  let articles: { slug: { current: string }; publishedAt?: string }[] = []
+  // Note: getPosts returns slug as string directly (not slug.current)
+  let articles: { slug: string; publishedAt?: string }[] = []
   try {
     articles = await getPosts()
   } catch {
@@ -100,7 +101,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Article pages
   const articleEntries = articles.map((article) => ({
-    url: `${baseUrl}/articles/${article.slug.current}`,
+    url: `${baseUrl}/articles/${article.slug}`,
     lastModified: article.publishedAt ? new Date(article.publishedAt) : new Date(),
     changeFrequency: 'weekly' as const,
     priority: 0.7,

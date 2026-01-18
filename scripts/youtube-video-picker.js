@@ -16,7 +16,7 @@ import { createClient } from '@sanity/client';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // ====== CONFIG ======
-const SANITY_PROJECT_ID = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '3nnnl6gi';
+const SANITY_PROJECT_ID = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || 'z0g6hj8g';
 const SANITY_DATASET = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production';
 const SANITY_API_TOKEN = process.env.SANITY_API_TOKEN;
 const YT_KEY = process.env.YOUTUBE_API_KEY;
@@ -72,11 +72,12 @@ function hashSignature(parts) {
 
 function isNiche(texts = []) {
   const nicheKeywords = [
-    'spigola', 'orata', 'sarago', 'occhiata', 'seppia', 'calamaro', 'cefalo', 'dentice',
-    'ricciola', 'lampuga', 'serra', 'triglia', 'barracuda', 'mormora', 'pagro', 'pagello',
-    'surfcasting', 'bolognese', 'eging', 'traina', 'bolentino', 'inchiku', 'long arm',
-    'light rock fishing', 'rock fishing', 'shore jigging', 'vertical jigging', 'montatura',
-    'terminali', 'shock leader'
+    'roth ira', '401k', 'index fund', 'etf', 'dividend', 'compound interest',
+    'emergency fund', 'debt snowball', 'debt avalanche', 'credit score', 'fico',
+    'hsa', 'fsa', 'tax deduction', 'capital gains', 'tax loss harvesting',
+    'asset allocation', 'rebalancing', 'dollar cost averaging', 'fire movement',
+    'passive income', 'side hustle', 'freelance', 'gig economy', 'budgeting',
+    'zero-based budget', '50/30/20', 'envelope system', 'sinking fund'
   ];
   const hay = texts.join(' ').toLowerCase();
   return nicheKeywords.some(k => hay.includes(k));
@@ -155,7 +156,7 @@ async function fetchArticle(slug) {
       excerpt,
       body,
       "categories": categories[]->title,
-      "techniques": fishingTechniques[]->title,
+      "topics": financeTopics[]->title,
       youtube,
       showYouTubeVideo,
       youtubeUrl
@@ -181,13 +182,15 @@ function buildQueries(article) {
   q.add(base);
   (article.headings || []).slice(0, 3).forEach(h => q.add(h));
   (article.categories || []).forEach(c => q.add(`${c} personal finance`));
-  (article.techniques || []).forEach(t => q.add(`${t} money tips`));
+  (article.topics || []).forEach(t => q.add(`${t} money tips`));
 
   // tutorial versions
-  const mainTech = article.techniques[0] || '';
-  const mainCat = article.categories[0] || '';
-  if (mainTech) q.add(`${mainTech} tutorial money`);
-  if (mainTech && article.title.toLowerCase().includes('budget')) q.add(`${mainTech} budgeting tutorial`);
+  const mainTopic = article.topics?.[0] || '';
+  const mainCat = article.categories?.[0] || '';
+  if (mainTopic) q.add(`${mainTopic} tutorial money`);
+  if (mainCat) q.add(`${mainCat} explained`);
+  if (article.title.toLowerCase().includes('budget')) q.add(`budgeting tutorial beginner`);
+  if (article.title.toLowerCase().includes('invest')) q.add(`investing for beginners`);
 
   // cleanup
   const queries = Array.from(q)
@@ -206,7 +209,7 @@ async function ytSearch(query) {
     type: 'video',
     videoEmbeddable: 'true',
     safeSearch: 'moderate',
-    regionCode: 'IT',
+    relevanceLanguage: 'en',
   });
   const res = await fetch(`${YT_SEARCH_URL}?${params.toString()}`);
   if (!res.ok) throw new Error(`YouTube search failed: ${res.status}`);
@@ -321,14 +324,14 @@ async function main() {
   const headings = extractHeadingsFromBody(article.body);
   const safeHeadings = Array.isArray(headings) ? headings : [];
   const safeCategories = Array.isArray(article.categories) ? article.categories.filter(Boolean) : [];
-  const safeTechniques = Array.isArray(article.techniques) ? article.techniques.filter(Boolean) : [];
+  const safeTopics = Array.isArray(article.topics) ? article.topics.filter(Boolean) : [];
   const articleData = {
     slug: article.slug,
     title: article.title,
     excerpt: article.excerpt || '',
     headings: safeHeadings,
     categories: safeCategories,
-    techniques: safeTechniques,
+    topics: safeTopics,
   };
 
   // Cache check (skip if --force)
@@ -337,7 +340,7 @@ async function main() {
     article.excerpt || '',
     safeHeadings.join('|'),
     safeCategories.join('|'),
-    safeTechniques.join('|'),
+    safeTopics.join('|'),
   ]);
   if (!force && article.youtube?.signatureHash === signature && article.youtube?.pickedAt) {
     const pickedAt = new Date(article.youtube.pickedAt).getTime();
@@ -424,7 +427,7 @@ async function main() {
     };
   });
 
-  const niche = isNiche([article.title, ...safeHeadings, ...safeCategories, ...safeTechniques]);
+  const niche = isNiche([article.title, ...safeHeadings, ...safeCategories, ...safeTopics]);
   const mainKeyword = extractMainKeyword(articleData);
   const filtered = candidates.filter(c => {
     const reason = applyHardFilters(c, niche);
@@ -545,7 +548,7 @@ async function main() {
     showYouTubeVideo: true,
     youtubeUrl: winner.id,
     youtubeTitle: winner.title,
-    youtubeDescription: winner.reason || 'Il video che ti consigliamo di vedere per questo argomento.',
+    youtubeDescription: winner.reason || 'A recommended video to help you understand this topic better.',
   };
 
   console.log('\n🏆 Video scelto:', winner.id, '-', winner.title);
