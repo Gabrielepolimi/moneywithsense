@@ -22,7 +22,8 @@ export async function searchPhotos(query, options = {}) {
   const {
     perPage = 7,
     orientation = 'portrait',
-    orderBy = 'relevant'
+    orderBy = 'relevant',
+    page = 1
   } = options;
   
   if (!CONFIG.accessKey) {
@@ -34,7 +35,8 @@ export async function searchPhotos(query, options = {}) {
     query,
     per_page: perPage,
     orientation,
-    order_by: orderBy
+    order_by: orderBy,
+    page
   });
   
   try {

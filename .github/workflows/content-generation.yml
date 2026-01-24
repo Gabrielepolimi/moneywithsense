@@ -78,7 +78,7 @@ jobs:
             COUNT="${{ github.event.inputs.article_count }}"
             DRY_RUN="${{ github.event.inputs.dry_run }}"
           else
-            COUNT="2"
+            COUNT="1"
             DRY_RUN="false"
           fi
           if [ "$DRY_RUN" = "true" ]; then

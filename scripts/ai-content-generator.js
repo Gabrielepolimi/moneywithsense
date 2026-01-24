@@ -48,6 +48,64 @@ const CONFIG = {
   unsplashRetryDelay: 2000 // 2 secondi
 };
 
+const USED_UNSPLASH_IDS_FILE = path.join(__dirname, '..', 'data', 'unsplash-used.json');
+const MAX_STORED_UNSPLASH_IDS = 300;
+const usedUnsplashPhotoIds = new Set();
+let usedUnsplashPhotoIdQueue = [];
+
+function loadUsedUnsplashIds() {
+  try {
+    if (!fs.existsSync(USED_UNSPLASH_IDS_FILE)) {
+      return;
+    }
+    const raw = fs.readFileSync(USED_UNSPLASH_IDS_FILE, 'utf-8');
+    const parsed = JSON.parse(raw);
+    const ids = Array.isArray(parsed) ? parsed : parsed.ids;
+    if (!Array.isArray(ids)) return;
+
+    const trimmed = ids.slice(-MAX_STORED_UNSPLASH_IDS);
+    usedUnsplashPhotoIdQueue = [];
+    usedUnsplashPhotoIds.clear();
+    trimmed.forEach((id) => {
+      if (id && !usedUnsplashPhotoIds.has(id)) {
+        usedUnsplashPhotoIds.add(id);
+        usedUnsplashPhotoIdQueue.push(id);
+      }
+    });
+  } catch (error) {
+    console.warn(`⚠️ Impossibile caricare unsplash-used.json: ${error.message}`);
+  }
+}
+
+function saveUsedUnsplashIds() {
+  try {
+    const dir = path.dirname(USED_UNSPLASH_IDS_FILE);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    const payload = {
+      updatedAt: new Date().toISOString(),
+      ids: usedUnsplashPhotoIdQueue
+    };
+    fs.writeFileSync(USED_UNSPLASH_IDS_FILE, JSON.stringify(payload, null, 2), 'utf-8');
+  } catch (error) {
+    console.warn(`⚠️ Impossibile salvare unsplash-used.json: ${error.message}`);
+  }
+}
+
+function rememberUnsplashId(id) {
+  if (!id || usedUnsplashPhotoIds.has(id)) return;
+  usedUnsplashPhotoIds.add(id);
+  usedUnsplashPhotoIdQueue.push(id);
+  if (usedUnsplashPhotoIdQueue.length > MAX_STORED_UNSPLASH_IDS) {
+    const removed = usedUnsplashPhotoIdQueue.shift();
+    if (removed) usedUnsplashPhotoIds.delete(removed);
+  }
+  saveUsedUnsplashIds();
+}
+
+loadUsedUnsplashIds();
+
 // Sanity Client
 const sanityClient = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || 'z0g6hj8g',
@@ -183,37 +241,44 @@ async function getImageWithFallback(keyword, categorySlug, finalSlug, articleTit
   for (let attempt = 1; attempt <= CONFIG.unsplashMaxRetries; attempt++) {
     try {
       const imageKeywords = extractImageKeywords(keyword, categorySlug);
-      log(`   🔍 Tentativo ${attempt}/${CONFIG.unsplashMaxRetries} - Query: "${imageKeywords}"`);
-      
+      const orderBy = Math.random() < 0.5 ? 'relevant' : 'latest';
+      const page = Math.floor(Math.random() * 4) + 1;
+      log(`   🔍 Tentativo ${attempt}/${CONFIG.unsplashMaxRetries} - Query: "${imageKeywords}" (order: ${orderBy}, page: ${page})`);
+
       const photos = await searchPhotos(imageKeywords, {
-        perPage: 5,
-        orientation: 'landscape'
+        perPage: 12,
+        orientation: 'landscape',
+        orderBy,
+        page
       });
-      
-      if (photos && photos.length > 0 && photos[0].url) {
-        const photo = photos[0];
-        
-        // Verifica che non sia un placeholder
-        if (photo.id && !photo.id.startsWith('placeholder')) {
+
+      if (photos && photos.length > 0) {
+        const candidates = photos.filter(photo => photo?.id && photo.url && !photo.id.startsWith('placeholder'));
+        const unused = candidates.filter(photo => !usedUnsplashPhotoIds.has(photo.id));
+        const pool = unused.length > 0 ? unused : candidates;
+        const photo = pool[Math.floor(Math.random() * pool.length)];
+
+        if (photo) {
           imageCredit = photo.author;
-          
+
           // Traccia download (ToS Unsplash)
           if (photo.downloadLink) {
             await trackDownload(photo.downloadLink);
           }
-          
+
           log(`   ✅ Unsplash: ${photo.description || 'Immagine trovata'}`);
           log(`   📷 by ${photo.author?.name || 'Unknown'}`);
-          
+
           // Upload su Sanity
           mainImageAsset = await uploadImageToSanity(
             photo.url,
             finalSlug,
             `${articleTitle} - Foto di ${photo.author?.name || 'Unsplash'} su Unsplash`
           );
-          
+
           if (mainImageAsset) {
             imageSource = 'unsplash';
+            rememberUnsplashId(photo.id);
             break;
           }
         }
@@ -675,42 +740,61 @@ function parseGeneratedContent(content) {
  * Uses full words and varied search queries for better Unsplash results
  */
 function extractImageKeywords(keyword, category) {
-  // Topic-specific image queries for variety
-  const topicQueries = {
-    'saving': ['piggy bank savings', 'money jar coins', 'savings account'],
-    'budget': ['budget planner notebook', 'expense tracking', 'financial planning desk'],
-    'retire': ['retirement planning', 'senior couple finances', 'pension savings'],
-    'baby': ['family budget planning', 'baby savings jar', 'new parents finances'],
-    'expat': ['international money', 'travel finances', 'world currency'],
-    'freelance': ['freelancer workspace', 'home office laptop', 'self employed'],
-    'debt': ['debt free celebration', 'credit card payment', 'financial freedom'],
-    'invest': ['investment growth chart', 'stock market', 'portfolio analysis'],
-    'income': ['multiple income streams', 'passive income', 'money growth'],
-    'mistake': ['financial planning mistakes', 'money stress', 'budget review'],
-    'checklist': ['checklist notepad', 'financial checklist', 'planning notebook'],
-    'couple': ['couple finances', 'joint budget', 'partners money talk'],
-    'student': ['student budget', 'college finances', 'young adult money'],
-    'expense': ['expense tracking', 'receipt organization', 'spending analysis'],
-    'track': ['money tracking app', 'budget spreadsheet', 'financial dashboard']
+  const pick = (items) => items[Math.floor(Math.random() * items.length)];
+  const stopwords = new Set([
+    'how', 'to', 'the', 'a', 'an', 'of', 'and', 'in', 'with', 'for', 'on', 'at',
+    'your', 'you', 'is', 'are', 'this', 'that', 'from', 'without', 'guide', 'tips',
+    'best', 'simple', 'easy', 'money', 'finance', 'financial'
+  ]);
+
+  const tokens = keyword
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(word => word.length > 2 && !stopwords.has(word))
+    .slice(0, 4);
+
+  const categoryPhrases = {
+    'personal-finance': ['personal finance', 'money management', 'financial planning'],
+    'saving-money': ['saving money', 'piggy bank', 'budget planning'],
+    'investing-basics': ['investment planning', 'portfolio review', 'growth chart'],
+    'passive-income': ['side income', 'multiple income streams', 'remote work'],
+    'budgeting': ['budget planner', 'expense tracking', 'monthly budget'],
+    'credit-debt': ['credit card payment', 'debt payoff', 'credit score'],
+    'credit-and-debt': ['credit card payment', 'debt payoff', 'credit score'],
+    'banking-cards': ['online banking', 'bank card', 'mobile banking'],
+    'banking-and-cards': ['online banking', 'bank card', 'mobile banking'],
+    'taxes-tips': ['tax documents', 'tax planning', 'calculator desk'],
+    'taxes-and-tips': ['tax documents', 'tax planning', 'calculator desk'],
+    'side-hustles': ['freelancer workspace', 'side hustle', 'home office'],
+    'money-psychology': ['money mindset', 'financial habits', 'stress relief']
   };
-  
-  // Find matching topic
-  const keywordLower = keyword.toLowerCase();
-  let searchQuery = 'personal finance money management'; // default
-  
-  for (const [topic, queries] of Object.entries(topicQueries)) {
-    if (keywordLower.includes(topic)) {
-      // Pick random query from options for variety
-      searchQuery = queries[Math.floor(Math.random() * queries.length)];
-      break;
-    }
-  }
-  
-  // Add some randomization to avoid same images
-  const suffixes = ['minimal', 'clean', 'professional', 'modern', 'aesthetic'];
-  const randomSuffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-  
-  return `${searchQuery} ${randomSuffix}`.trim();
+
+  const sceneModifiers = [
+    'desk setup', 'notebook', 'calculator', 'laptop', 'spreadsheet', 'receipt',
+    'planning session', 'workspace', 'coffee table', 'home office', 'minimal'
+  ];
+
+  const styleModifiers = [
+    'clean', 'modern', 'professional', 'minimal', 'natural light', 'organized'
+  ];
+
+  const base = tokens.join(' ');
+  const categoryPhrase = pick(categoryPhrases[category] || ['personal finance', 'budget planning']);
+
+  const variants = [
+    `${base || categoryPhrase} ${categoryPhrase}`,
+    `${base || categoryPhrase} ${pick(sceneModifiers)}`,
+    `${categoryPhrase} ${pick(sceneModifiers)}`,
+    `${base || categoryPhrase} ${pick(styleModifiers)}`,
+    `${categoryPhrase} ${pick(styleModifiers)}`
+  ];
+
+  const cleanedVariants = variants
+    .map(q => q.replace(/\s+/g, ' ').trim())
+    .filter(q => q.length > 0);
+
+  return cleanedVariants.length > 0 ? pick(cleanedVariants) : categoryPhrase;
 }
 
 /**
