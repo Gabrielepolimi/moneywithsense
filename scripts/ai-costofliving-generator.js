@@ -117,6 +117,7 @@ const sanityClient = createClient({
 let genAI = null;
 let vertexAI = null;
 let useVertexAI = false;
+let forceAiStudio = false; // Flag to force Google AI Studio even if Vertex AI is configured
 
 function getGeminiAI() {
   // Check if Vertex AI is configured
@@ -417,15 +418,18 @@ a) TL;DR / In Brief
   • 3–5 bullet points OR  
   • One short summary paragraph  
   (choose format naturally, not always the same)
-- Must clearly answer:
-  "You'll need approximately $X–$Y per month to live in {city}."
+- Must clearly answer in LOCAL CURRENCY:
+  "You'll need approximately {localCurrency}X–{localCurrency}Y per month to live in {city}."
+  (Include USD equivalent if different: "approximately €1,200–€1,800 ($1,300–$1,950 USD) per month")
 
 b) Last Updated  
 - Format exactly:
   "Last updated: {Month YYYY}"
 
 c) Monthly Cost Breakdown  
-- Markdown table with ranges (Min / Max)
+- Markdown table with ranges (Min / Max) in LOCAL CURRENCY ({localCurrency})
+- Show USD equivalent in parentheses if different from local currency
+- Example: "€800–€1,200 ($850–$1,280 USD)"
 - Include:
   Rent (city center)
   Rent (outside center)
@@ -493,10 +497,10 @@ k) Disclaimer (mandatory, exact meaning)
 - Never below 1,000 words
 
 8) SEO RULES
-- Primary keyword must appear:
-  • Once in the first paragraph
-  • Once in one H2
-  • No more than 2 times total
+- Primary keyword:
+  • Use naturally throughout the content
+  • Avoid keyword stuffing
+  • Appear in first paragraph and at least one H2
 - Use 4–6 related keywords naturally
 - Use proper markdown:
   • ## for H2
@@ -545,6 +549,7 @@ k) Disclaimer (mandatory, exact meaning)
   "totalMin": 2830,
   "totalMax": 4350
 }
+---END_COST_DATA_JSON---
 
 ---DATA_POLICY_JSON---
 {
@@ -1180,6 +1185,7 @@ Alternatively, you can enable it via gcloud CLI:
         
         if (isVertexError && attempt === 1) {
           log('⚠️ Vertex AI failed, falling back to Google AI Studio...');
+          forceAiStudio = true; // Force AI Studio for all subsequent calls
           useVertexAI = false; // Switch to Google AI Studio
           genAI = null; // Reset to force re-initialization
           vertexAI = null; // Reset Vertex AI
@@ -1210,8 +1216,34 @@ Alternatively, you can enable it via gcloud CLI:
     log(`⚠️ SEO validation failed: ${seoValidation.errors.join(', ')}`);
     log('   Attempting to fix SEO fields...');
     
-    // Retry with fix prompt for SEO fields only
-    const seoFixPrompt = `${prompt}\n\nCRITICAL: The previous output had invalid SEO metadata. Please regenerate ONLY the metadata sections with these exact constraints:\n- TITLE: max 60 characters\n- SEO_TITLE: max 60 characters\n- META_DESCRIPTION: EXACTLY 150-160 characters (count carefully)\n- EXCERPT: max 150 characters\n\nKeep all other content the same.`;
+    // Retry with fix prompt - ask ONLY for metadata sections, include original content to preserve it
+    const seoFixPrompt = `You are fixing SEO metadata for a cost-of-living article. The original content is below.
+
+ORIGINAL CONTENT (DO NOT CHANGE):
+---CONTENT---
+${parsed.content}
+---END_CONTENT---
+
+REQUIRED: Generate ONLY the following metadata sections with these exact constraints:
+- TITLE: max 60 characters
+- SEO_TITLE: max 60 characters  
+- META_DESCRIPTION: EXACTLY 150-160 characters (count carefully)
+- EXCERPT: max 150 characters
+
+OUTPUT FORMAT (only these sections):
+---TITLE---
+[Display title, max 60 chars]
+
+---SEO_TITLE---
+[SEO title, max 60 chars]
+
+---META_DESCRIPTION---
+[150-160 characters exactly]
+
+---EXCERPT---
+[Max 150 characters]
+
+---END---`;
     
     try {
       const ai = getGeminiAI();
@@ -1232,7 +1264,7 @@ Alternatively, you can enable it via gcloud CLI:
           contents: [{ role: 'user', parts: [{ text: seoFixPrompt }] }],
           generationConfig: {
             temperature: 0.3, // Lower temperature for more precise metadata
-            maxOutputTokens: CONFIG.maxTokens
+            maxOutputTokens: 500 // Only need metadata, not full content
           }
         });
         fixedContent = result.response.candidates[0].content.parts[0].text;
@@ -1242,21 +1274,34 @@ Alternatively, you can enable it via gcloud CLI:
           contents: [{ role: 'user', parts: [{ text: seoFixPrompt }] }],
           generationConfig: {
             temperature: 0.3,
-            maxOutputTokens: CONFIG.maxTokens
+            maxOutputTokens: 500 // Only need metadata, not full content
           }
         });
         fixedContent = result.response.text();
       }
       
-      const fixedParsed = parseGeneratedContent(fixedContent);
-      const fixedSeoValidation = validateSeoFields(fixedParsed);
+      // Parse only metadata sections from fixed content
+      const titleMatch = fixedContent.match(/---TITLE---\s*([\s\S]*?)\s*---SEO_TITLE---/);
+      if (titleMatch) parsed.title = titleMatch[1].trim();
       
+      const seoTitleMatch = fixedContent.match(/---SEO_TITLE---\s*([\s\S]*?)\s*---META_DESCRIPTION---/);
+      if (seoTitleMatch) parsed.seoTitle = seoTitleMatch[1].trim();
+      
+      const metaDescMatch = fixedContent.match(/---META_DESCRIPTION---\s*([\s\S]*?)\s*---EXCERPT---/);
+      if (metaDescMatch) parsed.metaDescription = metaDescMatch[1].trim();
+      
+      const excerptMatch = fixedContent.match(/---EXCERPT---\s*([\s\S]*?)\s*---END---/);
+      if (excerptMatch) {
+        parsed.excerpt = excerptMatch[1].trim();
+        // Truncate to 150 chars if too long
+        if (parsed.excerpt.length > 150) {
+          parsed.excerpt = parsed.excerpt.substring(0, 147) + '...';
+        }
+      }
+      
+      // Re-validate
+      const fixedSeoValidation = validateSeoFields(parsed);
       if (fixedSeoValidation.valid) {
-        // Merge only SEO fields
-        parsed.title = fixedParsed.title;
-        parsed.seoTitle = fixedParsed.seoTitle;
-        parsed.metaDescription = fixedParsed.metaDescription;
-        parsed.excerpt = fixedParsed.excerpt;
         log('✅ SEO fields fixed on retry');
       } else {
         throw new Error(`SEO validation failed after retry: ${fixedSeoValidation.errors.join(', ')}`);
@@ -1487,16 +1532,22 @@ Alternatively, you can enable it via gcloud CLI:
   log(`⏱️ Reading: ${readingTime} min`);
   log(`🆔 ID: ${created._id}`);
   
-  // 17. Update related posts now that we have the document ID (exclude current)
+  // 17. Update related posts now that we have the document ID (exclude current) - non-blocking
   if (relatedPosts.length > 0) {
     log('🔄 Updating related posts (excluding current)...');
-    const updatedRelatedPosts = await findRelatedPosts(citySlug, countryCode, year, created._id, 2);
-    if (updatedRelatedPosts.length !== relatedPosts.length || updatedRelatedPosts.some((p, i) => p._id !== relatedPosts[i]?._id)) {
-      // Update internal links if different
-      await sanityClient.patch(created._id).set({
-        'internalLinks.relatedRefs': updatedRelatedPosts.map(p => ({ _type: 'reference', _ref: p._id }))
-      }).commit();
-      log(`   Updated related posts: ${updatedRelatedPosts.length}`);
+    try {
+      const updatedRelatedPosts = await findRelatedPosts(citySlug, countryCode, year, created._id, 2);
+      if (updatedRelatedPosts.length !== relatedPosts.length || updatedRelatedPosts.some((p, i) => p._id !== relatedPosts[i]?._id)) {
+        // Update internal links if different
+        await sanityClient.patch(created._id).set({
+          'internalLinks.relatedRefs': updatedRelatedPosts.map(p => ({ _type: 'reference', _ref: p._id }))
+        }).commit();
+        log(`   Updated related posts: ${updatedRelatedPosts.length}`);
+      }
+    } catch (error) {
+      // Non-blocking: log warning but don't fail the entire generation
+      console.warn(`⚠️ Failed to update related posts (non-blocking): ${error.message}`);
+      log(`   ⚠️ Related posts update skipped (non-critical)`);
     }
   }
   
