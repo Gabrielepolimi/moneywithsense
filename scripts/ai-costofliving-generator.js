@@ -688,8 +688,8 @@ c) Monthly Cost Breakdown
 
 - CRITICAL: The table MUST have:
   • A header row with column names
-  • A separator row with `| :--- | :--- | :--- | :--- |` (left-aligned columns)
-  • Data rows with proper pipe separators `|`
+  • A separator row with pipes and colons: | :--- | :--- | :--- | :--- | (left-aligned columns)
+  • Data rows with proper pipe separators
   • All values in LOCAL CURRENCY with USD equivalent in parentheses
 - Do NOT use fake table formatting with dashes or dots - use proper Markdown table syntax
 
