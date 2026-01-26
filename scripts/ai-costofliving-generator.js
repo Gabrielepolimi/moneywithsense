@@ -937,11 +937,16 @@ function getPromptTemplate(mode, city, country, year, comparisonCity = null) {
   const countryCode = normalizeCountryCode(country);
   const localCurrency = inferLocalCurrency(countryCode);
   // For JSON template, always use ISO code (fallback to USD if not mapped)
-  // For display text, use symbol or placeholder
+  // For display text, use symbol or fallback to USD with instruction
   const costDataCurrency = localCurrency || 'USD'; // Always ISO for JSON
   const currencySymbol = localCurrency 
     ? (localCurrency === 'EUR' ? '€' : localCurrency === 'GBP' ? '£' : localCurrency === 'USD' ? '$' : localCurrency)
-    : '[LOCAL_CURRENCY]'; // Placeholder for AI to fill in text
+    : '$'; // Use USD symbol as fallback, but add instruction in prompt
+  
+  // Add currency instruction if currency not mapped
+  const currencyInstruction = localCurrency 
+    ? '' 
+    : '\n\nIMPORTANT: Even though the JSON uses USD (due to missing currency mapping), write the article using the local currency symbol for {city}. Do not use [LOCAL_CURRENCY] placeholder - use the actual currency symbol (e.g., €, £, ¥, etc.) based on the country.';
   
   return template
     .replace(/{city}/g, city)
@@ -949,7 +954,8 @@ function getPromptTemplate(mode, city, country, year, comparisonCity = null) {
     .replace(/{year}/g, year.toString())
     .replace(/{comparisonCity}/g, comparisonCity || '')
     .replace(/{localCurrency}/g, costDataCurrency) // Always ISO code for JSON
-    .replace(/{currencySymbol}/g, currencySymbol);
+    .replace(/{currencySymbol}/g, currencySymbol)
+    + currencyInstruction; // Append instruction if needed
 }
 
 // ===== CONTENT PARSING =====
@@ -1136,11 +1142,22 @@ function validateArticleStructure(content, mode = 'city') {
   requiredH2Headings.forEach(({ exact, flexible }) => {
     if (flexible) {
       // Allow variations (e.g., "## How to Save Money in {city}")
+      // For city mode, require "in {city}" suffix; for others, just require base heading
       const base = exact.replace(/^##\s+/, '');
       const escaped = base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp(`^##\\s+${escaped}\\b.*$`, 'im');
-      if (!regex.test(content)) {
-        errors.push(`Missing required section: ${exact}`);
+      
+      if (mode === 'city') {
+        // For city mode, require "How to Save Money in {city}" (tolerant to city name variations)
+        const regex = new RegExp(`^##\\s+${escaped}\\s+in\\s+[^\\n]+$`, 'im');
+        if (!regex.test(content)) {
+          errors.push(`Missing required section: ${exact} in {city} (required for city mode)`);
+        }
+      } else {
+        // For other modes, just require base heading
+        const regex = new RegExp(`^##\\s+${escaped}\\b.*$`, 'im');
+        if (!regex.test(content)) {
+          errors.push(`Missing required section: ${exact}`);
+        }
       }
     } else {
       // Tolerant exact match (allows whitespace and small suffixes)
