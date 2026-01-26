@@ -655,31 +655,43 @@ CRITICAL: Use these EXACT H2 headings (case-sensitive):
 - ## Disclaimer
 
 a) TL;DR  
-- Either:
-  • 3–5 bullet points OR  
-  • One short summary paragraph  
-  (choose format naturally, not always the same)
-- Must clearly answer in LOCAL CURRENCY:
-  "You'll need approximately {currencySymbol}X–{currencySymbol}Y per month to live in {city}."
+- Use 3–5 bullet points (preferred format)
+- Each bullet point should be concise (one line)
+- First bullet MUST clearly state the monthly budget range in LOCAL CURRENCY:
+  "• You'll need approximately {currencySymbol}X–{currencySymbol}Y per month to live in {city}."
   (Include USD equivalent if different: "approximately €1,200–€1,800 ($1,300–$1,950 USD) per month")
+- Other bullets can cover key points: largest expense, lifestyle factors, etc.
+- Example format:
+  • Monthly budget: €1,200–€1,800 ($1,300–$1,950 USD) per month
+  • Rent is typically the largest expense
+  • Costs vary significantly by neighborhood
+  • Public transport is affordable and efficient
 
 b) Last Updated  
 - Format exactly:
   "Last updated: {Month YYYY}"
 
 c) Monthly Cost Breakdown  
-- Markdown table with ranges (Min / Max) in LOCAL CURRENCY ({localCurrency})
-- Show USD equivalent in parentheses if different from local currency
-- Example: "€800–€1,200 ($850–$1,280 USD)"
-- Include:
-  Rent (city center)
-  Rent (outside center)
-  Utilities
-  Groceries
-  Transport
-  Eating out
-  Internet / Phone
-  Entertainment
+- MUST be a properly formatted Markdown table
+- Use this EXACT format (copy the structure, replace values):
+  
+  | Category | Cost Range ({currencySymbol}) | Cost Range (USD) | Notes |
+  | :--- | :--- | :--- | :--- |
+  | Rent (1-bed, city center) | {currencySymbol}1,200–{currencySymbol}1,800 | $1,300–$1,940 | Areas like [neighborhood examples] |
+  | Rent (1-bed, outside center) | {currencySymbol}800–{currencySymbol}1,200 | $860–$1,300 | Neighborhoods like [examples] |
+  | Utilities | {currencySymbol}150–{currencySymbol}250 | $160–$270 | Includes electricity, gas, water |
+  | Groceries | {currencySymbol}300–{currencySymbol}450 | $325–$485 | Based on cooking most meals at home |
+  | Transport | {currencySymbol}40–{currencySymbol}90 | $45–$100 | Monthly public transport pass |
+  | Eating Out | {currencySymbol}250–{currencySymbol}400 | $270–$430 | Mix of casual and mid-range restaurants |
+  | Internet / Phone | {currencySymbol}50–{currencySymbol}80 | $55–$85 | Combined home internet + mobile plan |
+  | Entertainment & Lifestyle | {currencySymbol}150–{currencySymbol}300 | $160–$325 | Gym, cinema, museums, social events |
+
+- CRITICAL: The table MUST have:
+  • A header row with column names
+  • A separator row with `| :--- | :--- | :--- | :--- |` (left-aligned columns)
+  • Data rows with proper pipe separators `|`
+  • All values in LOCAL CURRENCY with USD equivalent in parentheses
+- Do NOT use fake table formatting with dashes or dots - use proper Markdown table syntax
 
 d) By Lifestyle (Lifestyle Scenarios)
 - Single person
