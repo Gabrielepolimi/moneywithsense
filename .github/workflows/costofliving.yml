@@ -111,6 +111,30 @@ jobs:
           
           echo "GOOGLE_APPLICATION_CREDENTIALS=$CREDS_FILE" >> $GITHUB_ENV
           echo "✅ Vertex AI credentials file created and verified at $CREDS_FILE"
+          
+          # Verify file permissions and readability
+          chmod 600 "$CREDS_FILE"
+          if [ -r "$CREDS_FILE" ]; then
+            echo "✅ Credentials file is readable"
+          else
+            echo "❌ Credentials file is not readable"
+            exit 1
+          fi
+      
+      - name: Verify credentials before generation
+        if: ${{ secrets.GCP_PROJECT_ID != '' }}
+        run: |
+          if [ -z "$GOOGLE_APPLICATION_CREDENTIALS" ]; then
+            echo "❌ GOOGLE_APPLICATION_CREDENTIALS environment variable not set"
+            exit 1
+          fi
+          if [ ! -f "$GOOGLE_APPLICATION_CREDENTIALS" ]; then
+            echo "❌ Credentials file not found: $GOOGLE_APPLICATION_CREDENTIALS"
+            exit 1
+          fi
+          echo "✅ Credentials file verified: $GOOGLE_APPLICATION_CREDENTIALS"
+          echo "✅ GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}"
+          echo "✅ GCP_LOCATION: ${{ secrets.GCP_LOCATION || 'us-central1' }}"
       
       - name: Generate Cost of Living Article
         env:
