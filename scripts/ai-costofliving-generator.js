@@ -835,7 +835,7 @@ YEAR: {year}
 
 1) TITLE: max 60 characters, SEO-friendly comparison title
 2) SEO_TITLE: max 60 characters
-3) META_DESCRIPTION: exactly 150-160 characters
+3) META_DESCRIPTION: max 140 characters
 4) EXCERPT: max 150 characters
 
 5) CONTENT STRUCTURE:
@@ -880,7 +880,7 @@ FRAMING: "How much do you need to live in {city}?"
 
 1) TITLE: "How Much Do You Need to Live in {city} (2026)?"
 2) SEO_TITLE: max 60 characters
-3) META_DESCRIPTION: exactly 150-160 characters
+3) META_DESCRIPTION: max 140 characters
 4) EXCERPT: max 150 characters
 
 5) CONTENT STRUCTURE:
