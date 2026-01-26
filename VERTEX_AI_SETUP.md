@@ -15,11 +15,16 @@ This guide explains how to configure Vertex AI to use advanced Gemini models lik
    - Sign up at https://cloud.google.com
    - Create a new project or use existing one
 
-2. **Enable Vertex AI API**
+2. **Enable Vertex AI API** ⚠️ **REQUIRED - This step is critical!**
    - Go to [Google Cloud Console](https://console.cloud.google.com)
    - Navigate to "APIs & Services" → "Library"
-   - Search for "Vertex AI API"
+   - Search for "Vertex AI API" (or "AI Platform API")
    - Click "Enable"
+   - **Alternative method via gcloud CLI:**
+     ```bash
+     gcloud services enable aiplatform.googleapis.com --project=YOUR_PROJECT_ID
+     ```
+   - **Important:** Wait 2-5 minutes after enabling for the API to propagate
 
 3. **Create Service Account**
    - Go to "IAM & Admin" → "Service Accounts"

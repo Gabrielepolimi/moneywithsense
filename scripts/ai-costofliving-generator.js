@@ -129,7 +129,6 @@ function getGeminiAI() {
           console.log(`🔑 GOOGLE_APPLICATION_CREDENTIALS set to: ${process.env.GOOGLE_APPLICATION_CREDENTIALS}`);
           // Verify file exists
           try {
-            const fs = require('fs');
             if (fs.existsSync(process.env.GOOGLE_APPLICATION_CREDENTIALS)) {
               console.log(`✅ Credentials file exists and is readable`);
             } else {
