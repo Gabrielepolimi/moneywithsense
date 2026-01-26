@@ -1674,10 +1674,10 @@ ${parsed.content}
 REQUIRED: Generate ONLY the following metadata sections with these exact constraints:
 - TITLE: max 60 characters (count each character)
 - SEO_TITLE: max 60 characters (count each character)
-- META_DESCRIPTION: MAX 140 characters. Count every character including spaces.
+- META_DESCRIPTION: MAX 140 characters (strict limit). Count every character including spaces. Target 135-140 characters to be safe.
 - EXCERPT: max 150 characters (count each character)
 
-CRITICAL: META_DESCRIPTION must be <= 140 characters. Count carefully before outputting.
+CRITICAL: META_DESCRIPTION must be <= 140 characters. Count carefully before outputting. If current is 148, shorten to 135-140.
 
 OUTPUT FORMAT (only these sections):
 ---TITLE---
