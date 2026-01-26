@@ -1935,7 +1935,21 @@ OUTPUT FORMAT (only these sections):
   if (!structureValidation.valid) {
     // Single retry with fix prompt
     log('⚠️ Structure validation failed, retrying with fix prompt...');
-    const fixPrompt = `${prompt}\n\nIMPORTANT: The previous output was missing required sections. Please regenerate with ALL required sections as H2 headings (##): TL;DR, Last Updated, Monthly Cost Breakdown, By Lifestyle, How to Save Money, Common Mistakes, Quick Checklist, FAQ, Sources & Methodology, Conclusion, Disclaimer.`;
+      const fixPrompt = `${prompt}\n\nCRITICAL FIX REQUIRED: The previous output had formatting errors. Please regenerate with ALL required sections as H2 headings (##):
+
+- ## TL;DR (NOT plain text "TL;DR" - must be a heading!)
+- ## Last Updated
+- ## Monthly Cost Breakdown
+- ## By Lifestyle
+- ## How to Save Money in {city}
+- ## Common Mistakes
+- ## Quick Checklist
+- ## FAQ
+- ## Sources & Methodology
+- ## Conclusion
+- ## Disclaimer
+
+IMPORTANT: TL;DR must start with "## TL;DR" followed by a newline, then bullet points. Never write "TL;DR" as plain text.`;
     
     try {
       // Use generateText abstraction for consistency
