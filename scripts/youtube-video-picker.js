@@ -108,7 +108,7 @@ async function getRelevanceViaGemini(article, video) {
   const gem = getGemini();
   if (!gem) return null;
   try {
-    const model = gem.getGenerativeModel({ model: 'gemini-1.5-pro' });
+    const model = gem.getGenerativeModel({ model: 'gemini-1.5-pro-latest' });
     const prompt = `
 You are a personal finance assistant. Evaluate how relevant this video is for the article.
 Reply ONLY with JSON: {"relevance":0-1,"reason":"...","takeaways":["...","...","..."]} without any extra text.
