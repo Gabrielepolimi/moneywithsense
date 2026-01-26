@@ -1724,7 +1724,20 @@ OUTPUT FORMAT (only these sections):
       if (fixedSeoValidation.valid) {
         log('✅ SEO fields fixed on retry');
       } else {
-        throw new Error(`SEO validation failed after retry: ${fixedSeoValidation.errors.join(', ')}`);
+        // Final fallback: truncate meta description if still too long
+        if (parsed.metaDescription && parsed.metaDescription.length > 140) {
+          log('⚠️ Meta description still too long after retry, truncating to 140 chars...');
+          parsed.metaDescription = parsed.metaDescription.substring(0, 137).trim() + '...';
+          // Re-validate after truncation
+          const finalValidation = validateSeoFields(parsed);
+          if (finalValidation.valid) {
+            log('✅ SEO fields fixed with truncation fallback');
+          } else {
+            throw new Error(`SEO validation failed after retry and truncation: ${finalValidation.errors.join(', ')}`);
+          }
+        } else {
+          throw new Error(`SEO validation failed after retry: ${fixedSeoValidation.errors.join(', ')}`);
+        }
       }
     } catch (error) {
       throw new Error(`SEO validation failed: ${seoValidation.errors.join(', ')}. Retry also failed: ${error.message}`);
