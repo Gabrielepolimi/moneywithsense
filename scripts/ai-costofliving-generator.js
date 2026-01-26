@@ -905,7 +905,10 @@ function getPromptTemplate(mode, city, country, year, comparisonCity = null) {
   // Infer local currency for the country
   const countryCode = normalizeCountryCode(country);
   const localCurrency = inferLocalCurrency(countryCode);
-  const currencySymbol = localCurrency === 'EUR' ? '€' : localCurrency === 'GBP' ? '£' : localCurrency === 'USD' ? '$' : localCurrency;
+  // If currency not mapped, use generic symbol (AI will specify in content)
+  const currencySymbol = localCurrency 
+    ? (localCurrency === 'EUR' ? '€' : localCurrency === 'GBP' ? '£' : localCurrency === 'USD' ? '$' : localCurrency)
+    : '[LOCAL_CURRENCY]'; // Placeholder for AI to fill
   
   return template
     .replace(/{city}/g, city)
