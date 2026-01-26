@@ -915,7 +915,7 @@ function getPromptTemplate(mode, city, country, year, comparisonCity = null) {
     .replace(/{country}/g, country)
     .replace(/{year}/g, year.toString())
     .replace(/{comparisonCity}/g, comparisonCity || '')
-    .replace(/{localCurrency}/g, localCurrency)
+    .replace(/{localCurrency}/g, localCurrency || 'local currency (specify in content)')
     .replace(/{currencySymbol}/g, currencySymbol);
 }
 
