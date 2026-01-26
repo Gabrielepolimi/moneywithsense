@@ -645,9 +645,9 @@ function parseGeneratedContent(content) {
   const excerptMatch = content.match(/---EXCERPT---\s*([\s\S]*?)\s*---/);
   if (excerptMatch) {
     sections.excerpt = excerptMatch[1].trim();
-    // Truncate to 160 chars if too long (safety check)
-    if (sections.excerpt.length > 160) {
-      sections.excerpt = sections.excerpt.substring(0, 157) + '...';
+    // Truncate to 150 chars if too long (safety check)
+    if (sections.excerpt.length > 150) {
+      sections.excerpt = sections.excerpt.substring(0, 147) + '...';
     }
   }
   
