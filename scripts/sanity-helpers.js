@@ -243,8 +243,8 @@ export function validatePostDocument(doc) {
 
   if (!doc.excerpt || doc.excerpt.length === 0) {
     errors.push('Excerpt mancante');
-  } else if (doc.excerpt.length > 160) {
-    errors.push(`Excerpt troppo lungo: ${doc.excerpt.length} caratteri (max 160)`);
+  } else if (doc.excerpt.length > 150) {
+    errors.push(`Excerpt troppo lungo: ${doc.excerpt.length} caratteri (max 150)`);
   }
 
   if (!doc.body || doc.body.length === 0) {

@@ -379,7 +379,7 @@ YEAR: {year}
 1) TITLE: max 60 characters, SEO-friendly
 2) SEO_TITLE: max 60 characters, can differ from display title
 3) META_DESCRIPTION: exactly 150-160 characters for search engines
-4) EXCERPT: 200-300 characters for UI display (can be longer than meta description)
+4) EXCERPT: max 150 characters for UI display (same as meta description or shorter)
 
 5) CONTENT STRUCTURE (must follow this exact order):
    
@@ -453,7 +453,7 @@ YEAR: {year}
 ---META_DESCRIPTION---
 [Meta description, exactly 150-160 chars]
 ---EXCERPT---
-[Excerpt for UI, 200-300 chars]
+[Excerpt for UI, max 150 chars]
 ---KEYWORDS---
 [primary keyword, related keyword 1, related keyword 2, ...]
 ---COST_DATA_JSON---
@@ -511,7 +511,7 @@ YEAR: {year}
 1) TITLE: max 60 characters, SEO-friendly comparison title
 2) SEO_TITLE: max 60 characters
 3) META_DESCRIPTION: exactly 150-160 characters
-4) EXCERPT: 200-300 characters
+4) EXCERPT: max 150 characters
 
 5) CONTENT STRUCTURE:
    - TL;DR / In Brief
@@ -556,7 +556,7 @@ FRAMING: "How much do you need to live in {city}?"
 1) TITLE: "How Much Do You Need to Live in {city} (2026)?"
 2) SEO_TITLE: max 60 characters
 3) META_DESCRIPTION: exactly 150-160 characters
-4) EXCERPT: 200-300 characters
+4) EXCERPT: max 150 characters
 
 5) CONTENT STRUCTURE:
    - TL;DR / In Brief (focus on minimum budget)
@@ -643,7 +643,13 @@ function parseGeneratedContent(content) {
   if (metaDescMatch) sections.metaDescription = metaDescMatch[1].trim();
   
   const excerptMatch = content.match(/---EXCERPT---\s*([\s\S]*?)\s*---/);
-  if (excerptMatch) sections.excerpt = excerptMatch[1].trim();
+  if (excerptMatch) {
+    sections.excerpt = excerptMatch[1].trim();
+    // Truncate to 160 chars if too long (safety check)
+    if (sections.excerpt.length > 160) {
+      sections.excerpt = sections.excerpt.substring(0, 157) + '...';
+    }
+  }
   
   const keywordsMatch = content.match(/---KEYWORDS---\s*([\s\S]*?)\s*---/);
   if (keywordsMatch) {
