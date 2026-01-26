@@ -123,10 +123,16 @@ function getGeminiAI() {
   if (process.env.GCP_PROJECT_ID && process.env.GCP_LOCATION) {
     useVertexAI = true;
     if (!vertexAI) {
-      vertexAI = new VertexAI({
-        project: process.env.GCP_PROJECT_ID,
-        location: process.env.GCP_LOCATION || 'us-central1',
-      });
+      try {
+        vertexAI = new VertexAI({
+          project: process.env.GCP_PROJECT_ID,
+          location: process.env.GCP_LOCATION || 'us-central1',
+        });
+        console.log(`✅ Vertex AI initialized: project=${process.env.GCP_PROJECT_ID}, location=${process.env.GCP_LOCATION}`);
+      } catch (error) {
+        console.error('❌ Failed to initialize Vertex AI:', error.message);
+        throw new Error(`Vertex AI initialization failed: ${error.message}. Check GOOGLE_APPLICATION_CREDENTIALS.`);
+      }
     }
     return vertexAI;
   }
@@ -137,6 +143,7 @@ function getGeminiAI() {
       throw new Error('GEMINI_API_KEY not configured (or set GCP_PROJECT_ID and GCP_LOCATION for Vertex AI)');
     }
     genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    console.log('✅ Google AI Studio API initialized (fallback)');
   }
   return genAI;
 }
