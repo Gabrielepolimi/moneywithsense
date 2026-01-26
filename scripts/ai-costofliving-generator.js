@@ -656,21 +656,26 @@ CRITICAL: Use these EXACT H2 headings (case-sensitive):
 - ## Disclaimer
 
 a) TL;DR  
-- Use 3–5 bullet points (preferred format)
+- MUST start with heading: ## TL;DR (do NOT write "TL;DR" as plain text)
+- Follow with 3–5 bullet points using markdown format: - (dash and space)
 - Each bullet point should be concise (one line)
 - First bullet MUST clearly state the monthly budget range in LOCAL CURRENCY:
-  "• You'll need approximately {currencySymbol}X–{currencySymbol}Y per month to live in {city}."
+  "- You'll need approximately {currencySymbol}X–{currencySymbol}Y per month to live in {city}."
   (Include USD equivalent if different: "approximately €1,200–€1,800 ($1,300–$1,950 USD) per month")
 - Other bullets can cover key points: largest expense, lifestyle factors, etc.
 - Example format:
-  • Monthly budget: €1,200–€1,800 ($1,300–$1,950 USD) per month
-  • Rent is typically the largest expense
-  • Costs vary significantly by neighborhood
-  • Public transport is affordable and efficient
+  ## TL;DR
+  - Monthly budget: €1,200–€1,800 ($1,300–$1,950 USD) per month
+  - Rent is typically the largest expense
+  - Costs vary significantly by neighborhood
+  - Public transport is affordable and efficient
 
 b) Last Updated  
-- Format exactly:
-  "Last updated: {Month YYYY}"
+- MUST start with heading: ## Last Updated (do NOT write "Last Updated" as plain text)
+- Format exactly: "Last updated: {currentMonth} {year}"
+- Use the CURRENT month and year ({year}) - DO NOT invent dates from the past
+- Example: "Last updated: January 2026" (if generating in January 2026)
+- CRITICAL: Never use dates from the past like "October 2024" when generating in 2026
 
 c) Monthly Cost Breakdown  
 - MUST be a properly formatted Markdown table
@@ -711,14 +716,28 @@ f) Common Mistakes
 - Brief explanation why each is problematic
 
 g) Quick Checklist
-- 5–8 bullet points
+- MUST start with heading: ## Quick Checklist (do NOT write "Quick Checklist" as plain text)
+- Use markdown bullet points with checkboxes: - [ ] (dash, space, bracket, space, bracket)
+- 5–8 items
 - Easy to screenshot or save
+- Example format:
+  ## Quick Checklist
+  - [ ] Secure your tax number first
+  - [ ] Open a local bank account
+  - [ ] Research neighborhoods thoroughly
 
 h) FAQ
+- MUST start with heading: ## FAQ (do NOT write "FAQ" as plain text)
 - 3–6 questions
-- Each question as an H3 (###)
-- Short, clear answers
-- Example: ### Is {city} expensive?
+- Each question MUST be an H3 heading: ### Question text? (use ### followed by space)
+- Short, clear answers (paragraph after each H3)
+- Example format:
+  ## FAQ
+  ### Is {city} expensive?
+  [Answer paragraph here]
+  
+  ### What is the biggest expense?
+  [Answer paragraph here]
 
 i) Sources & Methodology
 - Explain clearly:
