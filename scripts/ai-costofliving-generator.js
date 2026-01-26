@@ -1580,7 +1580,7 @@ OUTPUT FORMAT (only these sections):
         model: CONFIG.geminiModel
       });
       const fixedParsed = parseGeneratedContent(fixedContent);
-      const fixedValidation = validateArticleStructure(fixedParsed.content);
+      const fixedValidation = validateArticleStructure(fixedParsed.content, mode || 'city');
       if (fixedValidation.valid) {
         Object.assign(parsed, fixedParsed);
         log('✅ Structure fixed on retry');
