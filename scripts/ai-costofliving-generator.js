@@ -1570,7 +1570,7 @@ OUTPUT FORMAT (only these sections):
   if (!structureValidation.valid) {
     // Single retry with fix prompt
     log('⚠️ Structure validation failed, retrying with fix prompt...');
-    const fixPrompt = `${prompt}\n\nIMPORTANT: The previous output was missing required sections. Please regenerate with ALL required sections as H2 headings (##): TL;DR, Last Updated, Monthly Cost Breakdown, By Lifestyle, How to Save Money, Common Mistakes, Quick Checklist, FAQ, Sources & Methodology.`;
+    const fixPrompt = `${prompt}\n\nIMPORTANT: The previous output was missing required sections. Please regenerate with ALL required sections as H2 headings (##): TL;DR, Last Updated, Monthly Cost Breakdown, By Lifestyle, How to Save Money, Common Mistakes, Quick Checklist, FAQ, Sources & Methodology, Conclusion, Disclaimer.`;
     
     try {
       // Use generateText abstraction for consistency
