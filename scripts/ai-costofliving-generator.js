@@ -944,6 +944,9 @@ Focus on answering "how much do I need?" with clear budget tiers.`;
  * Select prompt template based on mode
  */
 function getPromptTemplate(mode, city, country, year, comparisonCity = null) {
+  // Get current month name for "Last Updated" section
+  const currentMonth = new Date().toLocaleString('en-US', { month: 'long' });
+  
   const templates = {
     'city': PROMPT_TEMPLATE_SINGLE_CITY,
     'comparison': PROMPT_TEMPLATE_COMPARISON,
@@ -987,6 +990,7 @@ function getPromptTemplate(mode, city, country, year, comparisonCity = null) {
     .replace(/{comparisonCity}/g, comparisonCity || '')
     .replace(/{localCurrency}/g, costDataCurrency) // Always ISO code for JSON
     .replace(/{currencySymbol}/g, currencySymbol)
+    .replace(/{currentMonth}/g, currentMonth)
     + currencyInstruction; // Append instruction if needed
 }
 
