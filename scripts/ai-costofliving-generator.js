@@ -992,15 +992,31 @@ export async function generateCostOfLivingArticle(city, country, year, compariso
     
     try {
       const ai = getGeminiAI();
-      const model = ai.getGenerativeModel({ model: CONFIG.geminiModel });
-      const result = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: fixPrompt }] }],
-        generationConfig: {
-          temperature: CONFIG.temperature,
-          maxOutputTokens: CONFIG.maxTokens
-        }
-      });
-      const fixedContent = result.response.text();
+      
+      let fixedContent;
+      if (useVertexAI) {
+        // Vertex AI
+        const model = ai.getGenerativeModel({ model: CONFIG.geminiModel });
+        const result = await model.generateContent({
+          contents: [{ role: 'user', parts: [{ text: fixPrompt }] }],
+          generationConfig: {
+            temperature: CONFIG.temperature,
+            maxOutputTokens: CONFIG.maxTokens
+          }
+        });
+        fixedContent = result.response.candidates[0].content.parts[0].text;
+      } else {
+        // Google AI Studio API
+        const model = ai.getGenerativeModel({ model: CONFIG.geminiModel });
+        const result = await model.generateContent({
+          contents: [{ role: 'user', parts: [{ text: fixPrompt }] }],
+          generationConfig: {
+            temperature: CONFIG.temperature,
+            maxOutputTokens: CONFIG.maxTokens
+          }
+        });
+        fixedContent = result.response.text();
+      }
       const fixedParsed = parseGeneratedContent(fixedContent);
       const fixedValidation = validateArticleStructure(fixedParsed.content);
       if (fixedValidation.valid) {
