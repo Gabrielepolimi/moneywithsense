@@ -783,7 +783,8 @@ function parseGeneratedContent(content) {
     if (oldMatch) {
       const nextMarker = content.indexOf('---', oldMatch.index + oldMatch[0].length);
       if (nextMarker > 0) {
-        sections.keywords = content.substring(oldMatch.index + oldMatch[0].length - 3, nextMarker).trim().split(',').map(k => k.trim()).filter(Boolean);
+        const start = oldMatch.index + oldMatch[0].length;
+        sections.keywords = content.substring(start, nextMarker).trim().split(',').map(k => k.trim()).filter(Boolean);
       }
     }
   } else {
@@ -797,7 +798,8 @@ function parseGeneratedContent(content) {
     if (oldMatch) {
       const nextMarker = content.indexOf('---', oldMatch.index + oldMatch[0].length);
       if (nextMarker > 0) {
-        const jsonStr = content.substring(oldMatch.index + oldMatch[0].length - 3, nextMarker).trim();
+        const start = oldMatch.index + oldMatch[0].length;
+        const jsonStr = content.substring(start, nextMarker).trim();
         try {
           sections.costData = JSON.parse(jsonStr);
         } catch (e) {
@@ -820,7 +822,8 @@ function parseGeneratedContent(content) {
     if (oldMatch) {
       const nextMarker = content.indexOf('---', oldMatch.index + oldMatch[0].length);
       if (nextMarker > 0) {
-        const jsonStr = content.substring(oldMatch.index + oldMatch[0].length - 3, nextMarker).trim();
+        const start = oldMatch.index + oldMatch[0].length;
+        const jsonStr = content.substring(start, nextMarker).trim();
         try {
           sections.dataPolicy = JSON.parse(jsonStr);
         } catch (e) {
@@ -1377,48 +1380,15 @@ OUTPUT FORMAT (only these sections):
   if (!structureValidation.valid) {
     // Single retry with fix prompt
     log('⚠️ Structure validation failed, retrying with fix prompt...');
-    const fixPrompt = `${prompt}\n\nIMPORTANT: The previous output was missing required sections. Please regenerate with ALL required sections: TL;DR, Last Updated, Monthly Cost Breakdown, By Lifestyle, How to Save Money, Common Mistakes, Quick Checklist, FAQ, Sources & Methodology.`;
+    const fixPrompt = `${prompt}\n\nIMPORTANT: The previous output was missing required sections. Please regenerate with ALL required sections as H2 headings (##): TL;DR, Last Updated, Monthly Cost Breakdown, By Lifestyle, How to Save Money, Common Mistakes, Quick Checklist, FAQ, Sources & Methodology.`;
     
     try {
-      const ai = getGeminiAI();
-      
-      let fixedContent;
-      if (useVertexAI) {
-        // Vertex AI - try gemini-2.5-pro, fallback to gemini-2.5-flash-lite
-        let modelName = CONFIG.geminiModel;
-        let model;
-        
-        try {
-          model = ai.getGenerativeModel({ model: modelName });
-        } catch (modelError) {
-          if (modelName === 'gemini-2.5-pro') {
-            modelName = 'gemini-2.5-flash-lite';
-            model = ai.getGenerativeModel({ model: modelName });
-          } else {
-            throw modelError;
-          }
-        }
-        
-        const result = await model.generateContent({
-          contents: [{ role: 'user', parts: [{ text: fixPrompt }] }],
-          generationConfig: {
-            temperature: CONFIG.temperature,
-            maxOutputTokens: CONFIG.maxTokens
-          }
-        });
-        fixedContent = result.response.candidates[0].content.parts[0].text;
-      } else {
-        // Google AI Studio API
-        const model = ai.getGenerativeModel({ model: CONFIG.geminiModel });
-        const result = await model.generateContent({
-          contents: [{ role: 'user', parts: [{ text: fixPrompt }] }],
-          generationConfig: {
-            temperature: CONFIG.temperature,
-            maxOutputTokens: CONFIG.maxTokens
-          }
-        });
-        fixedContent = result.response.text();
-      }
+      // Use generateText abstraction for consistency
+      const fixedContent = await generateText(fixPrompt, {
+        temperature: CONFIG.temperature,
+        maxOutputTokens: CONFIG.maxTokens,
+        model: CONFIG.geminiModel
+      });
       const fixedParsed = parseGeneratedContent(fixedContent);
       const fixedValidation = validateArticleStructure(fixedParsed.content);
       if (fixedValidation.valid) {
