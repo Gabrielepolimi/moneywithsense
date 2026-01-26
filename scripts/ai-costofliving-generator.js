@@ -932,10 +932,29 @@ export async function generateCostOfLivingArticle(city, country, year, compariso
       
       let result;
       if (useVertexAI) {
-        // Vertex AI
-        const model = ai.getGenerativeModel({
-          model: CONFIG.geminiModel,
-        });
+        // Vertex AI - try gemini-2.5-pro, fallback to gemini-2.5-flash-lite if not available
+        let modelName = CONFIG.geminiModel;
+        let model;
+        
+        try {
+          log(`🔍 Trying model: ${modelName}`);
+          model = ai.getGenerativeModel({ model: modelName });
+        } catch (modelError) {
+          // If model not found, try fallback
+          if (modelName === 'gemini-2.5-pro') {
+            log(`⚠️ gemini-2.5-pro not available, trying gemini-2.5-flash-lite...`);
+            modelName = 'gemini-2.5-flash-lite';
+            try {
+              model = ai.getGenerativeModel({ model: modelName });
+            } catch (fallbackError) {
+              throw new Error(`Both gemini-2.5-pro and gemini-2.5-flash-lite failed: ${fallbackError.message}`);
+            }
+          } else {
+            throw modelError;
+          }
+        }
+        
+        log(`✅ Using model: ${modelName}`);
         result = await model.generateContent({
           contents: [{ role: 'user', parts: [{ text: prompt }] }],
           generationConfig: {
@@ -943,7 +962,15 @@ export async function generateCostOfLivingArticle(city, country, year, compariso
             maxOutputTokens: CONFIG.maxTokens
           }
         });
+        
+        if (!result.response || !result.response.candidates || result.response.candidates.length === 0) {
+          throw new Error('Vertex AI returned empty response');
+        }
+        
         articleContent = result.response.candidates[0].content.parts[0].text;
+        if (modelName !== CONFIG.geminiModel) {
+          log(`✅ Using ${modelName} (${CONFIG.geminiModel} not available)`);
+        }
       } else {
         // Google AI Studio API
         const model = ai.getGenerativeModel({ model: CONFIG.geminiModel });
