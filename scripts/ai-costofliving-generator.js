@@ -87,7 +87,12 @@ function loadUsedUnsplashIdsFromFile() {
  */
 async function loadUsedUnsplashIdsFromSanity() {
   try {
-    const posts = await sanityClient.fetch(`*[_type == "post" && contentSeries == "cost-of-living" && defined(unsplashPhotoId)]{
+    // Limit query to recent posts (last 1500) to avoid performance issues at scale
+    const posts = await sanityClient.fetch(`*[
+      _type == "post" && 
+      contentSeries == "cost-of-living" && 
+      defined(unsplashPhotoId)
+    ] | order(publishedAt desc)[0...1500]{
       unsplashPhotoId
     }`);
     posts.forEach(post => {
@@ -96,6 +101,7 @@ async function loadUsedUnsplashIdsFromSanity() {
         usedUnsplashPhotoIdQueue.push(post.unsplashPhotoId);
       }
     });
+    console.log(`✅ Loaded ${posts.length} Unsplash IDs from Sanity (limited to 1500 most recent)`);
   } catch (err) {
     console.warn('⚠️ Could not load Unsplash IDs from Sanity:', err.message);
   }
@@ -134,7 +140,6 @@ function getGeminiAI() {
   
   // Check if Vertex AI is configured
   if (process.env.GCP_PROJECT_ID && process.env.GCP_LOCATION) {
-    useVertexAI = true;
     if (!vertexAI) {
       try {
         // Log credentials info for debugging (don't log actual credentials)
@@ -158,8 +163,10 @@ function getGeminiAI() {
           project: process.env.GCP_PROJECT_ID,
           location: process.env.GCP_LOCATION || 'us-central1',
         });
+        useVertexAI = true; // Set only after successful initialization
         console.log(`✅ Vertex AI initialized: project=${process.env.GCP_PROJECT_ID}, location=${process.env.GCP_LOCATION}`);
       } catch (error) {
+        useVertexAI = false; // Reset flag on failure
         console.error('❌ Failed to initialize Vertex AI:', error.message);
         console.error('   Error details:', error);
         throw new Error(`Vertex AI initialization failed: ${error.message}. Check GOOGLE_APPLICATION_CREDENTIALS.`);
@@ -221,7 +228,18 @@ async function generateText(prompt, options = {}) {
       throw new Error('Vertex AI returned empty response');
     }
     
-    return result.response.candidates[0].content.parts[0].text;
+    // Extract text from all parts (handles multi-part responses and safety blocks)
+    const text = result?.response?.candidates?.[0]?.content?.parts
+      ?.map(p => p.text)
+      .filter(Boolean)
+      .join('\n')
+      .trim();
+    
+    if (!text) {
+      throw new Error('Vertex AI returned empty text (possibly blocked by safety filters)');
+    }
+    
+    return text;
   } else {
     // Google AI Studio API
     const model = ai.getGenerativeModel({ model: modelName });
@@ -306,15 +324,110 @@ function normalizeCountryCode(country) {
   return countryMap[lower] || country.toUpperCase().substring(0, 2);
 }
 
+/**
+ * Infer local currency from country code
+ */
+function inferLocalCurrency(countryCode) {
+  const currencyMap = {
+    'GB': 'GBP',
+    'IE': 'EUR',
+    'FR': 'EUR',
+    'DE': 'EUR',
+    'IT': 'EUR',
+    'ES': 'EUR',
+    'PT': 'EUR',
+    'NL': 'EUR',
+    'BE': 'EUR',
+    'AT': 'EUR',
+    'GR': 'EUR',
+    'FI': 'EUR',
+    'LU': 'EUR',
+    'US': 'USD',
+    'CA': 'CAD',
+    'AU': 'AUD',
+    'NZ': 'NZD',
+    'JP': 'JPY',
+    'CN': 'CNY',
+    'IN': 'INR',
+    'BR': 'BRL',
+    'MX': 'MXN',
+    'CH': 'CHF',
+    'SE': 'SEK',
+    'NO': 'NOK',
+    'DK': 'DKK',
+    'PL': 'PLN',
+    'KR': 'KRW',
+    'SG': 'SGD',
+    'HK': 'HKD',
+    'AE': 'AED',
+  };
+  return currencyMap[countryCode] || 'USD';
+}
+
+/**
+ * Generate deterministic slug based on mode, city, comparison, year
+ */
+function generateDeterministicSlug(mode, citySlug, comparisonCitySlug, year) {
+  let baseSlug;
+  
+  switch (mode) {
+    case 'comparison':
+      if (!comparisonCitySlug) {
+        throw new Error('Comparison mode requires comparisonCitySlug');
+      }
+      baseSlug = `${citySlug}-vs-${comparisonCitySlug}-cost-of-living`;
+      break;
+    case 'budget':
+      baseSlug = `how-much-to-live-in-${citySlug}`;
+      break;
+    case 'city':
+    default:
+      baseSlug = `cost-of-living-in-${citySlug}`;
+      break;
+  }
+  
+  // Append year if not 2026
+  if (year && year !== 2026) {
+    baseSlug = `${baseSlug}-${year}`;
+  }
+  
+  return baseSlug;
+}
+
+/**
+ * Ensure slug is unique by checking Sanity and appending suffix if needed
+ */
+async function ensureUniqueSlug(baseSlug) {
+  let slug = baseSlug;
+  let suffix = 1;
+  
+  while (true) {
+    const count = await sanityClient.fetch(`count(*[_type == "post" && slug.current == $slug])`, { slug });
+    
+    if (count === 0) {
+      return slug;
+    }
+    
+    suffix++;
+    slug = `${baseSlug}-${suffix}`;
+    
+    // Safety limit
+    if (suffix > 100) {
+      throw new Error(`Could not generate unique slug after 100 attempts for: ${baseSlug}`);
+    }
+  }
+}
+
 // ===== DUPLICATE CHECK =====
 
 /**
  * Check for duplicate cost-of-living articles using normalized fields
  * @param {boolean} strictDedup - If true, throw error on failure (fail closed). If false, allow proceed (fail open).
  */
-async function checkDuplicate(citySlug, countryCode, year, comparisonCitySlug = null, strictDedup = false) {
+async function checkDuplicate(citySlug, countryCode, year, comparisonCitySlug = null, comparisonCity = null, strictDedup = false) {
   try {
     // Use boolean hasComparison instead of defined() for parameters (more reliable in GROQ)
+    // Also check comparisonCity as fallback for legacy posts without comparisonCitySlug
     const query = `*[
       _type == "post" && 
       contentSeries == "cost-of-living" &&
@@ -322,8 +435,11 @@ async function checkDuplicate(citySlug, countryCode, year, comparisonCitySlug = 
       countryCode == $countryCode && 
       year == $year &&
       (
-        ($hasComparison == false && !defined(comparisonCitySlug)) ||
-        ($hasComparison == true && comparisonCitySlug == $comparisonCitySlug)
+        ($hasComparison == false && !defined(comparisonCitySlug) && !defined(comparisonCity)) ||
+        ($hasComparison == true && (
+          comparisonCitySlug == $comparisonCitySlug ||
+          comparisonCity == $comparisonCity
+        ))
       )
     ]{
       _id,
@@ -332,15 +448,17 @@ async function checkDuplicate(citySlug, countryCode, year, comparisonCitySlug = 
       city,
       country,
       year,
-      comparisonCity
+      comparisonCity,
+      comparisonCitySlug
     }`;
     
     const existing = await sanityClient.fetch(query, {
       citySlug,
       countryCode,
       year,
-      hasComparison: Boolean(comparisonCitySlug),
-      comparisonCitySlug: comparisonCitySlug || null
+      hasComparison: Boolean(comparisonCitySlug || comparisonCity),
+      comparisonCitySlug: comparisonCitySlug || null,
+      comparisonCity: comparisonCity || null
     });
     
     if (existing && existing.length > 0) {
@@ -369,9 +487,12 @@ async function checkDuplicate(citySlug, countryCode, year, comparisonCitySlug = 
  */
 function roundCost(value) {
   if (typeof value !== 'number' || isNaN(value)) return 0;
-  // Try rounding to nearest 25 first
-  const rounded25 = Math.round(value / 25) * 25;
-  // If difference is small, use 25-step
+  // Use CONFIG.costRoundingSteps for rounding
+  const steps = CONFIG.costRoundingSteps || [10, 25];
+  // Try rounding to nearest larger step first
+  const largerStep = Math.max(...steps);
+  const roundedLarge = Math.round(value / largerStep) * largerStep;
+  // If difference is small, use larger step
   if (Math.abs(value - rounded25) <= 12.5) {
     return rounded25;
   }
@@ -937,27 +1058,30 @@ function validateSeoFields(parsed) {
 /**
  * Validate article structure
  */
-function validateArticleStructure(content) {
+function validateArticleStructure(content, mode = 'city') {
   const errors = [];
   const warnings = [];
   
   // Check required sections - must be H2 headings for key sections
+  // Patterns are more specific to match start of heading (prevents false positives)
   const requiredH2Sections = [
-    { patterns: ['tl;dr', 'tldr', 'in brief'], name: 'TL;DR' },
+    { patterns: ['tl;dr|tldr|in brief'], name: 'TL;DR' },
     { patterns: ['last updated'], name: 'Last Updated' },
-    { patterns: ['monthly cost breakdown', 'cost breakdown'], name: 'Monthly Cost Breakdown' },
-    { patterns: ['by lifestyle', 'lifestyle scenarios'], name: 'Lifestyle Scenarios' },
+    { patterns: ['monthly cost breakdown|cost breakdown'], name: 'Monthly Cost Breakdown' },
+    { patterns: ['by lifestyle|lifestyle scenarios'], name: 'Lifestyle Scenarios' },
     { patterns: ['how to save money'], name: 'How to Save Money' },
     { patterns: ['common mistakes'], name: 'Common Mistakes' },
-    { patterns: ['quick checklist', 'checklist'], name: 'Quick Checklist' },
-    { patterns: ['faq', 'frequently asked'], name: 'FAQ' },
-    { patterns: ['sources & methodology', 'sources and methodology', 'methodology'], name: 'Sources & Methodology' }
+    { patterns: ['quick checklist|checklist'], name: 'Quick Checklist' },
+    { patterns: ['faq|frequently asked'], name: 'FAQ' },
+    { patterns: ['sources & methodology|sources and methodology|methodology'], name: 'Sources & Methodology' },
+    { patterns: ['conclusion'], name: 'Conclusion' },
+    { patterns: ['disclaimer'], name: 'Disclaimer' }
   ];
   
   requiredH2Sections.forEach(section => {
-    // Check if section exists as H2 heading (## Section Name)
+    // More specific regex: matches H2 heading starting with pattern (prevents false positives from text within heading)
     const hasHeading = section.patterns.some(pattern => {
-      const regex = new RegExp(`(^|\\n)##\\s*.*${pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}.*`, 'i');
+      const regex = new RegExp(`(^|\\n)##\\s*(?:${pattern})(\\b|\\s*[:—-])`, 'i');
       return regex.test(content);
     });
     if (!hasHeading) {
@@ -971,18 +1095,27 @@ function validateArticleStructure(content) {
     errors.push(`Found ${h1Matches.length} H1 in body (should be 0, title is separate)`);
   }
   
-  // Check for markdown table
-  const tableMatches = content.match(/\|.*\|/);
-  if (!tableMatches) {
-      warnings.push('No markdown table found (recommended for cost breakdown)');
+  // Check for markdown table (header + separator row)
+  const hasTable = /\n\|.*\|\n\|[-:\s|]+\|\n/.test(content);
+  if (!hasTable) {
+    warnings.push('No markdown table found (recommended for cost breakdown)');
   }
   
-  // Word count
+  // Word count - different thresholds based on mode
   const wordCount = content.split(/\s+/).length;
-  if (wordCount < 1200) {
-    errors.push(`Word count too low: ${wordCount} (minimum 1,200)`);
-  } else if (wordCount > 2100) {
-    warnings.push(`Word count high: ${wordCount} (target 1,200-1,800 for single, 1,600-2,100 for comparison)`);
+  if (mode === 'comparison') {
+    if (wordCount < 1600) {
+      errors.push(`Word count too low: ${wordCount} (minimum 1,600 for comparison)`);
+    } else if (wordCount > 2100) {
+      warnings.push(`Word count high: ${wordCount} (target 1,600-2,100 for comparison)`);
+    }
+  } else {
+    // city or budget mode
+    if (wordCount < 1200) {
+      errors.push(`Word count too low: ${wordCount} (minimum 1,200)`);
+    } else if (wordCount > 1800) {
+      warnings.push(`Word count high: ${wordCount} (target 1,200-1,800 for single city)`);
+    }
   }
   
   return {
@@ -1223,7 +1356,7 @@ export async function generateCostOfLivingArticle(city, country, year, compariso
   if (strictDedup) {
     log('   ⚠️ Strict deduplication mode enabled (fail closed)');
   }
-  const duplicateCheck = await checkDuplicate(citySlug, countryCode, year, comparisonCitySlug, strictDedup);
+  const duplicateCheck = await checkDuplicate(citySlug, countryCode, year, comparisonCitySlug, comparisonCity, strictDedup);
   
   if (duplicateCheck.isDuplicate) {
     throw new Error(`Duplicate article exists: ${duplicateCheck.existing.title} (${duplicateCheck.existing.slug})`);
@@ -1433,7 +1566,7 @@ OUTPUT FORMAT (only these sections):
   
   // 7. Validate article structure
   log('✅ Validating article structure...');
-  const structureValidation = validateArticleStructure(parsed.content);
+  const structureValidation = validateArticleStructure(parsed.content, mode || 'city');
   if (!structureValidation.valid) {
     // Single retry with fix prompt
     log('⚠️ Structure validation failed, retrying with fix prompt...');
