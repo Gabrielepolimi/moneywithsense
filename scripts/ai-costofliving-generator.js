@@ -353,26 +353,31 @@ function validateCostData(costData) {
   }, 0);
   
   // Check coherence
-  const totalMin = rounded.totalMin || 0;
-  const totalMax = rounded.totalMax || 0;
+  const originalTotalMin = rounded.totalMin || 0;
+  const originalTotalMax = rounded.totalMax || 0;
   
-  const minDiff = Math.abs(totalMin - calculatedMin);
-  const maxDiff = Math.abs(totalMax - calculatedMax);
+  const minDiff = Math.abs(originalTotalMin - calculatedMin);
+  const maxDiff = Math.abs(originalTotalMax - calculatedMax);
   const minTolerance = calculatedMin * CONFIG.totalCoherenceTolerance;
   const maxTolerance = calculatedMax * CONFIG.totalCoherenceTolerance;
+  
+  // Track if totals were actually changed
+  let totalsAdjusted = false;
   
   // Fix totals if out of tolerance
   if (minDiff > minTolerance) {
     rounded.totalMin = roundCost(calculatedMin);
+    totalsAdjusted = true;
   }
   if (maxDiff > maxTolerance) {
     rounded.totalMax = roundCost(calculatedMax);
+    totalsAdjusted = true;
   }
   
   return {
     valid: true,
     costData: rounded,
-    warnings: minDiff > minTolerance || maxDiff > maxTolerance ? ['Totals adjusted to match category sums'] : []
+    warnings: totalsAdjusted ? ['Totals adjusted to match category sums'] : []
   };
 }
 
@@ -735,23 +740,33 @@ function parseGeneratedContent(content) {
     content: ''
   };
   
-  // Extract sections
-  const titleMatch = content.match(/---TITLE---\s*([\s\S]*?)\s*---/);
+  // Extract sections with specific next markers for robustness
+  const titleMatch = content.match(/---TITLE---\s*([\s\S]*?)\s*---SEO_TITLE---/);
   if (titleMatch) sections.title = titleMatch[1].trim();
   
-  const seoTitleMatch = content.match(/---SEO_TITLE---\s*([\s\S]*?)\s*---/);
+  const seoTitleMatch = content.match(/---SEO_TITLE---\s*([\s\S]*?)\s*---META_DESCRIPTION---/);
   if (seoTitleMatch) sections.seoTitle = seoTitleMatch[1].trim();
   
-  const metaDescMatch = content.match(/---META_DESCRIPTION---\s*([\s\S]*?)\s*---/);
+  const metaDescMatch = content.match(/---META_DESCRIPTION---\s*([\s\S]*?)\s*---EXCERPT---/);
   if (metaDescMatch) sections.metaDescription = metaDescMatch[1].trim();
   
-  const excerptMatch = content.match(/---EXCERPT---\s*([\s\S]*?)\s*---/);
-  if (excerptMatch) {
-    sections.excerpt = excerptMatch[1].trim();
-    // Truncate to 150 chars if too long (safety check)
-    if (sections.excerpt.length > 150) {
-      sections.excerpt = sections.excerpt.substring(0, 147) + '...';
+  const excerptMatch = content.match(/---EXCERPT---\s*([\s\S]*?)\s*---KEYWORDS---/);
+  if (!excerptMatch) {
+    // Fallback to old format for backward compatibility
+    const oldMatch = content.match(/---EXCERPT---\s*([\s\S]*?)\s*---(?!KEYWORDS)/);
+    if (oldMatch) {
+      const nextMarker = content.indexOf('---', oldMatch.index + oldMatch[0].length);
+      if (nextMarker > 0) {
+        sections.excerpt = content.substring(oldMatch.index + oldMatch[0].length - 3, nextMarker).trim();
+      }
     }
+  } else {
+    sections.excerpt = excerptMatch[1].trim();
+  }
+  
+  // Truncate excerpt to 150 chars if too long (safety check)
+  if (sections.excerpt && sections.excerpt.length > 150) {
+    sections.excerpt = sections.excerpt.substring(0, 147) + '...';
   }
   
   // Parse with new delimiters (---END_XXX---) for robustness, with fallback to old format
