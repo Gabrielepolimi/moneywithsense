@@ -656,19 +656,28 @@ CRITICAL: Use these EXACT H2 headings (case-sensitive):
 - ## Disclaimer
 
 a) TL;DR  
-- MUST start with heading: ## TL;DR (do NOT write "TL;DR" as plain text)
-- Follow with 3–5 bullet points using markdown format: - (dash and space)
+- CRITICAL: Start with EXACT heading: ## TL;DR (two hashes, space, TL;DR, newline)
+- NEVER write "TL;DR" as plain text - it MUST be a markdown H2 heading
+- After the heading, add a blank line, then follow with 3–5 bullet points using markdown format: - (dash and space)
 - Each bullet point should be concise (one line)
 - First bullet MUST clearly state the monthly budget range in LOCAL CURRENCY:
   "- You'll need approximately {currencySymbol}X–{currencySymbol}Y per month to live in {city}."
   (Include USD equivalent if different: "approximately €1,200–€1,800 ($1,300–$1,950 USD) per month")
 - Other bullets can cover key points: largest expense, lifestyle factors, etc.
-- Example format:
+- CORRECT format (copy this exactly):
+  
   ## TL;DR
+  
   - Monthly budget: €1,200–€1,800 ($1,300–$1,950 USD) per month
   - Rent is typically the largest expense
   - Costs vary significantly by neighborhood
   - Public transport is affordable and efficient
+  
+- WRONG format (DO NOT use):
+  TL;DR
+  • Monthly budget: ...
+  
+  (This is wrong because "TL;DR" is plain text, not a heading)
 
 b) Last Updated  
 - MUST start with heading: ## Last Updated (do NOT write "Last Updated" as plain text)
@@ -1306,8 +1315,17 @@ function validateArticleStructure(content, mode = 'city') {
   }
   
   // Validate TL;DR is a heading, not plain text
-  if (content.includes('TL;DR') && !content.match(/^##\s+TL;DR\s*$/m)) {
-    errors.push('TL;DR must be formatted as a heading (## TL;DR), not as plain text');
+  // Check if TL;DR appears but NOT as a proper H2 heading
+  const tldrAsText = /TL;DR[^#]/i.test(content) || /^TL;DR\s*$/m.test(content);
+  const tldrAsHeading = /^##\s+TL;DR\s*$/m.test(content);
+  
+  if (tldrAsText && !tldrAsHeading) {
+    errors.push('TL;DR must be formatted as a heading (## TL;DR), not as plain text. Found "TL;DR" as text instead of "## TL;DR" heading.');
+  }
+  
+  // Also check that TL;DR section exists and is properly formatted
+  if (!tldrAsHeading && !content.match(/^##\s+TL;DR\s*\n/m)) {
+    errors.push('TL;DR section is missing or not formatted as H2 heading. Must start with "## TL;DR" followed by a newline.');
   }
   
   // Validate Quick Checklist uses markdown checkboxes
