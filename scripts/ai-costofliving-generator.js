@@ -1575,9 +1575,12 @@ OUTPUT FORMAT (only these sections):
     
     // Add currency fields - costData should already have currency from prompt (localCurrency)
     // But ensure we have both localCurrency and displayCurrency for UI
-    const localCurrency = parsed.costData.currency || inferLocalCurrency(countryCode);
-    parsed.costData.localCurrency = localCurrency;
-    parsed.costData.displayCurrency = localCurrency; // Use local currency as display (more credible)
+    // Normalize currency: accept only valid ISO codes [A-Z]{3}, fallback to inferred or USD
+    const rawCurrency = parsed.costData?.currency;
+    const normalizedCurrency = normalizeCurrency(rawCurrency) || inferLocalCurrency(countryCode) || 'USD';
+    parsed.costData.localCurrency = normalizedCurrency;
+    parsed.costData.displayCurrency = normalizedCurrency; // Use local currency as display (more credible)
+    parsed.costData.currency = normalizedCurrency; // Ensure currency field is also normalized
     // If local currency is not USD, we can add USD conversion note
     if (localCurrency !== 'USD') {
       parsed.costData.fxNote = `All amounts are in ${localCurrency}. USD equivalents are approximate and vary with exchange rates.`;
