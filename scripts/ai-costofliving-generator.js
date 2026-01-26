@@ -431,7 +431,7 @@ a) TL;DR / In Brief
   • One short summary paragraph  
   (choose format naturally, not always the same)
 - Must clearly answer in LOCAL CURRENCY:
-  "You'll need approximately {localCurrency}X–{localCurrency}Y per month to live in {city}."
+  "You'll need approximately {currencySymbol}X–{currencySymbol}Y per month to live in {city}."
   (Include USD equivalent if different: "approximately €1,200–€1,800 ($1,300–$1,950 USD) per month")
 
 b) Last Updated  
@@ -537,10 +537,11 @@ k) Disclaimer (mandatory, exact meaning)
 
 ---KEYWORDS---
 [primary keyword, related keyword 1, related keyword 2, related keyword 3]
+---END_KEYWORDS---
 
 ---COST_DATA_JSON---
 {
-  "currency": "USD",
+  "currency": "{localCurrency}",
   "timeUnit": "monthly",
   "rentCityCenterMin": 1200,
   "rentCityCenterMax": 1800,
