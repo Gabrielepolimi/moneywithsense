@@ -629,7 +629,7 @@ You explain how estimates are built.
 - Can differ slightly from display title
 
 3) META_DESCRIPTION
-- EXACTLY 150–160 characters
+- MAX 140 characters
 - Neutral, informative, not promotional
 
 4) EXCERPT
@@ -759,7 +759,7 @@ k) Disclaimer (mandatory, exact meaning)
 [SEO title, max 60 chars]
 
 ---META_DESCRIPTION---
-[150–160 characters]
+[Max 140 characters]
 
 ---EXCERPT---
 [Max 150 characters]
@@ -1152,8 +1152,8 @@ function validateSeoFields(parsed) {
   }
   
   const metaDesc = parsed.metaDescription?.trim() || '';
-  if (!metaDesc || metaDesc.length < 150 || metaDesc.length > 160) {
-    errors.push(`Meta Description must be 150-160 characters (got ${metaDesc.length})`);
+  if (!metaDesc || metaDesc.length > 140) {
+    errors.push(`Meta Description must be <= 140 characters (got ${metaDesc.length})`);
   }
   
   const excerpt = parsed.excerpt?.trim() || '';
@@ -1634,10 +1634,12 @@ ${parsed.content}
 ---END---
 
 REQUIRED: Generate ONLY the following metadata sections with these exact constraints:
-- TITLE: max 60 characters
-- SEO_TITLE: max 60 characters  
-- META_DESCRIPTION: EXACTLY 150-160 characters (count carefully)
-- EXCERPT: max 150 characters
+- TITLE: max 60 characters (count each character)
+- SEO_TITLE: max 60 characters (count each character)
+- META_DESCRIPTION: MUST be between 150 and 160 characters inclusive. Count every character including spaces. If current is 163, shorten to 158-160.
+- EXCERPT: max 150 characters (count each character)
+
+CRITICAL: META_DESCRIPTION must be 150-160 characters. Count carefully before outputting.
 
 OUTPUT FORMAT (only these sections):
 ---TITLE---
@@ -1647,7 +1649,7 @@ OUTPUT FORMAT (only these sections):
 [SEO title, max 60 chars]
 
 ---META_DESCRIPTION---
-[150-160 characters exactly]
+[Max 140 characters]
 
 ---EXCERPT---
 [Max 150 characters]
