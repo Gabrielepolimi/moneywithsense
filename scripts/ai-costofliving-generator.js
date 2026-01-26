@@ -257,13 +257,17 @@ function normalizeCountryCode(country) {
  */
 async function checkDuplicate(citySlug, countryCode, year, comparisonCitySlug = null, strictDedup = false) {
   try {
+    // Use boolean hasComparison instead of defined() for parameters (more reliable in GROQ)
     const query = `*[
       _type == "post" && 
       contentSeries == "cost-of-living" &&
       citySlug == $citySlug && 
       countryCode == $countryCode && 
       year == $year &&
-      (!defined($comparisonCitySlug) || comparisonCitySlug == $comparisonCitySlug)
+      (
+        ($hasComparison == false && !defined(comparisonCitySlug)) ||
+        ($hasComparison == true && comparisonCitySlug == $comparisonCitySlug)
+      )
     ]{
       _id,
       title,
@@ -278,6 +282,7 @@ async function checkDuplicate(citySlug, countryCode, year, comparisonCitySlug = 
       citySlug,
       countryCode,
       year,
+      hasComparison: Boolean(comparisonCitySlug),
       comparisonCitySlug: comparisonCitySlug || null
     });
     
@@ -757,7 +762,8 @@ function parseGeneratedContent(content) {
     if (oldMatch) {
       const nextMarker = content.indexOf('---', oldMatch.index + oldMatch[0].length);
       if (nextMarker > 0) {
-        sections.excerpt = content.substring(oldMatch.index + oldMatch[0].length - 3, nextMarker).trim();
+        const start = oldMatch.index + oldMatch[0].length;
+        sections.excerpt = content.substring(start, nextMarker).trim();
       }
     }
   } else {
@@ -875,9 +881,9 @@ function validateArticleStructure(content) {
   const errors = [];
   const warnings = [];
   
-  // Check required sections
-  const requiredSections = [
-    { patterns: ['in brief', 'tldr', 'tl;dr'], name: 'TL;DR' },
+  // Check required sections - must be H2 headings for key sections
+  const requiredH2Sections = [
+    { patterns: ['tl;dr', 'tldr', 'in brief'], name: 'TL;DR' },
     { patterns: ['last updated'], name: 'Last Updated' },
     { patterns: ['monthly cost breakdown', 'cost breakdown'], name: 'Monthly Cost Breakdown' },
     { patterns: ['by lifestyle', 'lifestyle scenarios'], name: 'Lifestyle Scenarios' },
@@ -888,12 +894,14 @@ function validateArticleStructure(content) {
     { patterns: ['sources & methodology', 'sources and methodology', 'methodology'], name: 'Sources & Methodology' }
   ];
   
-  const contentLower = content.toLowerCase();
-  
-  requiredSections.forEach(section => {
-    const found = section.patterns.some(pattern => contentLower.includes(pattern));
-    if (!found) {
-      errors.push(`Missing required section: ${section.name}`);
+  requiredH2Sections.forEach(section => {
+    // Check if section exists as H2 heading (## Section Name)
+    const hasHeading = section.patterns.some(pattern => {
+      const regex = new RegExp(`(^|\\n)##\\s*.*${pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}.*`, 'i');
+      return regex.test(content);
+    });
+    if (!hasHeading) {
+      errors.push(`Missing required section: ${section.name} (must be an H2 heading)`);
     }
   });
   
@@ -1173,61 +1181,12 @@ export async function generateCostOfLivingArticle(city, country, year, compariso
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const ai = getGeminiAI();
-      
-      let result;
-      if (useVertexAI) {
-        // Vertex AI - try gemini-2.5-pro, fallback to gemini-2.5-flash-lite if not available
-        let modelName = CONFIG.geminiModel;
-        let model;
-        
-        try {
-          log(`🔍 Trying model: ${modelName}`);
-          model = ai.getGenerativeModel({ model: modelName });
-        } catch (modelError) {
-          // If model not found, try fallback
-          if (modelName === 'gemini-2.5-pro') {
-            log(`⚠️ gemini-2.5-pro not available, trying gemini-2.5-flash-lite...`);
-            modelName = 'gemini-2.5-flash-lite';
-            try {
-              model = ai.getGenerativeModel({ model: modelName });
-            } catch (fallbackError) {
-              throw new Error(`Both gemini-2.5-pro and gemini-2.5-flash-lite failed: ${fallbackError.message}`);
-            }
-          } else {
-            throw modelError;
-          }
-        }
-        
-        log(`✅ Using model: ${modelName}`);
-        result = await model.generateContent({
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: CONFIG.temperature,
-            maxOutputTokens: CONFIG.maxTokens
-          }
-        });
-        
-        if (!result.response || !result.response.candidates || result.response.candidates.length === 0) {
-          throw new Error('Vertex AI returned empty response');
-        }
-        
-        articleContent = result.response.candidates[0].content.parts[0].text;
-        if (modelName !== CONFIG.geminiModel) {
-          log(`✅ Using ${modelName} (${CONFIG.geminiModel} not available)`);
-        }
-      } else {
-        // Google AI Studio API
-        const model = ai.getGenerativeModel({ model: CONFIG.geminiModel });
-        result = await model.generateContent({
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: CONFIG.temperature,
-            maxOutputTokens: CONFIG.maxTokens
-          }
-        });
-        articleContent = result.response.text();
-      }
+      log(`🔍 Generating content (attempt ${attempt}/${maxRetries})...`);
+      articleContent = await generateText(prompt, {
+        temperature: CONFIG.temperature,
+        maxOutputTokens: CONFIG.maxTokens,
+        model: CONFIG.geminiModel
+      });
       
       log('✅ Content generated successfully');
       break;
