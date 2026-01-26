@@ -1374,16 +1374,13 @@ async function getUnsplashImage(city, country, articleTitle, log) {
     }
   }
   
+  // Query selection and fallback logic is above
+  if (!photos || photos.length === 0) {
+    log(`   ⚠️ No photos found for query: "${query}"`);
+    return null;
+  }
+  
   try {
-    const photos = await searchPhotos(query, {
-      perPage: CONFIG.unsplashResultsCount,
-      orientation: 'landscape'
-    });
-    
-    if (!photos || photos.length === 0) {
-      return null;
-    }
-    
     // Filter out already used photos
     const available = photos.filter(photo => {
       if (!photo?.id) return false;
@@ -1398,6 +1395,7 @@ async function getUnsplashImage(city, country, articleTitle, log) {
     if (selected) {
       log(`   ✅ Unsplash: ${selected.description || 'Image found'}`);
       log(`   📷 by ${selected.author?.name || 'Unknown'}`);
+      log(`   🔍 Query used: "${query}"`);
       
       if (selected.downloadLink) {
         await trackDownload(selected.downloadLink);
