@@ -1069,8 +1069,33 @@ function parseGeneratedContent(content) {
     }
   }
   
+  // Try to find content section with marker
   const contentMatch = content.match(/---CONTENT---\s*([\s\S]*?)\s*---END---/);
-  if (contentMatch) sections.content = contentMatch[1].trim();
+  if (contentMatch) {
+    sections.content = contentMatch[1].trim();
+  } else {
+    // Fallback: look for content after DATA_POLICY_JSON or after last marker
+    // Find the last marker position
+    const lastMarker = Math.max(
+      content.lastIndexOf('---END_DATA_POLICY_JSON---'),
+      content.lastIndexOf('---DATA_POLICY_JSON---'),
+      content.lastIndexOf('---END_COST_DATA_JSON---'),
+      content.lastIndexOf('---COST_DATA_JSON---'),
+      content.lastIndexOf('---END_KEYWORDS---'),
+      content.lastIndexOf('---KEYWORDS---')
+    );
+    
+    if (lastMarker > 0) {
+      // Extract everything after the last marker as content
+      const potentialContent = content.substring(lastMarker).replace(/^---[^\n]*---\s*/m, '').trim();
+      // Remove any trailing markers
+      const cleanedContent = potentialContent.replace(/\s*---END---?\s*$/, '').trim();
+      if (cleanedContent.length > 100) { // Only use if substantial content
+        sections.content = cleanedContent;
+        console.warn('⚠️ Content extracted using fallback (no ---CONTENT--- marker found)');
+      }
+    }
+  }
   
   return sections;
 }
