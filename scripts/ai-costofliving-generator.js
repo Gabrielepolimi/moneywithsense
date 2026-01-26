@@ -733,13 +733,37 @@ function parseGeneratedContent(content) {
     }
   }
   
-  const keywordsMatch = content.match(/---KEYWORDS---\s*([\s\S]*?)\s*---/);
-  if (keywordsMatch) {
+  // Parse with new delimiters (---END_XXX---) for robustness, with fallback to old format
+  const keywordsMatch = content.match(/---KEYWORDS---\s*([\s\S]*?)\s*---END_KEYWORDS---/);
+  if (!keywordsMatch) {
+    // Fallback to old format for backward compatibility
+    const oldMatch = content.match(/---KEYWORDS---\s*([\s\S]*?)\s*---(?!END_KEYWORDS)/);
+    if (oldMatch) {
+      const nextMarker = content.indexOf('---', oldMatch.index + oldMatch[0].length);
+      if (nextMarker > 0) {
+        sections.keywords = content.substring(oldMatch.index + oldMatch[0].length - 3, nextMarker).trim().split(',').map(k => k.trim()).filter(Boolean);
+      }
+    }
+  } else {
     sections.keywords = keywordsMatch[1].split(',').map(k => k.trim()).filter(Boolean);
   }
   
-  const costDataMatch = content.match(/---COST_DATA_JSON---\s*([\s\S]*?)\s*---/);
-  if (costDataMatch) {
+  const costDataMatch = content.match(/---COST_DATA_JSON---\s*([\s\S]*?)\s*---END_COST_DATA_JSON---/);
+  if (!costDataMatch) {
+    // Fallback to old format
+    const oldMatch = content.match(/---COST_DATA_JSON---\s*([\s\S]*?)\s*---(?!END_COST_DATA_JSON)/);
+    if (oldMatch) {
+      const nextMarker = content.indexOf('---', oldMatch.index + oldMatch[0].length);
+      if (nextMarker > 0) {
+        const jsonStr = content.substring(oldMatch.index + oldMatch[0].length - 3, nextMarker).trim();
+        try {
+          sections.costData = JSON.parse(jsonStr);
+        } catch (e) {
+          console.warn('⚠️ Failed to parse COST_DATA_JSON (fallback):', e.message);
+        }
+      }
+    }
+  } else {
     try {
       sections.costData = JSON.parse(costDataMatch[1].trim());
     } catch (e) {
@@ -747,8 +771,22 @@ function parseGeneratedContent(content) {
     }
   }
   
-  const dataPolicyMatch = content.match(/---DATA_POLICY_JSON---\s*([\s\S]*?)\s*---/);
-  if (dataPolicyMatch) {
+  const dataPolicyMatch = content.match(/---DATA_POLICY_JSON---\s*([\s\S]*?)\s*---END_DATA_POLICY_JSON---/);
+  if (!dataPolicyMatch) {
+    // Fallback to old format
+    const oldMatch = content.match(/---DATA_POLICY_JSON---\s*([\s\S]*?)\s*---(?!END_DATA_POLICY_JSON)/);
+    if (oldMatch) {
+      const nextMarker = content.indexOf('---', oldMatch.index + oldMatch[0].length);
+      if (nextMarker > 0) {
+        const jsonStr = content.substring(oldMatch.index + oldMatch[0].length - 3, nextMarker).trim();
+        try {
+          sections.dataPolicy = JSON.parse(jsonStr);
+        } catch (e) {
+          console.warn('⚠️ Failed to parse DATA_POLICY_JSON (fallback):', e.message);
+        }
+      }
+    }
+  } else {
     try {
       sections.dataPolicy = JSON.parse(dataPolicyMatch[1].trim());
     } catch (e) {
