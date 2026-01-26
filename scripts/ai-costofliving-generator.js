@@ -179,6 +179,63 @@ function getGeminiAI() {
   return genAI;
 }
 
+/**
+ * Generate text using Gemini AI (abstracts differences between Vertex AI and Google AI Studio)
+ * @param {string} prompt - The prompt to send to the model
+ * @param {object} options - Generation options (temperature, maxOutputTokens, model)
+ * @returns {Promise<string>} - The generated text
+ */
+async function generateText(prompt, options = {}) {
+  const ai = getGeminiAI();
+  const temperature = options.temperature ?? CONFIG.temperature;
+  const maxOutputTokens = options.maxOutputTokens ?? CONFIG.maxTokens;
+  const modelName = options.model ?? CONFIG.geminiModel;
+  
+  if (useVertexAI) {
+    // Vertex AI - try specified model, fallback to gemini-2.5-flash-lite if needed
+    let model;
+    try {
+      model = ai.getGenerativeModel({ model: modelName });
+    } catch (modelError) {
+      if (modelName === 'gemini-2.5-pro') {
+        console.warn(`⚠️ gemini-2.5-pro not available, trying gemini-2.5-flash-lite...`);
+        try {
+          model = ai.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
+        } catch (fallbackError) {
+          throw new Error(`Both gemini-2.5-pro and gemini-2.5-flash-lite failed: ${fallbackError.message}`);
+        }
+      } else {
+        throw modelError;
+      }
+    }
+    
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature,
+        maxOutputTokens
+      }
+    });
+    
+    if (!result.response || !result.response.candidates || result.response.candidates.length === 0) {
+      throw new Error('Vertex AI returned empty response');
+    }
+    
+    return result.response.candidates[0].content.parts[0].text;
+  } else {
+    // Google AI Studio API
+    const model = ai.getGenerativeModel({ model: modelName });
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature,
+        maxOutputTokens
+      }
+    });
+    return result.response.text();
+  }
+}
+
 // ===== NORMALIZATION FUNCTIONS =====
 
 /**
