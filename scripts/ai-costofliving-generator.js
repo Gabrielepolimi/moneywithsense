@@ -1439,7 +1439,14 @@ export async function generateCostOfLivingArticle(city, country, year, compariso
   
   if (duplicateCheck.isDuplicate) {
     const existing = duplicateCheck.existing;
-    const errorMsg = `❌ Duplicate article already exists!
+    const forceGeneration = process.env.FORCE_GENERATION === '1' || process.env.FORCE_GENERATION === 'true';
+    
+    if (forceGeneration) {
+      log(`⚠️ Duplicate detected but FORCE_GENERATION is enabled. Will generate with unique slug.`);
+      log(`   Existing: ${existing.title} (${existing.slug})`);
+      // Continue - ensureUniqueSlug will handle making it unique
+    } else {
+      const errorMsg = `❌ Duplicate article already exists!
 
 Existing article:
   - Title: ${existing.title}
@@ -1451,10 +1458,10 @@ Existing article:
 To generate a new article, try:
   - Use a different year (e.g., ${year + 1})
   - Use a different mode (comparison or budget)
-  - Or update the existing article instead
-
-If you need to force generation anyway, you can modify the existing article's slug in Sanity first.`;
-    throw new Error(errorMsg);
+  - Set FORCE_GENERATION=1 to generate anyway (will use unique slug)
+  - Or update the existing article instead`;
+      throw new Error(errorMsg);
+    }
   }
   
   log('✅ No duplicates found');
@@ -1524,10 +1531,31 @@ Alternatively, you can enable it via gcloud CLI:
   
   // 4. Parse content
   log('📝 Parsing content...');
+  
+  // Log first 500 chars for debugging
+  if (articleContent && articleContent.length > 0) {
+    log(`   Content preview (first 500 chars): ${articleContent.substring(0, 500)}...`);
+  } else {
+    throw new Error('Generated content is empty');
+  }
+  
   const parsed = parseGeneratedContent(articleContent);
   
+  // Debug parsed sections
+  log(`   Parsed sections:`);
+  log(`   - Title: ${parsed.title ? `"${parsed.title}" (${parsed.title.length} chars)` : 'MISSING'}`);
+  log(`   - SEO Title: ${parsed.seoTitle ? `"${parsed.seoTitle}"` : 'MISSING'}`);
+  log(`   - Meta Description: ${parsed.metaDescription ? `"${parsed.metaDescription.substring(0, 50)}..." (${parsed.metaDescription.length} chars)` : 'MISSING'}`);
+  log(`   - Excerpt: ${parsed.excerpt ? `"${parsed.excerpt}" (${parsed.excerpt.length} chars)` : 'MISSING'}`);
+  log(`   - Content: ${parsed.content ? `${parsed.content.length} chars` : 'MISSING'}`);
+  log(`   - Cost Data: ${parsed.costData ? 'Present' : 'MISSING'}`);
+  log(`   - Data Policy: ${parsed.dataPolicy ? 'Present' : 'MISSING'}`);
+  
   if (!parsed.title || !parsed.content) {
-    throw new Error('Invalid content structure - missing title or content');
+    const missing = [];
+    if (!parsed.title) missing.push('title');
+    if (!parsed.content) missing.push('content');
+    throw new Error(`Invalid content structure - missing: ${missing.join(', ')}. Check if Gemini output matches expected format with ---TITLE---, ---CONTENT--- markers.`);
   }
   
   // 5. Validate SEO fields
