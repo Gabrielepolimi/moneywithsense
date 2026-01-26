@@ -1283,6 +1283,51 @@ function validateArticleStructure(content, mode = 'city') {
       if (dataRows.length < 5) {
         warnings.push(`Markdown table has only ${dataRows.length} data rows (expected at least 5-8 for cost categories)`);
       }
+      // Check that separator row has proper format (colons for alignment)
+      const separatorMatch = content.match(/\n\|[:\s-|]+\|\n/);
+      if (!separatorMatch || !separatorMatch[0].includes(':')) {
+        errors.push('Markdown table separator row must use colons for alignment (e.g., | :--- | :--- | :--- | :--- |)');
+      }
+    }
+  }
+  
+  // Validate Last Updated uses current year (not past dates)
+  const lastUpdatedMatch = content.match(/##\s+Last\s+Updated\s*\n([^\n]+)/i);
+  if (lastUpdatedMatch) {
+    const lastUpdatedText = lastUpdatedMatch[1];
+    const yearMatch = lastUpdatedText.match(/\b(20\d{2})\b/);
+    if (yearMatch) {
+      const foundYear = parseInt(yearMatch[1]);
+      const currentYear = new Date().getFullYear();
+      if (foundYear < currentYear - 1) {
+        errors.push(`Last Updated contains year ${foundYear} which is in the past. Use current year ${currentYear} or ${currentYear - 1} at most.`);
+      }
+    }
+  }
+  
+  // Validate TL;DR is a heading, not plain text
+  if (content.includes('TL;DR') && !content.match(/^##\s+TL;DR\s*$/m)) {
+    errors.push('TL;DR must be formatted as a heading (## TL;DR), not as plain text');
+  }
+  
+  // Validate Quick Checklist uses markdown checkboxes
+  const checklistMatch = content.match(/##\s+Quick\s+Checklist\s*\n([\s\S]*?)(?=\n##|$)/i);
+  if (checklistMatch) {
+    const checklistContent = checklistMatch[1];
+    // Check if it uses [ ] format (markdown checkboxes)
+    if (!checklistContent.match(/^\s*-\s*\[\s*\]/m)) {
+      errors.push('Quick Checklist must use markdown checkbox format: - [ ] (not plain bullets or other formats)');
+    }
+  }
+  
+  // Validate FAQ questions are H3 headings
+  const faqMatch = content.match(/##\s+FAQ\s*\n([\s\S]*?)(?=\n##\s+(?:Sources|Conclusion|Disclaimer)|$)/i);
+  if (faqMatch) {
+    const faqContent = faqMatch[1];
+    // Check that questions start with ###
+    const questions = faqContent.match(/^###\s+.+\?/gm);
+    if (!questions || questions.length < 3) {
+      errors.push('FAQ section must have at least 3 questions formatted as H3 headings (### Question text?)');
     }
   }
   
