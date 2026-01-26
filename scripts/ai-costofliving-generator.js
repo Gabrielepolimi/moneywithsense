@@ -335,10 +335,10 @@ function validateCostData(costData) {
   const rounded = { ...costData };
   
   categories.forEach(cat => {
-    if (rounded[`${cat}Min`]) {
+    if (typeof rounded[`${cat}Min`] === 'number') {
       rounded[`${cat}Min`] = roundCost(rounded[`${cat}Min`]);
     }
-    if (rounded[`${cat}Max`]) {
+    if (typeof rounded[`${cat}Max`] === 'number') {
       rounded[`${cat}Max`] = roundCost(rounded[`${cat}Max`]);
     }
   });
@@ -1281,7 +1281,7 @@ Alternatively, you can enable it via gcloud CLI:
 ORIGINAL CONTENT (DO NOT CHANGE):
 ---CONTENT---
 ${parsed.content}
----END_CONTENT---
+---END---
 
 REQUIRED: Generate ONLY the following metadata sections with these exact constraints:
 - TITLE: max 60 characters
