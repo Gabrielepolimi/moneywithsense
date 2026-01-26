@@ -48,7 +48,22 @@ jobs:
     name: Generate Cost of Living Article
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Debug - Show workflow info
+        run: |
+          echo "🔍 Workflow Debug Info:"
+          echo "   Event: ${{ github.event_name }}"
+          echo "   Ref: ${{ github.ref }}"
+          echo "   SHA: ${{ github.sha }}"
+          echo "   Workflow: ${{ github.workflow }}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "   Inputs:"
+            echo "     City: ${{ github.event.inputs.city }}"
+            echo "     Country: ${{ github.event.inputs.country }}"
+            echo "     Year: ${{ github.event.inputs.year }}"
+          fi
       
       - uses: actions/setup-node@v4
         with:
