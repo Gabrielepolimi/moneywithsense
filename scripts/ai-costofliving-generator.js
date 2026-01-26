@@ -1074,26 +1074,61 @@ function parseGeneratedContent(content) {
   if (contentMatch) {
     sections.content = contentMatch[1].trim();
   } else {
-    // Fallback: look for content after DATA_POLICY_JSON or after last marker
-    // Find the last marker position
-    const lastMarker = Math.max(
-      content.lastIndexOf('---END_DATA_POLICY_JSON---'),
-      content.lastIndexOf('---DATA_POLICY_JSON---'),
-      content.lastIndexOf('---END_COST_DATA_JSON---'),
-      content.lastIndexOf('---COST_DATA_JSON---'),
-      content.lastIndexOf('---END_KEYWORDS---'),
-      content.lastIndexOf('---KEYWORDS---')
-    );
+    // Fallback: look for content after the last JSON marker
+    // Try to find content after END_DATA_POLICY_JSON or END_KEYWORDS
+    let potentialContent = null;
     
-    if (lastMarker > 0) {
-      // Extract everything after the last marker as content
-      const potentialContent = content.substring(lastMarker).replace(/^---[^\n]*---\s*/m, '').trim();
-      // Remove any trailing markers
-      const cleanedContent = potentialContent.replace(/\s*---END---?\s*$/, '').trim();
-      if (cleanedContent.length > 100) { // Only use if substantial content
-        sections.content = cleanedContent;
-        console.warn('⚠️ Content extracted using fallback (no ---CONTENT--- marker found)');
+    // Strategy 1: After END_DATA_POLICY_JSON
+    const dataPolicyEnd = content.lastIndexOf('---END_DATA_POLICY_JSON---');
+    if (dataPolicyEnd > 0) {
+      const afterDataPolicy = content.substring(dataPolicyEnd + '---END_DATA_POLICY_JSON---'.length).trim();
+      // Skip any remaining markers and get actual content
+      const cleaned = afterDataPolicy.replace(/^---[^\n]*---\s*/gm, '').replace(/\s*---END---?\s*$/, '').trim();
+      if (cleaned.length > 100 && cleaned.includes('##')) { // Must have markdown headings
+        potentialContent = cleaned;
       }
+    }
+    
+    // Strategy 2: After END_KEYWORDS (if Strategy 1 didn't work)
+    if (!potentialContent) {
+      const keywordsEnd = content.lastIndexOf('---END_KEYWORDS---');
+      if (keywordsEnd > 0) {
+        const afterKeywords = content.substring(keywordsEnd + '---END_KEYWORDS---'.length).trim();
+        // Skip DATA_POLICY_JSON section if present, then get content
+        const afterPolicy = afterKeywords.replace(/---DATA_POLICY_JSON---[\s\S]*?---END_DATA_POLICY_JSON---/, '').trim();
+        const cleaned = afterPolicy.replace(/^---[^\n]*---\s*/gm, '').replace(/\s*---END---?\s*$/, '').trim();
+        if (cleaned.length > 100 && cleaned.includes('##')) {
+          potentialContent = cleaned;
+        }
+      }
+    }
+    
+    // Strategy 3: Everything after last ---END_XXX--- marker
+    if (!potentialContent) {
+      const allEndMarkers = [
+        content.lastIndexOf('---END_DATA_POLICY_JSON---'),
+        content.lastIndexOf('---END_COST_DATA_JSON---'),
+        content.lastIndexOf('---END_KEYWORDS---')
+      ].filter(pos => pos > 0);
+      
+      if (allEndMarkers.length > 0) {
+        const lastMarkerPos = Math.max(...allEndMarkers);
+        const afterLastMarker = content.substring(lastMarkerPos);
+        // Find where the marker ends
+        const markerEnd = afterLastMarker.indexOf('---', 3); // Skip first ---
+        if (markerEnd > 0) {
+          const contentStart = afterLastMarker.substring(markerEnd + 3).trim();
+          const cleaned = contentStart.replace(/^---[^\n]*---\s*/gm, '').replace(/\s*---END---?\s*$/, '').trim();
+          if (cleaned.length > 100 && cleaned.includes('##')) {
+            potentialContent = cleaned;
+          }
+        }
+      }
+    }
+    
+    if (potentialContent) {
+      sections.content = potentialContent;
+      console.warn('⚠️ Content extracted using fallback (no ---CONTENT--- marker found)');
     }
   }
   
