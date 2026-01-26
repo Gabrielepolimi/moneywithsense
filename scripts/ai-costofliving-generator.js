@@ -1487,7 +1487,20 @@ Alternatively, you can enable it via gcloud CLI:
   log(`⏱️ Reading: ${readingTime} min`);
   log(`🆔 ID: ${created._id}`);
   
-  // 16. YouTube picker (if available, skip in dry run)
+  // 17. Update related posts now that we have the document ID (exclude current)
+  if (relatedPosts.length > 0) {
+    log('🔄 Updating related posts (excluding current)...');
+    const updatedRelatedPosts = await findRelatedPosts(citySlug, countryCode, year, created._id, 2);
+    if (updatedRelatedPosts.length !== relatedPosts.length || updatedRelatedPosts.some((p, i) => p._id !== relatedPosts[i]?._id)) {
+      // Update internal links if different
+      await sanityClient.patch(created._id).set({
+        'internalLinks.relatedRefs': updatedRelatedPosts.map(p => ({ _type: 'reference', _ref: p._id }))
+      }).commit();
+      log(`   Updated related posts: ${updatedRelatedPosts.length}`);
+    }
+  }
+  
+  // 18. YouTube picker (if available, skip in dry run)
   if (process.env.YOUTUBE_API_KEY && !dryRun) {
     log('🎥 Starting YouTube picker...');
     try {
