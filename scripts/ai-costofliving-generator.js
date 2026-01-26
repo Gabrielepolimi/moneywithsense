@@ -334,12 +334,7 @@ function normalizeCurrency(currency) {
   const match = currency.match(/\b([A-Z]{3})\b/);
   if (match) {
     const isoCode = match[1];
-    // Basic validation: common currency codes
-    const validCodes = ['USD', 'EUR', 'GBP', 'JPY', 'CNY', 'INR', 'BRL', 'MXN', 'CAD', 'AUD', 'NZD', 'CHF', 'SEK', 'NOK', 'DKK', 'PLN', 'KRW', 'SGD', 'HKD', 'AED'];
-    if (validCodes.includes(isoCode)) {
-      return isoCode;
-    }
-    // If it's 3 uppercase letters, accept it (might be valid but not in our list)
+    // Accept any valid ISO currency code (3 uppercase letters)
     if (/^[A-Z]{3}$/.test(isoCode)) {
       return isoCode;
     }
@@ -941,17 +936,19 @@ function getPromptTemplate(mode, city, country, year, comparisonCity = null) {
   // Infer local currency for the country
   const countryCode = normalizeCountryCode(country);
   const localCurrency = inferLocalCurrency(countryCode);
-  // If currency not mapped, use generic symbol (AI will specify in content)
+  // For JSON template, always use ISO code (fallback to USD if not mapped)
+  // For display text, use symbol or placeholder
+  const costDataCurrency = localCurrency || 'USD'; // Always ISO for JSON
   const currencySymbol = localCurrency 
     ? (localCurrency === 'EUR' ? '€' : localCurrency === 'GBP' ? '£' : localCurrency === 'USD' ? '$' : localCurrency)
-    : '[LOCAL_CURRENCY]'; // Placeholder for AI to fill
+    : '[LOCAL_CURRENCY]'; // Placeholder for AI to fill in text
   
   return template
     .replace(/{city}/g, city)
     .replace(/{country}/g, country)
     .replace(/{year}/g, year.toString())
     .replace(/{comparisonCity}/g, comparisonCity || '')
-    .replace(/{localCurrency}/g, localCurrency || 'local currency (specify in content)')
+    .replace(/{localCurrency}/g, costDataCurrency) // Always ISO code for JSON
     .replace(/{currencySymbol}/g, currencySymbol);
 }
 
@@ -1126,20 +1123,30 @@ function validateArticleStructure(content, mode = 'city') {
     { exact: '## Disclaimer', flexible: false }
   ];
   
+  /**
+   * Create regex for heading validation - tolerant to whitespace and small suffixes
+   */
+  function makeHeadingRegex(heading) {
+    const base = heading.replace(/^##\s+/, '');
+    const escaped = base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Allow optional whitespace, optional colon/dash/emdash, and any text after
+    return new RegExp(`^##\\s+${escaped}\\s*(?:[:—-].*)?$`, 'im');
+  }
+  
   requiredH2Headings.forEach(({ exact, flexible }) => {
     if (flexible) {
       // Allow variations (e.g., "## How to Save Money in {city}")
-      const baseHeading = exact.replace(/^##\s+/, '');
-      const regex = new RegExp(`^##\\s+${baseHeading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'im');
+      const base = exact.replace(/^##\s+/, '');
+      const escaped = base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`^##\\s+${escaped}\\b.*$`, 'im');
       if (!regex.test(content)) {
-        errors.push(`Missing required section: ${exact} (must be an exact H2 heading)`);
+        errors.push(`Missing required section: ${exact}`);
       }
     } else {
-      // Exact match
-      const escapedHeading = exact.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp(`^##\\s+${escapedHeading.replace(/^##\s+/, '')}$`, 'im');
+      // Tolerant exact match (allows whitespace and small suffixes)
+      const regex = makeHeadingRegex(exact);
       if (!regex.test(content)) {
-        errors.push(`Missing required section: ${exact} (must be an exact H2 heading)`);
+        errors.push(`Missing required section: ${exact}`);
       }
     }
   });
@@ -1620,15 +1627,15 @@ OUTPUT FORMAT (only these sections):
     // Normalize currency: accept only valid ISO codes [A-Z]{3}, fallback to inferred or USD
     const rawCurrency = parsed.costData?.currency;
     const normalizedCurrency = normalizeCurrency(rawCurrency) || inferLocalCurrency(countryCode) || 'USD';
+    
+    parsed.costData.currency = normalizedCurrency;
     parsed.costData.localCurrency = normalizedCurrency;
-    parsed.costData.displayCurrency = normalizedCurrency; // Use local currency as display (more credible)
-    parsed.costData.currency = normalizedCurrency; // Ensure currency field is also normalized
-    // If local currency is not USD, we can add USD conversion note
-    if (localCurrency !== 'USD') {
-      parsed.costData.fxNote = `All amounts are in ${localCurrency}. USD equivalents are approximate and vary with exchange rates.`;
-    } else {
-      parsed.costData.fxNote = 'Ranges are in USD.';
-    }
+    parsed.costData.displayCurrency = normalizedCurrency;
+    
+    parsed.costData.fxNote =
+      normalizedCurrency !== 'USD'
+        ? `All amounts are in ${normalizedCurrency}. USD equivalents are approximate and vary with exchange rates.`
+        : 'Ranges are in USD.';
   }
   
   // 7. Validate article structure
