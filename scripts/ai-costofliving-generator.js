@@ -431,10 +431,10 @@ YEAR: {year}
    k) Disclaimer (required at end)
       - "This content is for informational purposes only and does not constitute financial advice. Always consult a qualified professional for personalized guidance."
 
-6) INTERNAL LINKS (required):
-   - Include 1 link to pillar guide: [Cost of Living Guide](/guides/cost-of-living-guide-2026)
-   - Include 2 links to related articles: [anchor text](/articles/{article-slug})
-   - Use natural anchor text, not exact match keywords
+6) INTERNAL LINKS:
+   - DO NOT include internal links in the markdown content
+   - Internal linking is handled automatically by the system
+   - Focus on writing the content without adding markdown links
 
 7) LENGTH: 1,200-1,800 words (minimum 1,200, never below 1,000)
 
@@ -528,7 +528,7 @@ YEAR: {year}
    - Conclusion
    - Disclaimer
 
-6) INTERNAL LINKS: 1 pillar + 2 related
+6) INTERNAL LINKS: DO NOT include internal links in markdown - handled automatically by system
 
 7) LENGTH: 1,600-2,100 words
 
@@ -574,7 +574,7 @@ FRAMING: "How much do you need to live in {city}?"
    - Conclusion
    - Disclaimer
 
-6) INTERNAL LINKS: 1 pillar + 2 related
+6) INTERNAL LINKS: DO NOT include internal links in markdown - handled automatically by system
 
 7) LENGTH: 1,200-1,800 words
 

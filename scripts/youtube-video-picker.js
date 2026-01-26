@@ -14,6 +14,7 @@
 import crypto from 'crypto';
 import { createClient } from '@sanity/client';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { VertexAI } from '@google-cloud/vertexai';
 
 // ====== CONFIG ======
 const SANITY_PROJECT_ID = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || 'z0g6hj8g';
@@ -51,10 +52,26 @@ const sanityClient = createClient({
 });
 
 let genAI = null;
+let vertexAI = null;
+let useVertexAI = false;
+
 function getGemini() {
+  // Check if Vertex AI is configured
+  if (process.env.GCP_PROJECT_ID && process.env.GCP_LOCATION) {
+    useVertexAI = true;
+    if (!vertexAI) {
+      vertexAI = new VertexAI({
+        project: process.env.GCP_PROJECT_ID,
+        location: process.env.GCP_LOCATION || 'us-central1',
+      });
+    }
+    return vertexAI;
+  }
+  
+  // Fallback to Google AI Studio API
   if (genAI) return genAI;
   if (!GEMINI_KEY) {
-    throw new Error('GEMINI_API_KEY mancante: il picker richiede il ranking LLM');
+    throw new Error('GEMINI_API_KEY mancante (o configura GCP_PROJECT_ID e GCP_LOCATION per Vertex AI)');
   }
   genAI = new GoogleGenerativeAI(GEMINI_KEY);
   return genAI;
@@ -108,7 +125,20 @@ async function getRelevanceViaGemini(article, video) {
   const gem = getGemini();
   if (!gem) return null;
   try {
-    const model = gem.getGenerativeModel({ model: 'gemini-1.5-pro-latest' });
+    // Use Vertex AI model if available, otherwise fallback to Google AI Studio
+    let model;
+    if (useVertexAI) {
+      // Try gemini-2.5-pro, fallback to gemini-2.5-flash-lite
+      try {
+        model = gem.getGenerativeModel({ model: 'gemini-2.5-pro' });
+      } catch (error) {
+        console.warn('⚠️ gemini-2.5-pro not available, using gemini-2.5-flash-lite');
+        model = gem.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
+      }
+    } else {
+      // Google AI Studio - use gemini-1.5-flash (stable and available)
+      model = gem.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    }
     const prompt = `
 You are a personal finance assistant. Evaluate how relevant this video is for the article.
 Reply ONLY with JSON: {"relevance":0-1,"reason":"...","takeaways":["...","...","..."]} without any extra text.
