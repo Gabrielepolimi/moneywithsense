@@ -7,12 +7,14 @@ on:
   workflow_dispatch:
     inputs:
       city:
-        description: 'City name'
-        required: true
+        description: 'City name (e.g., London)'
+        required: false
+        default: 'London'
         type: string
       country:
-        description: 'Country name'
-        required: true
+        description: 'Country name (e.g., UK)'
+        required: false
+        default: 'UK'
         type: string
       year:
         description: 'Year'
@@ -151,18 +153,24 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             # Manual trigger
-            CITY="${{ github.event.inputs.city }}"
-            COUNTRY="${{ github.event.inputs.country }}"
-            YEAR="${{ github.event.inputs.year }}"
+            CITY="${{ github.event.inputs.city || 'London' }}"
+            COUNTRY="${{ github.event.inputs.country || 'UK' }}"
+            YEAR="${{ github.event.inputs.year || '2026' }}"
             COMPARISON_CITY="${{ github.event.inputs.comparison_city }}"
-            MODE="${{ github.event.inputs.mode }}"
-            DRY_RUN="${{ github.event.inputs.dry_run }}"
+            MODE="${{ github.event.inputs.mode || 'city' }}"
+            DRY_RUN="${{ github.event.inputs.dry_run || 'false' }}"
+            
+            # Validate required inputs
+            if [ -z "$CITY" ] || [ -z "$COUNTRY" ]; then
+              echo "❌ City and Country are required!"
+              exit 1
+            fi
             
             echo "🏙️ Generating Cost of Living article:"
             echo "   City: $CITY"
             echo "   Country: $COUNTRY"
             echo "   Year: $YEAR"
-            if [ -n "$COMPARISON_CITY" ]; then
+            if [ -n "$COMPARISON_CITY" ] && [ "$COMPARISON_CITY" != "" ]; then
               echo "   Comparison City: $COMPARISON_CITY"
             fi
             echo "   Mode: $MODE"
