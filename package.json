@@ -11,6 +11,7 @@
     "update-sitemap": "node update-sitemap-auto.js"
   },
   "dependencies": {
+    "@google-cloud/vertexai": "^1.10.0",
     "@google/generative-ai": "^0.24.1",
     "@portabletext/react": "^5.0.0",
     "@prisma/client": "^6.13.0",

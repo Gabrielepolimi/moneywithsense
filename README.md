@@ -36,7 +36,15 @@ NEXT_PUBLIC_GSC_VERIFICATION=your_verification_code
 GOOGLE_SHEETS_WEBHOOK_URL=your_webhook_url
 
 # AI Content Scripts (optional)
+# Option 1: Google AI Studio API (simpler)
 GEMINI_API_KEY=your_gemini_key
+
+# Option 2: Vertex AI (for gemini-2.5-pro and advanced models)
+GCP_PROJECT_ID=your-gcp-project-id
+GCP_LOCATION=us-central1
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
+GEMINI_MODEL=gemini-2.0-flash-exp  # or gemini-2.5-pro when available
+
 UNSPLASH_ACCESS_KEY=your_unsplash_key
 ```
 

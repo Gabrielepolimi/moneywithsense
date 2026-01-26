@@ -14,6 +14,7 @@
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { VertexAI } from '@google-cloud/vertexai';
 import { createClient } from '@sanity/client';
 import { searchPhotos, trackDownload } from './unsplash-service.js';
 import {
@@ -37,7 +38,7 @@ const __dirname = path.dirname(__filename);
 
 // ===== CONFIGURATION =====
 const CONFIG = {
-  geminiModel: 'gemini-1.5-pro-latest',
+  geminiModel: process.env.GEMINI_MODEL || 'gemini-2.0-flash-exp', // Default to Vertex AI model, fallback to flash
   maxTokens: 10000,
   temperature: 0.7,
   publishImmediately: true,
@@ -112,13 +113,28 @@ const sanityClient = createClient({
   token: process.env.SANITY_API_TOKEN
 });
 
-// Gemini AI
+// Gemini AI - Support both Vertex AI and Google AI Studio
 let genAI = null;
+let vertexAI = null;
+let useVertexAI = false;
 
 function getGeminiAI() {
+  // Check if Vertex AI is configured
+  if (process.env.GCP_PROJECT_ID && process.env.GCP_LOCATION) {
+    useVertexAI = true;
+    if (!vertexAI) {
+      vertexAI = new VertexAI({
+        project: process.env.GCP_PROJECT_ID,
+        location: process.env.GCP_LOCATION || 'us-central1',
+      });
+    }
+    return vertexAI;
+  }
+  
+  // Fallback to Google AI Studio API
   if (!genAI) {
     if (!process.env.GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY not configured');
+      throw new Error('GEMINI_API_KEY not configured (or set GCP_PROJECT_ID and GCP_LOCATION for Vertex AI)');
     }
     genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
   }
@@ -906,17 +922,34 @@ export async function generateCostOfLivingArticle(city, country, year, compariso
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const ai = getGeminiAI();
-      const model = ai.getGenerativeModel({ model: CONFIG.geminiModel });
       
-      const result = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: CONFIG.temperature,
-          maxOutputTokens: CONFIG.maxTokens
-        }
-      });
+      let result;
+      if (useVertexAI) {
+        // Vertex AI
+        const model = ai.getGenerativeModel({
+          model: CONFIG.geminiModel,
+        });
+        result = await model.generateContent({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: CONFIG.temperature,
+            maxOutputTokens: CONFIG.maxTokens
+          }
+        });
+        articleContent = result.response.candidates[0].content.parts[0].text;
+      } else {
+        // Google AI Studio API
+        const model = ai.getGenerativeModel({ model: CONFIG.geminiModel });
+        result = await model.generateContent({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: CONFIG.temperature,
+            maxOutputTokens: CONFIG.maxTokens
+          }
+        });
+        articleContent = result.response.text();
+      }
       
-      articleContent = result.response.text();
       log('✅ Content generated successfully');
       break;
     } catch (error) {
