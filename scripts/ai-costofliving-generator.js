@@ -1329,17 +1329,50 @@ async function getUnsplashImage(city, country, articleTitle, log) {
     return null;
   }
   
-  // Diversified queries
+  // Diversified queries - prioritize iconic city landmarks and recognizable views
+  // These should return city-specific, recognizable images, not generic city photos
   const queries = [
-    `${city} skyline`,
-    `${city} urban`,
-    `${city} lifestyle`,
-    `${city} cityscape`,
-    `${country} city`,
-    `${city} downtown`
+    `${city} landmarks`,           // Iconic buildings/monuments
+    `${city} iconic`,               // Recognizable city views
+    `${city} ${country}`,          // City + country for specificity
+    `${city} city center`,         // Downtown/center views
+    `${city} architecture`,         // City-specific architecture
+    `${city} skyline view`,        // Skyline (more specific than just "skyline")
+    `${city} historic center`,      // Historic districts
+    `${city} famous places`         // Famous locations
   ];
   
-  const query = queries[Math.floor(Math.random() * queries.length)];
+  // Try queries in order of specificity, fallback to more generic if needed
+  let query = queries[Math.floor(Math.random() * queries.length)];
+  let photos = [];
+  
+  // Try first query
+  try {
+    photos = await searchPhotos(query, {
+      perPage: CONFIG.unsplashResultsCount,
+      orientation: 'landscape'
+    });
+  } catch (error) {
+    log(`   ⚠️ First query failed: ${error.message}`);
+  }
+  
+  // If no results or too few, try a more specific query
+  if (!photos || photos.length < 3) {
+    const fallbackQueries = [
+      `${city} ${country} landmarks`,
+      `${city} famous`,
+      `${city} tourist`
+    ];
+    query = fallbackQueries[Math.floor(Math.random() * fallbackQueries.length)];
+    try {
+      photos = await searchPhotos(query, {
+        perPage: CONFIG.unsplashResultsCount,
+        orientation: 'landscape'
+      });
+    } catch (error) {
+      log(`   ⚠️ Fallback query failed: ${error.message}`);
+    }
+  }
   
   try {
     const photos = await searchPhotos(query, {
