@@ -1005,6 +1005,21 @@ export async function generateCostOfLivingArticle(city, country, year, compariso
       log('✅ Content generated successfully');
       break;
     } catch (error) {
+      // Check for specific Vertex AI API errors
+      if (error.message && error.message.includes('SERVICE_DISABLED')) {
+        const errorMsg = `❌ Vertex AI API is not enabled in your GCP project.
+        
+To fix this:
+1. Go to: https://console.cloud.google.com/apis/api/aiplatform.googleapis.com/overview?project=${process.env.GCP_PROJECT_ID}
+2. Click "Enable" to enable the Vertex AI API
+3. Wait a few minutes for the API to propagate
+4. Retry the workflow
+
+Alternatively, you can enable it via gcloud CLI:
+  gcloud services enable aiplatform.googleapis.com --project=${process.env.GCP_PROJECT_ID}`;
+        throw new Error(errorMsg);
+      }
+      
       if (attempt === maxRetries) {
         throw new Error(`Gemini generation failed after ${maxRetries} attempts: ${error.message}`);
       }
