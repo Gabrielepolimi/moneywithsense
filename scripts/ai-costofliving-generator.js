@@ -1246,10 +1246,20 @@ function validateArticleStructure(content, mode = 'city') {
     errors.push(`Found ${h1Matches.length} H1 in body (should be 0, title is separate)`);
   }
   
-  // Check for markdown table (header + separator row)
-  const hasTable = /\n\|.*\|\n\|[-:\s|]+\|\n/.test(content);
+  // Check for markdown table (header + separator row with proper format)
+  // Must have: header row with pipes, separator row with colons and dashes, at least one data row
+  const hasTable = /\n\|[^\n]+\|\n\|[:\s-|]+\|\n\|[^\n]+\|\n/.test(content);
   if (!hasTable) {
-    warnings.push('No markdown table found (recommended for cost breakdown)');
+    errors.push('Monthly Cost Breakdown section must contain a properly formatted Markdown table with header, separator, and data rows');
+  } else {
+    // Additional validation: check that table has at least 5 data rows for cost categories
+    const tableMatch = content.match(/\n\|[^\n]+\|\n\|[:\s-|]+\|\n((?:\|[^\n]+\|\n?)+)/);
+    if (tableMatch) {
+      const dataRows = tableMatch[1].trim().split('\n').filter(row => row.trim().startsWith('|'));
+      if (dataRows.length < 5) {
+        warnings.push(`Markdown table has only ${dataRows.length} data rows (expected at least 5-8 for cost categories)`);
+      }
+    }
   }
   
   // Word count - different thresholds based on mode
