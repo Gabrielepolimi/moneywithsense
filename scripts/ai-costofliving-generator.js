@@ -629,8 +629,9 @@ You explain how estimates are built.
 - Can differ slightly from display title
 
 3) META_DESCRIPTION
-- MAX 140 characters
+- MAX 140 characters (count carefully - this is strict)
 - Neutral, informative, not promotional
+- Example (138 chars): "Estimate your monthly budget for Lisbon in 2026. See realistic cost ranges for rent, food, transport, and lifestyle expenses."
 
 4) EXCERPT
 - Max 150 characters
