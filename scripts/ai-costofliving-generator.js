@@ -1429,28 +1429,29 @@ async function findRelatedPosts(citySlug, countryCode, year, currentPostId = nul
       excludeConditions.push('_id != $currentPostId');
     }
     
+    // GROQ order() only supports one field, so we'll fetch more and sort in JS
+    const fetchLimit = limit * 3; // Fetch more to allow for sorting
+    
     const query = `*[
       _type == "post" && 
       contentSeries == "cost-of-living" &&
       status == "published" &&
       ${excludeConditions.join(' && ')}
-    ] | order(
-      countryCode == $countryCode desc,  // Same country first
-      publishedAt desc                   // Then by recency
-    ) [0...$limit]{
+    ] | order(publishedAt desc) [0...$fetchLimit]{
       _id,
       title,
       "slug": slug.current,
       countryCode,
       city,
-      year
+      year,
+      publishedAt
     }`;
     
     const params = {
       citySlug,
       countryCode,
       year,
-      limit
+      fetchLimit
     };
     
     if (currentPostId) {
@@ -1459,7 +1460,21 @@ async function findRelatedPosts(citySlug, countryCode, year, currentPostId = nul
     
     const related = await sanityClient.fetch(query, params);
     
-    return related || [];
+    // Sort in JavaScript: same country first, then by recency
+    const sorted = (related || []).sort((a, b) => {
+      const aSameCountry = a.countryCode === countryCode;
+      const bSameCountry = b.countryCode === countryCode;
+      
+      if (aSameCountry && !bSameCountry) return -1;
+      if (!aSameCountry && bSameCountry) return 1;
+      
+      // Both same or both different - sort by publishedAt desc
+      const aDate = new Date(a.publishedAt || 0);
+      const bDate = new Date(b.publishedAt || 0);
+      return bDate - aDate;
+    });
+    
+    return sorted.slice(0, limit);
   } catch (error) {
     console.error('❌ Error finding related posts:', error.message);
     return [];
