@@ -42,8 +42,89 @@ UNSPLASH_ACCESS_KEY=your_unsplash_key
 
 ## Content Scripts
 
+### Finance Articles Generator
 - `scripts/ai-content-generator.js`: Generates finance articles in English, posts to Sanity.
+- `scripts/generate-weekly-batch.js`: Batch generator with duplicate checking.
 - `scripts/weekly-content-planner.js`: Plans weekly finance content topics.
+
+### Cost of Living Generator
+- `scripts/ai-costofliving-generator.js`: Generates cost-of-living articles for cities.
+- `scripts/costofliving-queue.js`: Queue manager for scheduled article generation.
+
+#### Running Cost of Living Generator Locally
+
+**Manual generation:**
+```bash
+node scripts/ai-costofliving-generator.js "London" "UK" 2026
+node scripts/ai-costofliving-generator.js "New York City" "United States" 2026 "Chicago" "comparison"
+```
+
+**Queue management:**
+```bash
+# List queue items
+node scripts/costofliving-queue.js list
+
+# Add item to queue
+node scripts/costofliving-queue.js add "London" "UK" 2026 100
+# Priority: 100 (major cities), 50 (regional), 10 (other)
+
+# Add comparison article
+node scripts/costofliving-queue.js add "London" "UK" 2026 100 "Manchester" "comparison"
+```
+
+**Setup (first time only):**
+```bash
+# Create category and pillar page
+node scripts/create-costofliving-pillar.js
+```
+
+#### GitHub Actions Workflow
+
+**Manual trigger:**
+1. Go to Actions → "Cost of Living Content Generation"
+2. Click "Run workflow"
+3. Fill in:
+   - City: e.g., "London"
+   - Country: e.g., "UK"
+   - Year: 2026 (default)
+   - Comparison City: (optional)
+   - Mode: city/comparison/budget
+   - Dry Run: (optional, for testing)
+
+**Scheduled runs:**
+- Runs automatically Tue/Fri at 09:00 UTC
+- Processes 1 item from queue per run (highest priority first)
+- Lock mechanism prevents concurrent runs (30 min TTL)
+
+#### Queue System
+
+The queue system (`data/costofliving-queue.json`) uses:
+- **Priority-based processing**: Higher number = higher priority (100 > 50 > 10)
+- **Lock mechanism**: Prevents concurrent scheduled runs (30 min TTL, stale locks auto-unlock)
+- **Retry logic**: Max 1 retry per item
+- **Git conflict handling**: Automatic pull/rebase + retry on conflicts
+
+**Queue item structure:**
+```json
+{
+  "city": "London",
+  "country": "UK",
+  "year": 2026,
+  "comparisonCity": null,
+  "mode": "city",
+  "priority": 100,
+  "status": "pending",
+  "retryCount": 0,
+  "failedAt": null,
+  "addedAt": "2025-01-18T..."
+}
+```
+
+**Status values:**
+- `pending`: Waiting to be processed
+- `completed`: Successfully generated
+- `failed`: Failed (can retry if retryCount < maxRetries)
+- `failed_permanent`: Failed after max retries
 
 ## Deployment (Vercel)
 
@@ -78,6 +159,7 @@ UNSPLASH_ACCESS_KEY=your_unsplash_key
 8. Taxes & Finance Tips
 9. Side Hustles
 10. Money Psychology
+11. Cost of Living
 
 ## License
 

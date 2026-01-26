@@ -218,6 +218,85 @@ export default async function PostPage({ params }: Props) {
     });
   };
 
+  // Extract FAQ from body (look for FAQ section)
+  function extractFAQFromBody(body: PortableTextBlock[]): Array<{ question: string; answer: string }> {
+    const faqs: Array<{ question: string; answer: string }> = [];
+    let inFAQSection = false;
+    let currentQuestion = '';
+    let currentAnswer: string[] = [];
+    
+    for (const block of body) {
+      if (block._type === 'block') {
+        // Check if this is an H3 (FAQ question)
+        if (block.style === 'h3') {
+          const questionText = block.children
+            ?.map((child: any) => child.text || '')
+            .join('')
+            .trim() || '';
+          
+          // If we were collecting an answer, save previous FAQ
+          if (currentQuestion && currentAnswer.length > 0) {
+            faqs.push({
+              question: currentQuestion,
+              answer: currentAnswer.join(' ').trim()
+            });
+            currentAnswer = [];
+          }
+          
+          // Check if this looks like a question (contains ? or starts with common FAQ patterns)
+          if (questionText.includes('?') || 
+              /^(what|how|why|when|where|is|are|can|do|does|will)/i.test(questionText)) {
+            inFAQSection = true;
+            currentQuestion = questionText.replace(/^###\s*/, '').trim();
+          } else {
+            inFAQSection = false;
+          }
+        } else if (inFAQSection && block.style === 'normal' && currentQuestion) {
+          // Collect answer text
+          const answerText = block.children
+            ?.map((child: any) => child.text || '')
+            .join('')
+            .trim() || '';
+          if (answerText) {
+            currentAnswer.push(answerText);
+          }
+        } else if (block.style === 'h2') {
+          // If we hit another H2, check if it's the FAQ section
+          const headingText = block.children
+            ?.map((child: any) => child.text || '')
+            .join('')
+            .toLowerCase() || '';
+          if (headingText.includes('faq') || headingText.includes('frequently asked')) {
+            inFAQSection = true;
+          } else if (inFAQSection) {
+            // We've left the FAQ section
+            if (currentQuestion && currentAnswer.length > 0) {
+              faqs.push({
+                question: currentQuestion,
+                answer: currentAnswer.join(' ').trim()
+              });
+            }
+            inFAQSection = false;
+            currentQuestion = '';
+            currentAnswer = [];
+          }
+        }
+      }
+    }
+    
+    // Save last FAQ if exists
+    if (currentQuestion && currentAnswer.length > 0) {
+      faqs.push({
+        question: currentQuestion,
+        answer: currentAnswer.join(' ').trim()
+      });
+    }
+    
+    return faqs;
+  }
+  
+  const faqs = extractFAQFromBody(post.body);
+  
   const articleJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -245,6 +324,20 @@ export default async function PostPage({ params }: Props) {
     articleSection: post.categories?.map(cat => cat.title).join(', ') || '',
     keywords: post.seoKeywords?.join(', ') || 'personal finance, budgeting, investing',
   };
+  
+  // Generate FAQ schema if FAQs exist
+  const faqJsonLd = faqs.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map(faq => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer
+      }
+    }))
+  } : null;
 
   const primaryCategory = post.categories?.[0];
   const guideSlug = primaryCategory ? categoryToGuide[primaryCategory.slug] : undefined;
@@ -255,6 +348,12 @@ export default async function PostPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
       />
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
       <article className="max-w-4xl mx-auto px-4 sm:px-6 py-8 lg:py-12">
         {/* Breadcrumb */}
         <nav className="mb-6 text-sm">

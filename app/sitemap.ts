@@ -49,6 +49,7 @@ const pillarGuides = [
   'taxes-tips-guide',
   'side-hustles-guide',
   'money-psychology-guide',
+  'cost-of-living-guide-2026',
 ]
 
 // Tools

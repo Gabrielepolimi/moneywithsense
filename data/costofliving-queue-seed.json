@@ -1,0 +1,118 @@
+{
+  "lock": {
+    "locked": false,
+    "lockedAt": null,
+    "lockedBy": null,
+    "lockTtlMinutes": 30
+  },
+  "items": [
+    {
+      "city": "London",
+      "country": "UK",
+      "year": 2026,
+      "comparisonCity": null,
+      "mode": "city",
+      "priority": 100,
+      "status": "pending",
+      "retryCount": 0,
+      "failedAt": null,
+      "addedAt": "2025-01-18T00:00:00.000Z"
+    },
+    {
+      "city": "New York City",
+      "country": "United States",
+      "year": 2026,
+      "comparisonCity": null,
+      "mode": "city",
+      "priority": 100,
+      "status": "pending",
+      "retryCount": 0,
+      "failedAt": null,
+      "addedAt": "2025-01-18T00:00:00.000Z"
+    },
+    {
+      "city": "Berlin",
+      "country": "Germany",
+      "year": 2026,
+      "comparisonCity": null,
+      "mode": "city",
+      "priority": 100,
+      "status": "pending",
+      "retryCount": 0,
+      "failedAt": null,
+      "addedAt": "2025-01-18T00:00:00.000Z"
+    },
+    {
+      "city": "Paris",
+      "country": "France",
+      "year": 2026,
+      "comparisonCity": null,
+      "mode": "city",
+      "priority": 100,
+      "status": "pending",
+      "retryCount": 0,
+      "failedAt": null,
+      "addedAt": "2025-01-18T00:00:00.000Z"
+    },
+    {
+      "city": "Toronto",
+      "country": "Canada",
+      "year": 2026,
+      "comparisonCity": null,
+      "mode": "city",
+      "priority": 100,
+      "status": "pending",
+      "retryCount": 0,
+      "failedAt": null,
+      "addedAt": "2025-01-18T00:00:00.000Z"
+    },
+    {
+      "city": "Sydney",
+      "country": "Australia",
+      "year": 2026,
+      "comparisonCity": null,
+      "mode": "city",
+      "priority": 100,
+      "status": "pending",
+      "retryCount": 0,
+      "failedAt": null,
+      "addedAt": "2025-01-18T00:00:00.000Z"
+    },
+    {
+      "city": "London",
+      "country": "UK",
+      "year": 2026,
+      "comparisonCity": "Manchester",
+      "mode": "comparison",
+      "priority": 100,
+      "status": "pending",
+      "retryCount": 0,
+      "failedAt": null,
+      "addedAt": "2025-01-18T00:00:00.000Z"
+    },
+    {
+      "city": "Berlin",
+      "country": "Germany",
+      "year": 2026,
+      "comparisonCity": "Munich",
+      "mode": "comparison",
+      "priority": 100,
+      "status": "pending",
+      "retryCount": 0,
+      "failedAt": null,
+      "addedAt": "2025-01-18T00:00:00.000Z"
+    },
+    {
+      "city": "New York City",
+      "country": "United States",
+      "year": 2026,
+      "comparisonCity": "Chicago",
+      "mode": "comparison",
+      "priority": 100,
+      "status": "pending",
+      "retryCount": 0,
+      "failedAt": null,
+      "addedAt": "2025-01-18T00:00:00.000Z"
+    }
+  ]
+}

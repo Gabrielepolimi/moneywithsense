@@ -224,7 +224,7 @@ async function ytSearch(query) {
 async function ytVideosDetails(ids) {
   const params = new URLSearchParams({
     key: YT_KEY,
-    part: 'snippet,statistics,contentDetails',
+    part: 'snippet,statistics,contentDetails,status',
     id: ids.join(','),
     maxResults: String(ids.length),
   });
@@ -232,6 +232,28 @@ async function ytVideosDetails(ids) {
   if (!res.ok) throw new Error(`YouTube videos failed: ${res.status}`);
   const data = await res.json();
   return data.items || [];
+}
+
+/**
+ * Validate video is embeddable and public
+ * CRITICAL: Must check status.embeddable === true and status.privacyStatus === "public"
+ */
+function validateVideoEmbeddable(video) {
+  if (!video || !video.status) {
+    return { valid: false, reason: 'Missing status data' };
+  }
+  
+  // CRITICAL: Check embeddable status
+  if (video.status.embeddable !== true) {
+    return { valid: false, reason: 'Video is not embeddable' };
+  }
+  
+  // CRITICAL: Check privacy status
+  if (video.status.privacyStatus !== 'public') {
+    return { valid: false, reason: `Video privacy status is ${video.status.privacyStatus}, not public` };
+  }
+  
+  return { valid: true };
 }
 
 function applyHardFilters(video, niche) {
@@ -406,14 +428,19 @@ async function main() {
     }
   }
 
-  // merge details
+  // merge details with embeddable/privacy validation
   const candidates = details.map(item => {
     const base = videosMap.get(item.id);
     const stats = item.statistics || {};
     const snippet = item.snippet || {};
+    const status = item.status || {};
     const durationSeconds = isoDurationToSeconds(item.contentDetails?.duration);
     const lang = snippet.defaultAudioLanguage || snippet.defaultLanguage || '';
     const blacklisted = isBlacklisted(snippet);
+    
+    // CRITICAL: Validate embeddable and privacy status
+    const embedValidation = validateVideoEmbeddable(item);
+    
     return {
       id: item.id,
       title: snippet.title || base?.title || '',
@@ -428,6 +455,10 @@ async function main() {
       blacklisted,
       lang: lang.toLowerCase(),
       query: base?.query,
+      // Embeddable validation
+      embeddable: embedValidation.valid,
+      embeddableReason: embedValidation.reason || null,
+      privacyStatus: status.privacyStatus || 'unknown',
     };
   });
 
@@ -438,6 +469,18 @@ async function main() {
   const dropReasons = {};
   const mainKeyword = extractMainKeyword(articleData);
   const filtered = candidates.filter(c => {
+    // CRITICAL: Filter by embeddable and privacy status first
+    if (!c.embeddable) {
+      c._dropReason = `embeddable: ${c.embeddableReason || 'not embeddable'}`;
+      dropReasons['embeddable'] = (dropReasons['embeddable'] || 0) + 1;
+      return false;
+    }
+    if (c.privacyStatus !== 'public') {
+      c._dropReason = `privacy: ${c.privacyStatus}`;
+      dropReasons['privacy'] = (dropReasons['privacy'] || 0) + 1;
+      return false;
+    }
+    
     const reason = applyHardFilters(c, niche);
     if (reason) {
       c._dropReason = reason;
@@ -531,10 +574,22 @@ async function main() {
     process.exit(0);
   }
 
-  // Embed check
+  // Final embeddable check (already validated above, but double-check)
+  if (!winner.embeddable || winner.privacyStatus !== 'public') {
+    console.log(`⚠️ Video not embeddable (embeddable=${winner.embeddable}, privacy=${winner.privacyStatus}), skipping video`);
+    if (!dryRun) {
+      await sanityClient.patch(article._id).set({
+        youtube: null,
+        showYouTubeVideo: false,
+      }).commit({ autoGenerateArrayKeys: true });
+    }
+    process.exit(0);
+  }
+  
+  // Additional oEmbed check (redundant but safe)
   const embeddable = await oEmbedCheck(winner.id);
   if (!embeddable) {
-    console.log('⚠️ Video non embeddabile, fallback a nessun video');
+    console.log('⚠️ Video failed oEmbed check, skipping video');
     if (!dryRun) {
       await sanityClient.patch(article._id).set({
         youtube: null,
