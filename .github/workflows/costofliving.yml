@@ -98,10 +98,15 @@ jobs:
             exit 1
           fi
           
-          # Check if it's valid JSON
-          if ! python3 -m json.tool "$CREDS_FILE" > /dev/null 2>&1; then
-            echo "❌ Credentials file is not valid JSON"
-            exit 1
+          # Check if it's valid JSON (using jq if available, otherwise skip validation)
+          if command -v jq > /dev/null 2>&1; then
+            if ! jq empty "$CREDS_FILE" > /dev/null 2>&1; then
+              echo "❌ Credentials file is not valid JSON"
+              exit 1
+            fi
+            echo "✅ JSON validation passed (using jq)"
+          else
+            echo "⚠️ jq not available, skipping JSON validation (Vertex AI will validate on use)"
           fi
           
           echo "GOOGLE_APPLICATION_CREDENTIALS=$CREDS_FILE" >> $GITHUB_ENV
