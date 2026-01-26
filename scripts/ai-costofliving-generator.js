@@ -325,6 +325,29 @@ function normalizeCountryCode(country) {
 }
 
 /**
+ * Normalize currency to valid ISO code [A-Z]{3}
+ * Returns null if not a valid ISO currency code
+ */
+function normalizeCurrency(currency) {
+  if (!currency || typeof currency !== 'string') return null;
+  // Remove any descriptive text, keep only ISO code
+  const match = currency.match(/\b([A-Z]{3})\b/);
+  if (match) {
+    const isoCode = match[1];
+    // Basic validation: common currency codes
+    const validCodes = ['USD', 'EUR', 'GBP', 'JPY', 'CNY', 'INR', 'BRL', 'MXN', 'CAD', 'AUD', 'NZD', 'CHF', 'SEK', 'NOK', 'DKK', 'PLN', 'KRW', 'SGD', 'HKD', 'AED'];
+    if (validCodes.includes(isoCode)) {
+      return isoCode;
+    }
+    // If it's 3 uppercase letters, accept it (might be valid but not in our list)
+    if (/^[A-Z]{3}$/.test(isoCode)) {
+      return isoCode;
+    }
+  }
+  return null;
+}
+
+/**
  * Infer local currency from country code
  */
 function inferLocalCurrency(countryCode) {
@@ -621,9 +644,22 @@ You explain how estimates are built.
 ---
 
 5) CONTENT STRUCTURE  
-(Sections must appear in this exact order)
+(Sections must appear in this exact order with EXACT H2 headings)
 
-a) TL;DR / In Brief  
+CRITICAL: Use these EXACT H2 headings (case-sensitive):
+- ## TL;DR
+- ## Last Updated
+- ## Monthly Cost Breakdown
+- ## By Lifestyle
+- ## How to Save Money in {city}
+- ## Common Mistakes
+- ## Quick Checklist
+- ## FAQ
+- ## Sources & Methodology
+- ## Conclusion
+- ## Disclaimer
+
+a) TL;DR  
 - Either:
   • 3–5 bullet points OR  
   • One short summary paragraph  
@@ -1075,30 +1111,36 @@ function validateArticleStructure(content, mode = 'city') {
   const errors = [];
   const warnings = [];
   
-  // Check required sections - must be H2 headings for key sections
-  // Patterns are more specific to match start of heading (prevents false positives)
-  const requiredH2Sections = [
-    { patterns: ['tl;dr|tldr|in brief'], name: 'TL;DR' },
-    { patterns: ['last updated'], name: 'Last Updated' },
-    { patterns: ['monthly cost breakdown|cost breakdown'], name: 'Monthly Cost Breakdown' },
-    { patterns: ['by lifestyle|lifestyle scenarios'], name: 'Lifestyle Scenarios' },
-    { patterns: ['how to save money'], name: 'How to Save Money' },
-    { patterns: ['common mistakes'], name: 'Common Mistakes' },
-    { patterns: ['quick checklist|checklist'], name: 'Quick Checklist' },
-    { patterns: ['faq|frequently asked'], name: 'FAQ' },
-    { patterns: ['sources & methodology|sources and methodology|methodology'], name: 'Sources & Methodology' },
-    { patterns: ['conclusion'], name: 'Conclusion' },
-    { patterns: ['disclaimer'], name: 'Disclaimer' }
+  // Check required sections - must be EXACT H2 headings (as specified in prompt)
+  const requiredH2Headings = [
+    { exact: '## TL;DR', flexible: false },
+    { exact: '## Last Updated', flexible: false },
+    { exact: '## Monthly Cost Breakdown', flexible: false },
+    { exact: '## By Lifestyle', flexible: false },
+    { exact: '## How to Save Money', flexible: true }, // Allow "in {city}" suffix
+    { exact: '## Common Mistakes', flexible: false },
+    { exact: '## Quick Checklist', flexible: false },
+    { exact: '## FAQ', flexible: false },
+    { exact: '## Sources & Methodology', flexible: false },
+    { exact: '## Conclusion', flexible: false },
+    { exact: '## Disclaimer', flexible: false }
   ];
   
-  requiredH2Sections.forEach(section => {
-    // More specific regex: matches H2 heading starting with pattern (prevents false positives from text within heading)
-    const hasHeading = section.patterns.some(pattern => {
-      const regex = new RegExp(`(^|\\n)##\\s*(?:${pattern})(\\b|\\s*[:—-])`, 'i');
-      return regex.test(content);
-    });
-    if (!hasHeading) {
-      errors.push(`Missing required section: ${section.name} (must be an H2 heading)`);
+  requiredH2Headings.forEach(({ exact, flexible }) => {
+    if (flexible) {
+      // Allow variations (e.g., "## How to Save Money in {city}")
+      const baseHeading = exact.replace(/^##\s+/, '');
+      const regex = new RegExp(`^##\\s+${baseHeading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'im');
+      if (!regex.test(content)) {
+        errors.push(`Missing required section: ${exact} (must be an exact H2 heading)`);
+      }
+    } else {
+      // Exact match
+      const escapedHeading = exact.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`^##\\s+${escapedHeading.replace(/^##\s+/, '')}$`, 'im');
+      if (!regex.test(content)) {
+        errors.push(`Missing required section: ${exact} (must be an exact H2 heading)`);
+      }
     }
   });
   
