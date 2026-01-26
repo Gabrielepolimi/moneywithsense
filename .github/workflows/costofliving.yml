@@ -99,15 +99,23 @@ jobs:
           echo "✅ All required secrets are configured"
       
       - name: Setup Vertex AI credentials
-        if: ${{ secrets.GCP_PROJECT_ID != '' }}
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
         run: |
-          if [ -z "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}" ]; then
+          # Only setup credentials if GCP_PROJECT_ID is set
+          if [ -z "$GCP_PROJECT_ID" ]; then
+            echo "ℹ️ GCP_PROJECT_ID not set, skipping Vertex AI credentials setup"
+            exit 0
+          fi
+          
+          if [ -z "$GOOGLE_APPLICATION_CREDENTIALS_JSON" ]; then
             echo "❌ GOOGLE_APPLICATION_CREDENTIALS_JSON not set - Vertex AI requires credentials"
             exit 1
           fi
           
           CREDS_FILE="${{ runner.temp }}/gcp-credentials.json"
-          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}" > "$CREDS_FILE"
+          echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" > "$CREDS_FILE"
           
           # Verify file was created and is valid JSON
           if [ ! -f "$CREDS_FILE" ]; then
@@ -139,8 +147,16 @@ jobs:
           fi
       
       - name: Verify credentials before generation
-        if: ${{ secrets.GCP_PROJECT_ID != '' }}
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCP_LOCATION: ${{ secrets.GCP_LOCATION }}
         run: |
+          # Only verify if GCP_PROJECT_ID is set
+          if [ -z "$GCP_PROJECT_ID" ]; then
+            echo "ℹ️ GCP_PROJECT_ID not set, skipping credentials verification"
+            exit 0
+          fi
+          
           if [ -z "$GOOGLE_APPLICATION_CREDENTIALS" ]; then
             echo "❌ GOOGLE_APPLICATION_CREDENTIALS environment variable not set"
             exit 1
@@ -150,8 +166,8 @@ jobs:
             exit 1
           fi
           echo "✅ Credentials file verified: $GOOGLE_APPLICATION_CREDENTIALS"
-          echo "✅ GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}"
-          echo "✅ GCP_LOCATION: ${{ secrets.GCP_LOCATION || 'us-central1' }}"
+          echo "✅ GCP_PROJECT_ID: $GCP_PROJECT_ID"
+          echo "✅ GCP_LOCATION: ${GCP_LOCATION:-us-central1}"
       
       - name: Generate Cost of Living Article
         env:
