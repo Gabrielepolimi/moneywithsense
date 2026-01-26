@@ -702,11 +702,18 @@ function getPromptTemplate(mode, city, country, year, comparisonCity = null) {
   
   const template = templates[selectedMode] || templates['city'];
   
+  // Infer local currency for the country
+  const countryCode = normalizeCountryCode(country);
+  const localCurrency = inferLocalCurrency(countryCode);
+  const currencySymbol = localCurrency === 'EUR' ? '€' : localCurrency === 'GBP' ? '£' : localCurrency === 'USD' ? '$' : localCurrency;
+  
   return template
     .replace(/{city}/g, city)
     .replace(/{country}/g, country)
     .replace(/{year}/g, year.toString())
-    .replace(/{comparisonCity}/g, comparisonCity || '');
+    .replace(/{comparisonCity}/g, comparisonCity || '')
+    .replace(/{localCurrency}/g, localCurrency)
+    .replace(/{currencySymbol}/g, currencySymbol);
 }
 
 // ===== CONTENT PARSING =====
