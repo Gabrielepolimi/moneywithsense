@@ -578,6 +578,7 @@ k) Disclaimer (mandatory, exact meaning)
   ],
   "lastVerifiedAt": "{ISO_DATE}"
 }
+---END_DATA_POLICY_JSON---
 
 ---CONTENT---
 [Full markdown article]
@@ -1383,13 +1384,17 @@ OUTPUT FORMAT (only these sections):
       log(`   ⚠️ Warnings: ${validation.warnings.join(', ')}`);
     }
     
-    // Add currency fields
-    const localCurrency = inferLocalCurrency(countryCode);
+    // Add currency fields - costData should already have currency from prompt (localCurrency)
+    // But ensure we have both localCurrency and displayCurrency for UI
+    const localCurrency = parsed.costData.currency || inferLocalCurrency(countryCode);
     parsed.costData.localCurrency = localCurrency;
-    parsed.costData.displayCurrency = 'USD';
-    parsed.costData.fxNote = localCurrency !== 'USD' 
-      ? `Converted to USD using recent average rates; ranges vary. Original currency: ${localCurrency}.`
-      : 'Ranges are in USD.';
+    parsed.costData.displayCurrency = localCurrency; // Use local currency as display (more credible)
+    // If local currency is not USD, we can add USD conversion note
+    if (localCurrency !== 'USD') {
+      parsed.costData.fxNote = `All amounts are in ${localCurrency}. USD equivalents are approximate and vary with exchange rates.`;
+    } else {
+      parsed.costData.fxNote = 'Ranges are in USD.';
+    }
   }
   
   // 7. Validate article structure
