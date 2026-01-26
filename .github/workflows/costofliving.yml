@@ -65,22 +65,40 @@ jobs:
       
       - name: Verify secrets are configured
         run: |
-          if [ -z "${{ secrets.GEMINI_API_KEY }}" ]; then
-            echo "❌ GEMINI_API_KEY not configured in GitHub Secrets!"
+          # Check for either Vertex AI or Google AI Studio API
+          if [ -z "${{ secrets.GCP_PROJECT_ID }}" ] && [ -z "${{ secrets.GEMINI_API_KEY }}" ]; then
+            echo "❌ Either GCP_PROJECT_ID (for Vertex AI) or GEMINI_API_KEY (for Google AI Studio) must be configured!"
             exit 1
           fi
           if [ -z "${{ secrets.SANITY_API_TOKEN }}" ]; then
             echo "❌ SANITY_API_TOKEN not configured in GitHub Secrets!"
             exit 1
           fi
+          if [ -n "${{ secrets.GCP_PROJECT_ID }}" ]; then
+            echo "✅ Vertex AI configured (GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }})"
+          else
+            echo "✅ Google AI Studio API configured"
+          fi
           echo "✅ All required secrets are configured"
+      
+      - name: Setup Vertex AI credentials
+        if: env.GCP_PROJECT_ID != ''
+        run: |
+          if [ -n "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}" ]; then
+            echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}" > /tmp/gcp-credentials.json
+            export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-credentials.json
+            echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-credentials.json" >> $GITHUB_ENV
+            echo "✅ Vertex AI credentials file created"
+          else
+            echo "⚠️ GOOGLE_APPLICATION_CREDENTIALS_JSON not set, using Application Default Credentials"
+          fi
       
       - name: Generate Cost of Living Article
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           GCP_LOCATION: ${{ secrets.GCP_LOCATION || 'us-central1' }}
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
           GEMINI_MODEL: ${{ secrets.GEMINI_MODEL || 'gemini-2.0-flash-exp' }}
           SANITY_API_TOKEN: ${{ secrets.SANITY_API_TOKEN }}
           NEXT_PUBLIC_SANITY_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_SANITY_PROJECT_ID }}
