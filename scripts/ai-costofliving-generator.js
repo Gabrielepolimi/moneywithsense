@@ -120,6 +120,18 @@ let useVertexAI = false;
 let forceAiStudio = false; // Flag to force Google AI Studio even if Vertex AI is configured
 
 function getGeminiAI() {
+  // If forceAiStudio is set, use Google AI Studio even if Vertex AI is configured
+  if (forceAiStudio) {
+    if (!genAI) {
+      if (!process.env.GEMINI_API_KEY) {
+        throw new Error('GEMINI_API_KEY not configured (forced to use AI Studio)');
+      }
+      genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+      console.log('✅ Google AI Studio API initialized (forced)');
+    }
+    return genAI;
+  }
+  
   // Check if Vertex AI is configured
   if (process.env.GCP_PROJECT_ID && process.env.GCP_LOCATION) {
     useVertexAI = true;
