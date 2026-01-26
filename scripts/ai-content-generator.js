@@ -33,7 +33,7 @@ const __dirname = path.dirname(__filename);
 
 // ===== CONFIGURAZIONE =====
 const CONFIG = {
-  geminiModel: 'gemini-2.0-flash',
+  geminiModel: 'gemini-1.5-pro',
   maxTokens: 8000,
   temperature: 0.7,
   publishImmediately: true,
