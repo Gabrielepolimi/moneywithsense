@@ -38,7 +38,7 @@ const __dirname = path.dirname(__filename);
 
 // ===== CONFIGURATION =====
 const CONFIG = {
-  geminiModel: process.env.GEMINI_MODEL || 'gemini-2.0-flash-exp', // Default to Vertex AI model, fallback to flash
+  geminiModel: process.env.GEMINI_MODEL || 'gemini-2.5-pro', // Default to Vertex AI model (try gemini-2.5-pro, fallback to gemini-2.5-flash-lite if not available)
   maxTokens: 10000,
   temperature: 0.7,
   publishImmediately: true,
@@ -995,8 +995,21 @@ export async function generateCostOfLivingArticle(city, country, year, compariso
       
       let fixedContent;
       if (useVertexAI) {
-        // Vertex AI
-        const model = ai.getGenerativeModel({ model: CONFIG.geminiModel });
+        // Vertex AI - try gemini-2.5-pro, fallback to gemini-2.5-flash-lite
+        let modelName = CONFIG.geminiModel;
+        let model;
+        
+        try {
+          model = ai.getGenerativeModel({ model: modelName });
+        } catch (modelError) {
+          if (modelName === 'gemini-2.5-pro') {
+            modelName = 'gemini-2.5-flash-lite';
+            model = ai.getGenerativeModel({ model: modelName });
+          } else {
+            throw modelError;
+          }
+        }
+        
         const result = await model.generateContent({
           contents: [{ role: 'user', parts: [{ text: fixPrompt }] }],
           generationConfig: {
