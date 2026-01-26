@@ -85,12 +85,20 @@ jobs:
         if: env.GCP_PROJECT_ID != ''
         run: |
           if [ -n "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}" ]; then
-            echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}" > /tmp/gcp-credentials.json
-            export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-credentials.json
-            echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-credentials.json" >> $GITHUB_ENV
-            echo "✅ Vertex AI credentials file created"
+            echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}" > ${{ runner.temp }}/gcp-credentials.json
+            echo "GOOGLE_APPLICATION_CREDENTIALS=${{ runner.temp }}/gcp-credentials.json" >> $GITHUB_ENV
+            echo "✅ Vertex AI credentials file created at ${{ runner.temp }}/gcp-credentials.json"
+            # Verify file was created
+            if [ -f "${{ runner.temp }}/gcp-credentials.json" ]; then
+              echo "✅ Credentials file verified"
+            else
+              echo "❌ Failed to create credentials file"
+              exit 1
+            fi
           else
-            echo "⚠️ GOOGLE_APPLICATION_CREDENTIALS_JSON not set, using Application Default Credentials"
+            echo "⚠️ GOOGLE_APPLICATION_CREDENTIALS_JSON not set"
+            echo "⚠️ Vertex AI will not work without credentials"
+            exit 1
           fi
       
       - name: Generate Cost of Living Article
@@ -99,7 +107,7 @@ jobs:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           GCP_LOCATION: ${{ secrets.GCP_LOCATION || 'us-central1' }}
           GOOGLE_APPLICATION_CREDENTIALS: ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
-          GEMINI_MODEL: ${{ secrets.GEMINI_MODEL || 'gemini-2.0-flash-exp' }}
+          GEMINI_MODEL: ${{ secrets.GEMINI_MODEL || 'gemini-2.5-pro' }}
           SANITY_API_TOKEN: ${{ secrets.SANITY_API_TOKEN }}
           NEXT_PUBLIC_SANITY_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_SANITY_PROJECT_ID }}
           NEXT_PUBLIC_SANITY_DATASET: production
