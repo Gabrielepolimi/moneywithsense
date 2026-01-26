@@ -238,5 +238,5 @@ jobs:
           else
             # Scheduled trigger - process queue
             echo "📋 Processing queue (scheduled run)..."
-            node scripts/process-costofliving-queue.js
+            STRICT_DEDUP=1 node scripts/process-costofliving-queue.js
           fi

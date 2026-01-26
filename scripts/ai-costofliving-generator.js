@@ -240,8 +240,9 @@ function normalizeCountryCode(country) {
 
 /**
  * Check for duplicate cost-of-living articles using normalized fields
+ * @param {boolean} strictDedup - If true, throw error on failure (fail closed). If false, allow proceed (fail open).
  */
-async function checkDuplicate(citySlug, countryCode, year, comparisonCitySlug = null) {
+async function checkDuplicate(citySlug, countryCode, year, comparisonCitySlug = null, strictDedup = false) {
   try {
     const query = `*[
       _type == "post" && 
@@ -277,7 +278,11 @@ async function checkDuplicate(citySlug, countryCode, year, comparisonCitySlug = 
     return { isDuplicate: false };
   } catch (error) {
     console.error('❌ Error checking duplicate:', error.message);
-    // On error, allow proceeding (fail open)
+    if (strictDedup) {
+      throw new Error(`Duplicate check failed (strict mode): ${error.message}. Cannot proceed safely.`);
+    }
+    // On error, allow proceeding (fail open) only if not strict
+    console.warn('⚠️ Duplicate check failed, proceeding anyway (non-strict mode)');
     return { isDuplicate: false };
   }
 }
@@ -360,107 +365,167 @@ function validateCostData(costData) {
 
 // ===== PROMPT TEMPLATES =====
 
-const PROMPT_TEMPLATE_SINGLE_CITY = `You are a cost-of-living researcher writing for MoneyWithSense.com.
+const PROMPT_TEMPLATE_SINGLE_CITY = `You are a cost-of-living researcher writing for MoneyWithSense.com,
+an independent educational platform about personal finance.
 
 CITY: {city}
 COUNTRY: {country}
 YEAR: {year}
 
+Your goal is to help readers realistically estimate their monthly cost
+of living using transparent ranges and practical explanations.
+
+You are NOT a financial advisor.
+You do NOT invent precise numbers.
+You explain how estimates are built.
+
 === WRITING STYLE ===
-- Simple, global English (readable by US, UK, AU, CA, EU audiences)
-- No heavy American slang
-- Short sentences (max 20 words average)
-- Practical, calm, trustworthy voice
-- Never clickbait or sensationalist
-- Use ranges for costs, never fabricated precise numbers
+- Global English (clear for US, UK, EU, CA, AU readers)
+- No slang, no hype, no clickbait
+- Short, clear sentences (average ≤ 20 words)
+- Calm, practical, trustworthy tone
+- Neutral and informative
+- Always use cost ranges, never exact figures
+- Write for humans first, search engines second
 
 === STRICT REQUIREMENTS ===
 
-1) TITLE: max 60 characters, SEO-friendly
-2) SEO_TITLE: max 60 characters, can differ from display title
-3) META_DESCRIPTION: exactly 150-160 characters for search engines
-4) EXCERPT: max 150 characters for UI display (same as meta description or shorter)
+1) TITLE
+- Max 60 characters
+- SEO-friendly
+- Must clearly include city name and year
 
-5) CONTENT STRUCTURE (must follow this exact order):
-   
-   a) TL;DR / In Brief
-      - 3-5 bullet points summarizing key costs
-      - Quick answer: "You'll need approximately $X-$Y per month"
-   
-   b) Last Updated
-      - "Last updated: [Month YYYY]"
-   
-   c) Monthly Cost Breakdown
-      - Markdown table with categories and ranges
-      - Include: Rent (city center/outside), Utilities, Groceries, Transport, Eating Out, Internet/Phone, Entertainment
-      - Show Min/Max for each category
-   
-   d) By Lifestyle (Lifestyle Scenarios)
-      - Single person budget
-      - Couple budget
-      - Family budget (if applicable)
-      - Digital nomad budget (if applicable)
-   
-   e) How to Save Money in {city}
-      - 5-8 practical tips specific to the city
-      - Local insights (public transport, markets, etc.)
-   
-   f) Common Mistakes
-      - 3-5 typical errors people make when budgeting for {city}
-      - Brief explanation of why each is problematic
-   
-   g) Quick Checklist
-      - Bullet list, 5-8 items
-      - Easy to save or screenshot
-   
-   h) FAQ
-      - 3-6 common questions with brief answers
-      - Use ### for each question
-      - Example: ### Is {city} expensive?
-   
-   i) Sources & Methodology
-      - Explain how estimates are built (typical ranges, public price ranges, rental ranges)
-      - Pricing variability: prices vary by neighborhood, lifestyle choices, etc.
-      - How to validate locally: suggest checking local rental sites, grocery stores, expat forums
-      - No fake citations - be honest about methodology
-   
-   j) Conclusion
-      - Practical summary
-      - Soft call-to-action
-   
-   k) Disclaimer (required at end)
-      - "This content is for informational purposes only and does not constitute financial advice. Always consult a qualified professional for personalized guidance."
+2) SEO_TITLE
+- Max 60 characters
+- Can differ slightly from display title
 
-6) INTERNAL LINKS:
-   - DO NOT include internal links in the markdown content
-   - Internal linking is handled automatically by the system
-   - Focus on writing the content without adding markdown links
+3) META_DESCRIPTION
+- EXACTLY 150–160 characters
+- Neutral, informative, not promotional
 
-7) LENGTH: 1,200-1,800 words (minimum 1,200, never below 1,000)
+4) EXCERPT
+- Max 150 characters
+- Can match or slightly shorten meta description
 
-8) SEO & FORMATTING:
-   - Include primary keyword in first 120 words
-   - Use 4-6 related keywords naturally throughout
-   - Use proper markdown syntax: ## for H2, ### for H3
-   - NEVER write "H2:" or "H3:" as text!
+---
 
-=== OUTPUT FORMAT (EXACTLY) ===
+5) CONTENT STRUCTURE  
+(Sections must appear in this exact order)
+
+a) TL;DR / In Brief  
+- Either:
+  • 3–5 bullet points OR  
+  • One short summary paragraph  
+  (choose format naturally, not always the same)
+- Must clearly answer:
+  "You'll need approximately $X–$Y per month to live in {city}."
+
+b) Last Updated  
+- Format exactly:
+  "Last updated: {Month YYYY}"
+
+c) Monthly Cost Breakdown  
+- Markdown table with ranges (Min / Max)
+- Include:
+  Rent (city center)
+  Rent (outside center)
+  Utilities
+  Groceries
+  Transport
+  Eating out
+  Internet / Phone
+  Entertainment
+
+d) By Lifestyle (Lifestyle Scenarios)
+- Single person
+- Couple
+- Family (if applicable)
+- Digital nomad (if applicable)
+- Explain how spending patterns differ
+
+e) How to Save Money in {city}
+- 5–8 practical, city-specific tips
+- Focus on transport, housing, food, daily habits
+- No generic advice
+
+f) Common Mistakes
+- 3–5 frequent budgeting errors
+- Brief explanation why each is problematic
+
+g) Quick Checklist
+- 5–8 bullet points
+- Easy to screenshot or save
+
+h) FAQ
+- 3–6 questions
+- Each question as an H3 (###)
+- Short, clear answers
+- Example: ### Is {city} expensive?
+
+i) Sources & Methodology
+- Explain clearly:
+  • How ranges are estimated
+  • Why prices vary by neighborhood and lifestyle
+  • That figures are indicative, not guarantees
+  • How readers can validate locally
+    (rental sites, supermarkets, local forums)
+- Do NOT invent citations or fake sources
+
+j) Conclusion
+- Practical wrap-up
+- Neutral tone
+- Soft suggestion to explore related guides or comparisons
+- No selling language
+
+k) Disclaimer (mandatory, exact meaning)
+- State clearly:
+  "This content is for informational purposes only and does not constitute financial advice."
+
+---
+
+6) INTERNAL LINKS
+- DO NOT include any internal or external links in markdown
+- Internal linking is handled automatically by the system
+
+7) LENGTH
+- Minimum: 1,200 words
+- Maximum: 1,800 words
+- Never below 1,000 words
+
+8) SEO RULES
+- Primary keyword must appear:
+  • Once in the first paragraph
+  • Once in one H2
+  • No more than 2 times total
+- Use 4–6 related keywords naturally
+- Use proper markdown:
+  • ## for H2
+  • ### for H3
+- NEVER write "H2:" or "H3:" as text
+
+---
+
+=== OUTPUT FORMAT (EXACT — DO NOT CHANGE) ===
 
 ---TITLE---
-[Title here, max 60 chars]
+[Display title, max 60 chars]
+
 ---SEO_TITLE---
-[SEO-optimized title, max 60 chars]
+[SEO title, max 60 chars]
+
 ---META_DESCRIPTION---
-[Meta description, exactly 150-160 chars]
+[150–160 characters]
+
 ---EXCERPT---
-[Excerpt for UI, max 150 chars]
+[Max 150 characters]
+
 ---KEYWORDS---
-[primary keyword, related keyword 1, related keyword 2, ...]
+[primary keyword, related keyword 1, related keyword 2, related keyword 3]
+
 ---COST_DATA_JSON---
 {
   "currency": "USD",
   "timeUnit": "monthly",
-  "householdType": "single",
   "rentCityCenterMin": 1200,
   "rentCityCenterMax": 1800,
   "rentOutsideMin": 800,
@@ -480,17 +545,29 @@ YEAR: {year}
   "totalMin": 2830,
   "totalMax": 4350
 }
+
 ---DATA_POLICY_JSON---
 {
-  "dataSources": ["Public rental listings", "Consumer price indices", "Local cost databases"],
-  "assumptions": ["Based on 1-bedroom apartment in city center", "Excludes luxury items", "Assumes moderate lifestyle"],
-  "lastVerifiedAt": "2026-01-18T00:00:00Z"
+  "dataSources": [
+    "Public rental listings",
+    "Consumer price indices",
+    "Local cost databases"
+  ],
+  "assumptions": [
+    "Based on a one-bedroom apartment",
+    "Moderate lifestyle",
+    "No luxury expenses included"
+  ],
+  "lastVerifiedAt": "{ISO_DATE}"
 }
+
 ---CONTENT---
-[Full markdown article with all required sections]
+[Full markdown article]
+
 ---END---
 
-Write original, practical, and helpful content. Focus on real, actionable information that helps people estimate their monthly budget.`;
+Write original, helpful, and realistic content.
+Your goal is clarity, transparency, and usefulness — not persuasion.`;
 
 const PROMPT_TEMPLATE_COMPARISON = `You are a cost-of-living researcher writing for MoneyWithSense.com.
 
@@ -681,6 +758,36 @@ function parseGeneratedContent(content) {
 }
 
 // ===== QUALITY GATES =====
+
+/**
+ * Validate SEO fields (title, seoTitle, metaDescription, excerpt)
+ */
+function validateSeoFields(parsed) {
+  const errors = [];
+  
+  if (!parsed.title || parsed.title.length > 60) {
+    errors.push(`Title must be <= 60 characters (got ${parsed.title?.length || 0})`);
+  }
+  
+  if (!parsed.seoTitle || parsed.seoTitle.length > 60) {
+    errors.push(`SEO Title must be <= 60 characters (got ${parsed.seoTitle?.length || 0})`);
+  }
+  
+  const metaDesc = parsed.metaDescription?.trim() || '';
+  if (!metaDesc || metaDesc.length < 150 || metaDesc.length > 160) {
+    errors.push(`Meta Description must be 150-160 characters (got ${metaDesc.length})`);
+  }
+  
+  const excerpt = parsed.excerpt?.trim() || '';
+  if (!excerpt || excerpt.length > 150) {
+    errors.push(`Excerpt must be <= 150 characters (got ${excerpt.length})`);
+  }
+  
+  return {
+    valid: errors.length === 0,
+    errors
+  };
+}
 
 /**
  * Validate article structure
@@ -883,24 +990,55 @@ async function findPillarPost() {
 /**
  * Find related posts (same country or same series)
  */
-async function findRelatedPosts(citySlug, countryCode, limit = 2) {
+/**
+ * Find related posts for cost-of-living articles
+ * Excludes current post by citySlug + year, prioritizes same country, then recency
+ * @param {string} citySlug - Current city slug
+ * @param {string} countryCode - Current country code
+ * @param {number} year - Current year
+ * @param {string|null} currentPostId - Current post ID (if available, for exclusion)
+ * @param {number} limit - Maximum number of related posts to return
+ */
+async function findRelatedPosts(citySlug, countryCode, year, currentPostId = null, limit = 2) {
   try {
-    const related = await sanityClient.fetch(`*[
+    // Build exclusion conditions
+    const excludeConditions = [
+      '!(citySlug == $citySlug && year == $year)' // Exclude same city+year
+    ];
+    
+    if (currentPostId) {
+      excludeConditions.push('_id != $currentPostId');
+    }
+    
+    const query = `*[
       _type == "post" && 
       contentSeries == "cost-of-living" &&
       status == "published" &&
-      slug.current != $citySlug &&
-      (countryCode == $countryCode || defined(countryCode))
-    ] | order(publishedAt desc) [0...$limit]{
+      ${excludeConditions.join(' && ')}
+    ] | order(
+      countryCode == $countryCode desc,  // Same country first
+      publishedAt desc                   // Then by recency
+    ) [0...$limit]{
       _id,
       title,
       "slug": slug.current,
-      countryCode
-    }`, {
+      countryCode,
+      city,
+      year
+    }`;
+    
+    const params = {
       citySlug,
       countryCode,
+      year,
       limit
-    });
+    };
+    
+    if (currentPostId) {
+      params.currentPostId = currentPostId;
+    }
+    
+    const related = await sanityClient.fetch(query, params);
     
     return related || [];
   } catch (error) {
@@ -932,9 +1070,13 @@ export async function generateCostOfLivingArticle(city, country, year, compariso
   
   log(`   Normalized: citySlug="${citySlug}", countryCode="${countryCode}"`);
   
-  // 2. Check for duplicates
+  // 2. Check for duplicates (fail closed in scheduled mode)
   log('🔍 Checking for duplicates...');
-  const duplicateCheck = await checkDuplicate(citySlug, countryCode, year, comparisonCitySlug);
+  const strictDedup = process.env.STRICT_DEDUP === '1' || process.env.STRICT_DEDUP === 'true';
+  if (strictDedup) {
+    log('   ⚠️ Strict deduplication mode enabled (fail closed)');
+  }
+  const duplicateCheck = await checkDuplicate(citySlug, countryCode, year, comparisonCitySlug, strictDedup);
   
   if (duplicateCheck.isDuplicate) {
     throw new Error(`Duplicate article exists: ${duplicateCheck.existing.title} (${duplicateCheck.existing.slug})`);
@@ -1026,6 +1168,25 @@ Alternatively, you can enable it via gcloud CLI:
         throw new Error(errorMsg);
       }
       
+      // Check if Vertex AI failed and we can fallback to Google AI Studio
+      if (useVertexAI && process.env.GEMINI_API_KEY) {
+        const isVertexError = error.message && (
+          error.message.includes('SERVICE_DISABLED') ||
+          error.message.includes('PERMISSION_DENIED') ||
+          error.message.includes('Unable to authenticate') ||
+          error.message.includes('credentials') ||
+          error.message.includes('403')
+        );
+        
+        if (isVertexError && attempt === 1) {
+          log('⚠️ Vertex AI failed, falling back to Google AI Studio...');
+          useVertexAI = false; // Switch to Google AI Studio
+          genAI = null; // Reset to force re-initialization
+          vertexAI = null; // Reset Vertex AI
+          continue; // Retry with Google AI Studio
+        }
+      }
+      
       if (attempt === maxRetries) {
         throw new Error(`Gemini generation failed after ${maxRetries} attempts: ${error.message}`);
       }
@@ -1042,7 +1203,72 @@ Alternatively, you can enable it via gcloud CLI:
     throw new Error('Invalid content structure - missing title or content');
   }
   
-  // 5. Validate cost data
+  // 5. Validate SEO fields
+  log('🔍 Validating SEO fields...');
+  const seoValidation = validateSeoFields(parsed);
+  if (!seoValidation.valid) {
+    log(`⚠️ SEO validation failed: ${seoValidation.errors.join(', ')}`);
+    log('   Attempting to fix SEO fields...');
+    
+    // Retry with fix prompt for SEO fields only
+    const seoFixPrompt = `${prompt}\n\nCRITICAL: The previous output had invalid SEO metadata. Please regenerate ONLY the metadata sections with these exact constraints:\n- TITLE: max 60 characters\n- SEO_TITLE: max 60 characters\n- META_DESCRIPTION: EXACTLY 150-160 characters (count carefully)\n- EXCERPT: max 150 characters\n\nKeep all other content the same.`;
+    
+    try {
+      const ai = getGeminiAI();
+      let fixedContent;
+      
+      if (useVertexAI) {
+        let model;
+        try {
+          model = ai.getGenerativeModel({ model: CONFIG.geminiModel });
+        } catch (modelError) {
+          if (CONFIG.geminiModel === 'gemini-2.5-pro') {
+            model = ai.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
+          } else {
+            throw modelError;
+          }
+        }
+        const result = await model.generateContent({
+          contents: [{ role: 'user', parts: [{ text: seoFixPrompt }] }],
+          generationConfig: {
+            temperature: 0.3, // Lower temperature for more precise metadata
+            maxOutputTokens: CONFIG.maxTokens
+          }
+        });
+        fixedContent = result.response.candidates[0].content.parts[0].text;
+      } else {
+        const model = ai.getGenerativeModel({ model: CONFIG.geminiModel });
+        const result = await model.generateContent({
+          contents: [{ role: 'user', parts: [{ text: seoFixPrompt }] }],
+          generationConfig: {
+            temperature: 0.3,
+            maxOutputTokens: CONFIG.maxTokens
+          }
+        });
+        fixedContent = result.response.text();
+      }
+      
+      const fixedParsed = parseGeneratedContent(fixedContent);
+      const fixedSeoValidation = validateSeoFields(fixedParsed);
+      
+      if (fixedSeoValidation.valid) {
+        // Merge only SEO fields
+        parsed.title = fixedParsed.title;
+        parsed.seoTitle = fixedParsed.seoTitle;
+        parsed.metaDescription = fixedParsed.metaDescription;
+        parsed.excerpt = fixedParsed.excerpt;
+        log('✅ SEO fields fixed on retry');
+      } else {
+        throw new Error(`SEO validation failed after retry: ${fixedSeoValidation.errors.join(', ')}`);
+      }
+    } catch (error) {
+      throw new Error(`SEO validation failed: ${seoValidation.errors.join(', ')}. Retry also failed: ${error.message}`);
+    }
+  } else {
+    log('✅ SEO fields validated');
+  }
+  
+  // 6. Validate cost data
   if (parsed.costData) {
     log('💰 Validating cost data...');
     const validation = validateCostData(parsed.costData);
@@ -1053,9 +1279,17 @@ Alternatively, you can enable it via gcloud CLI:
     if (validation.warnings.length > 0) {
       log(`   ⚠️ Warnings: ${validation.warnings.join(', ')}`);
     }
+    
+    // Add currency fields
+    const localCurrency = inferLocalCurrency(countryCode);
+    parsed.costData.localCurrency = localCurrency;
+    parsed.costData.displayCurrency = 'USD';
+    parsed.costData.fxNote = localCurrency !== 'USD' 
+      ? `Converted to USD using recent average rates; ranges vary. Original currency: ${localCurrency}.`
+      : 'Ranges are in USD.';
   }
   
-  // 6. Validate article structure
+  // 7. Validate article structure
   log('✅ Validating article structure...');
   const structureValidation = validateArticleStructure(parsed.content);
   if (!structureValidation.valid) {
@@ -1116,26 +1350,17 @@ Alternatively, you can enable it via gcloud CLI:
     }
   }
   
-  // 7. Generate slug
-  const primaryKeyword = parsed.keywords[0] || `${city} cost of living ${year}`;
-  const slug = slugify(primaryKeyword);
+  // 8. Generate deterministic slug
+  log('🔗 Generating slug...');
+  const baseSlug = generateDeterministicSlug(mode || 'city', citySlug, comparisonCitySlug, year);
+  const slug = await ensureUniqueSlug(baseSlug);
+  log(`   Slug: ${slug}`);
   
-  // 8. Get image
+  // 9. Get image
   log('📸 Getting image...');
   const imageResult = await getUnsplashImage(city, country, parsed.title, log);
   
-  // 9. Find internal links
-  log('🔗 Finding internal links...');
-  const pillarId = await findPillarPost();
-  if (!pillarId) {
-    throw new Error('Pillar post (cost-of-living-guide-2026) not found. Create it first.');
-  }
-  
-  const relatedPosts = await findRelatedPosts(citySlug, countryCode, 2);
-  log(`   Found pillar: ${pillarId}`);
-  log(`   Found ${relatedPosts.length} related posts`);
-  
-  // 10. Get author and category
+  // 10. Get author and category (needed before creating document for related posts)
   const authorId = await getDefaultAuthorId();
   if (!authorId) {
     throw new Error('No author found in Sanity');
@@ -1147,9 +1372,33 @@ Alternatively, you can enable it via gcloud CLI:
   }
   
   // 11. Convert markdown to block content
+  log('📄 Converting markdown to blocks...');
   const bodyBlocks = markdownToBlockContent(parsed.content);
   
-  // 12. Calculate reading time
+  // 11b. Validate no H1 in blocks
+  const hasH1 = bodyBlocks.some(block => block._type === 'block' && block.style === 'h1');
+  if (hasH1) {
+    log('⚠️ Found H1 in body blocks, converting to H2...');
+    bodyBlocks.forEach(block => {
+      if (block._type === 'block' && block.style === 'h1') {
+        block.style = 'h2';
+      }
+    });
+  }
+  
+  // 12. Find internal links (after we have slug, before creating document)
+  log('🔗 Finding internal links...');
+  const pillarId = await findPillarPost();
+  if (!pillarId) {
+    throw new Error('Pillar post (cost-of-living-guide-2026) not found. Create it first.');
+  }
+  
+  // Find related posts (exclude current by citySlug+year, will exclude by _id after creation)
+  const relatedPosts = await findRelatedPosts(citySlug, countryCode, year, null, 2);
+  log(`   Found pillar: ${pillarId}`);
+  log(`   Found ${relatedPosts.length} related posts`);
+  
+  // 13. Calculate reading time
   const wordCount = parsed.content.split(/\s+/).length;
   const readingTime = Math.max(
     CONFIG.readingTimeMin,
@@ -1160,7 +1409,7 @@ Alternatively, you can enable it via gcloud CLI:
     Math.random() * (CONFIG.initialLikesMax - CONFIG.initialLikesMin + 1)
   ) + CONFIG.initialLikesMin;
   
-  // 13. Create Sanity document
+  // 14. Create Sanity document
   const sanityDocument = {
     _type: 'post',
     title: parsed.title,
@@ -1177,7 +1426,7 @@ Alternatively, you can enable it via gcloud CLI:
     status: 'published',
     publishedAt: CONFIG.publishImmediately ? new Date().toISOString() : null,
     contentSeries: 'cost-of-living',
-    primaryKeyword: primaryKeyword,
+    primaryKeyword: parsed.keywords[0] || `${city} cost of living ${year}`,
     city: city,
     citySlug: citySlug,
     country: country,
@@ -1242,15 +1491,23 @@ Alternatively, you can enable it via gcloud CLI:
   if (process.env.YOUTUBE_API_KEY && !dryRun) {
     log('🎥 Starting YouTube picker...');
     try {
+      // Pass context as arguments: slug, city, country, year, mode
       const { stdout, stderr } = await execFileAsync('node', [
         path.join(__dirname, 'youtube-video-picker.js'),
-        slug
+        slug,
+        city,
+        country,
+        year.toString(),
+        mode || 'city'
       ], {
         env: {
           ...process.env,
           YOUTUBE_API_KEY: process.env.YOUTUBE_API_KEY,
           SANITY_API_TOKEN: process.env.SANITY_API_TOKEN,
           GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+          GCP_PROJECT_ID: process.env.GCP_PROJECT_ID,
+          GCP_LOCATION: process.env.GCP_LOCATION,
+          GOOGLE_APPLICATION_CREDENTIALS: process.env.GOOGLE_APPLICATION_CREDENTIALS,
           NEXT_PUBLIC_SANITY_PROJECT_ID: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
         },
         maxBuffer: 10 * 1024 * 1024, // 10MB buffer

@@ -217,6 +217,18 @@ function extractHeadingsFromBody(body = []) {
 
 function buildQueries(article) {
   const q = new Set();
+  
+  // If we have city/country context (Cost of Living articles), prioritize those queries
+  if (article.city && article.country) {
+    const yearSuffix = article.year ? ` ${article.year}` : '';
+    q.add(`${article.city} ${article.country} cost of living${yearSuffix}`);
+    q.add(`${article.city} living expenses${yearSuffix}`);
+    q.add(`${article.city} monthly budget${yearSuffix}`);
+    q.add(`cost of living in ${article.city}${yearSuffix}`);
+    q.add(`${article.city} ${article.country} expat budget${yearSuffix}`);
+  }
+  
+  // Always include article title and headings
   const base = article.title;
   q.add(base);
   (article.headings || []).slice(0, 3).forEach(h => q.add(h));
@@ -359,10 +371,15 @@ async function main() {
   const args = process.argv.slice(2).filter(Boolean);
   const dryRun = args.includes('--dry-run');
   const force = args.includes('--force');
-  const slug = args.find(a => !a.startsWith('-'));
+  const nonFlagArgs = args.filter(a => !a.startsWith('-'));
+  const slug = nonFlagArgs[0] || null;
+  const city = nonFlagArgs[1] || null;
+  const country = nonFlagArgs[2] || null;
+  const year = nonFlagArgs[3] || null;
+  const mode = nonFlagArgs[4] || null;
 
   if (!slug) {
-    console.error('❌ Specifica uno slug: node scripts/youtube-video-picker.js "<slug>" [--dry-run]');
+    console.error('❌ Specifica uno slug: node scripts/youtube-video-picker.js "<slug>" [city] [country] [year] [mode] [--dry-run]');
     process.exit(1);
   }
   if (!SANITY_API_TOKEN) {
@@ -374,7 +391,12 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`\n🎥 YouTube Picker - slug: ${slug} ${dryRun ? '(dry-run)' : ''}\n`);
+  console.log(`\n🎥 YouTube Picker - slug: ${slug} ${dryRun ? '(dry-run)' : ''}`);
+  if (city && country) {
+    console.log(`   Context: ${city}, ${country}${year ? ` (${year})` : ''}${mode ? ` [${mode}]` : ''}\n`);
+  } else {
+    console.log('');
+  }
 
   const article = await fetchArticle(slug);
   if (!article) {
@@ -386,6 +408,8 @@ async function main() {
   const safeHeadings = Array.isArray(headings) ? headings : [];
   const safeCategories = Array.isArray(article.categories) ? article.categories.filter(Boolean) : [];
   const safeTopics = Array.isArray(article.topics) ? article.topics.filter(Boolean) : [];
+  
+  // Use provided context if available, otherwise fallback to article data
   const articleData = {
     slug: article.slug,
     title: article.title,
@@ -393,6 +417,11 @@ async function main() {
     headings: safeHeadings,
     categories: safeCategories,
     topics: safeTopics,
+    // Add context for better YouTube search
+    city: city || article.city || null,
+    country: country || article.country || null,
+    year: year || article.year || null,
+    mode: mode || null,
   };
 
   // Cache check (skip if --force)
