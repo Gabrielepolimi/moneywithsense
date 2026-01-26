@@ -1438,7 +1438,23 @@ export async function generateCostOfLivingArticle(city, country, year, compariso
   const duplicateCheck = await checkDuplicate(citySlug, countryCode, year, comparisonCitySlug, comparisonCity, strictDedup);
   
   if (duplicateCheck.isDuplicate) {
-    throw new Error(`Duplicate article exists: ${duplicateCheck.existing.title} (${duplicateCheck.existing.slug})`);
+    const existing = duplicateCheck.existing;
+    const errorMsg = `❌ Duplicate article already exists!
+
+Existing article:
+  - Title: ${existing.title}
+  - Slug: ${existing.slug}
+  - City: ${existing.city || 'N/A'}
+  - Country: ${existing.country || 'N/A'}
+  - Year: ${existing.year || 'N/A'}
+
+To generate a new article, try:
+  - Use a different year (e.g., ${year + 1})
+  - Use a different mode (comparison or budget)
+  - Or update the existing article instead
+
+If you need to force generation anyway, you can modify the existing article's slug in Sanity first.`;
+    throw new Error(errorMsg);
   }
   
   log('✅ No duplicates found');
