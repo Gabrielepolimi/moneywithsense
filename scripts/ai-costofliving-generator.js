@@ -361,7 +361,14 @@ function inferLocalCurrency(countryCode) {
     'HK': 'HKD',
     'AE': 'AED',
   };
-  return currencyMap[countryCode] || 'USD';
+  
+  const currency = currencyMap[countryCode];
+  if (!currency) {
+    console.warn(`⚠️ Currency not mapped for country code: ${countryCode}. Prompt will ask AI to use local currency.`);
+    return null; // Return null instead of defaulting to USD
+  }
+  
+  return currency;
 }
 
 /**
@@ -386,10 +393,9 @@ function generateDeterministicSlug(mode, citySlug, comparisonCitySlug, year) {
       break;
   }
   
-  // Append year if not 2026
-  if (year && year !== 2026) {
-    baseSlug = `${baseSlug}-${year}`;
-  }
+  // Always append year for SEO and to prevent collisions
+  const articleYear = year || new Date().getFullYear();
+  baseSlug = `${baseSlug}-${articleYear}`;
   
   return baseSlug;
 }
@@ -486,18 +492,22 @@ async function checkDuplicate(citySlug, countryCode, year, comparisonCitySlug = 
  * Round cost value to nearest 10 or 25
  */
 function roundCost(value) {
-  if (typeof value !== 'number' || isNaN(value)) return 0;
-  // Use CONFIG.costRoundingSteps for rounding
-  const steps = CONFIG.costRoundingSteps || [10, 25];
-  // Try rounding to nearest larger step first
-  const largerStep = Math.max(...steps);
-  const roundedLarge = Math.round(value / largerStep) * largerStep;
-  // If difference is small, use larger step
-  if (Math.abs(value - rounded25) <= 12.5) {
-    return rounded25;
+  if (typeof value !== 'number' || Number.isNaN(value)) return 0;
+
+  const steps = Array.isArray(CONFIG.costRoundingSteps) && CONFIG.costRoundingSteps.length
+    ? [...CONFIG.costRoundingSteps].sort((a, b) => b - a)  // es: [25,10]
+    : [25, 10];
+
+  // Try larger step first (more "clean"), then fallback to smaller
+  for (const step of steps) {
+    const rounded = Math.round(value / step) * step;
+    const tolerance = step / 2; // equivalent to 12.5 for 25
+    if (Math.abs(value - rounded) <= tolerance) return rounded;
   }
-  // Otherwise round to nearest 10
-  return Math.round(value / 10) * 10;
+
+  // Safety fallback
+  const lastStep = steps[steps.length - 1] || 10;
+  return Math.round(value / lastStep) * lastStep;
 }
 
 /**
@@ -1414,7 +1424,7 @@ Alternatively, you can enable it via gcloud CLI:
           forceAiStudio = true; // Force AI Studio for all subsequent calls
           useVertexAI = false; // Switch to Google AI Studio
           genAI = null; // Reset to force re-initialization
-          vertexAI = null; // Reset Vertex AI
+          vertexAI = null; // Reset Vertex AI to prevent re-initialization attempts
           continue; // Retry with Google AI Studio
         }
       }
@@ -1493,7 +1503,16 @@ OUTPUT FORMAT (only these sections):
             maxOutputTokens: 500 // Only need metadata, not full content
           }
         });
-        fixedContent = result.response.candidates[0].content.parts[0].text;
+        // Use multi-part extraction (same logic as generateText)
+        fixedContent = result?.response?.candidates?.[0]?.content?.parts
+          ?.map(p => p.text)
+          .filter(Boolean)
+          .join('\n')
+          .trim();
+        
+        if (!fixedContent) {
+          throw new Error('Vertex AI returned empty metadata (possibly blocked by safety filters)');
+        }
       } else {
         const model = ai.getGenerativeModel({ model: CONFIG.geminiModel });
         const result = await model.generateContent({
