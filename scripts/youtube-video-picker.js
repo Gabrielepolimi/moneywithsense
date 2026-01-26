@@ -156,7 +156,12 @@ Video:
 - Views: ${video.views}
     `;
     const res = await model.generateContent(prompt);
-    const txt = res.response?.text?.() || res.response?.text;
+    let txt;
+    if (useVertexAI) {
+      txt = res.response?.candidates?.[0]?.content?.parts?.[0]?.text;
+    } else {
+      txt = res.response?.text?.() || res.response?.text;
+    }
     const jsonMatch = txt?.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return null;
     const data = JSON.parse(jsonMatch[0]);
