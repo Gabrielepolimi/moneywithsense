@@ -1977,8 +1977,10 @@ OUTPUT FORMAT (only these sections):
   if (process.env.YOUTUBE_API_KEY && !dryRun) {
     log('🎥 Starting YouTube picker...');
     try {
-      // Pass context as arguments: slug, city, country, year, mode
-      const { stdout, stderr } = await execFileAsync('node', [
+      // Add timeout wrapper (5 minutes max)
+      const YOUTUBE_PICKER_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+      
+      const pickerPromise = execFileAsync('node', [
         path.join(__dirname, 'youtube-video-picker.js'),
         slug,
         city,
@@ -1999,6 +2001,14 @@ OUTPUT FORMAT (only these sections):
         maxBuffer: 10 * 1024 * 1024, // 10MB buffer
       });
       
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(new Error(`YouTube picker timeout after ${YOUTUBE_PICKER_TIMEOUT / 1000}s`));
+        }, YOUTUBE_PICKER_TIMEOUT);
+      });
+      
+      const { stdout, stderr } = await Promise.race([pickerPromise, timeoutPromise]);
+      
       // Show YouTube picker output
       if (stdout) {
         const lines = stdout.trim().split('\n');
@@ -2011,9 +2021,14 @@ OUTPUT FORMAT (only these sections):
       if (stderr) console.warn('   YouTube stderr:', stderr);
       log('✅ YouTube picker completed');
     } catch (err) {
-      console.warn('⚠️ YouTube picker failed:', err.message);
-      if (err.stdout) console.log('   stdout:', err.stdout.slice(-500));
-      if (err.stderr) console.log('   stderr:', err.stderr.slice(-500));
+      if (err.message && err.message.includes('timeout')) {
+        console.warn(`⚠️ YouTube picker timed out after 5 minutes: ${err.message}`);
+        log('   ⚠️ Skipping YouTube video (timeout) - article created successfully');
+      } else {
+        console.warn('⚠️ YouTube picker failed:', err.message);
+        if (err.stdout) console.log('   stdout:', err.stdout.slice(-500));
+        if (err.stderr) console.log('   stderr:', err.stderr.slice(-500));
+      }
     }
   }
   
