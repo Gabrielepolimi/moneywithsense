@@ -124,6 +124,24 @@ function getGeminiAI() {
     useVertexAI = true;
     if (!vertexAI) {
       try {
+        // Log credentials info for debugging (don't log actual credentials)
+        if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+          console.log(`🔑 GOOGLE_APPLICATION_CREDENTIALS set to: ${process.env.GOOGLE_APPLICATION_CREDENTIALS}`);
+          // Verify file exists
+          try {
+            const fs = require('fs');
+            if (fs.existsSync(process.env.GOOGLE_APPLICATION_CREDENTIALS)) {
+              console.log(`✅ Credentials file exists and is readable`);
+            } else {
+              console.error(`❌ Credentials file not found: ${process.env.GOOGLE_APPLICATION_CREDENTIALS}`);
+            }
+          } catch (fsError) {
+            console.warn(`⚠️ Could not verify credentials file: ${fsError.message}`);
+          }
+        } else {
+          console.warn(`⚠️ GOOGLE_APPLICATION_CREDENTIALS not set - Vertex AI will use Application Default Credentials`);
+        }
+        
         vertexAI = new VertexAI({
           project: process.env.GCP_PROJECT_ID,
           location: process.env.GCP_LOCATION || 'us-central1',
@@ -131,6 +149,7 @@ function getGeminiAI() {
         console.log(`✅ Vertex AI initialized: project=${process.env.GCP_PROJECT_ID}, location=${process.env.GCP_LOCATION}`);
       } catch (error) {
         console.error('❌ Failed to initialize Vertex AI:', error.message);
+        console.error('   Error details:', error);
         throw new Error(`Vertex AI initialization failed: ${error.message}. Check GOOGLE_APPLICATION_CREDENTIALS.`);
       }
     }
