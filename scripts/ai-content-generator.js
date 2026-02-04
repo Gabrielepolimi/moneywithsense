@@ -424,7 +424,7 @@ SEASON: {season}
 
 1) TITLE: max 60 characters, SEO-friendly, no quotes, practical focus
 
-2) EXCERPT: 150-160 characters for meta description
+2) EXCERPT: max 150 characters (strict) for meta description
 
 3) CONTENT STRUCTURE (must follow this exact order):
    
@@ -496,7 +496,7 @@ SEASON: {season}
 ---TITLE---
 [Title here, max 60 chars]
 ---EXCERPT---
-[Meta description, 150-160 chars]
+[Meta description, max 150 chars]
 ---KEYWORDS---
 [primary keyword, related keyword 1, related keyword 2, ...]
 ---PRODUCTS---
@@ -661,19 +661,23 @@ export async function generateArticle(keyword, categorySlug = 'personal-finance'
     Math.random() * (CONFIG.initialLikesMax - CONFIG.initialLikesMin + 1)
   ) + CONFIG.initialLikesMin;
 
+  // Excerpt max 150 caratteri (validazione Sanity)
+  const rawExcerpt = parsed.excerpt || parsed.title || '';
+  const excerpt = rawExcerpt.length > 150 ? rawExcerpt.substring(0, 147) + '...' : rawExcerpt;
+
   // Documento completo
   const sanityDocument = {
     _type: 'post',
     title: parsed.title,
     slug: { current: finalSlug },
-    excerpt: parsed.excerpt || parsed.title,
+    excerpt,
     author: { _type: 'reference', _ref: authorId },
     categories: categoryId ? [{ _type: 'reference', _ref: categoryId }] : [],
     body: bodyBlocks,
     readingTime,
     initialLikes,
     seoTitle: parsed.title,
-    seoDescription: parsed.excerpt,
+    seoDescription: excerpt,
     seoKeywords: parsed.keywords || [],
     status: 'published',
     publishedAt: CONFIG.publishImmediately ? new Date().toISOString() : null
@@ -765,10 +769,11 @@ function parseGeneratedContent(content) {
       result.title = titleMatch[1].trim().replace(/^["']|["']$/g, '').substring(0, 60);
     }
 
-    // Excerpt
+    // Excerpt (max 150 per validazione Sanity)
     const excerptMatch = content.match(/---EXCERPT---\s*([\s\S]*?)(?=---KEYWORDS---|$)/i);
     if (excerptMatch) {
-      result.excerpt = excerptMatch[1].trim().substring(0, 160);
+      const raw = excerptMatch[1].trim();
+      result.excerpt = raw.length > 150 ? raw.substring(0, 147) + '...' : raw;
     }
 
     // Keywords
