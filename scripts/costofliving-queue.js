@@ -18,16 +18,20 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const QUEUE_FILE = path.join(__dirname, '..', 'data', 'costofliving-queue.json');
+const QUEUE_SEED_FILE = path.join(__dirname, '..', 'data', 'costofliving-queue-seed.json');
 const LOCK_TTL_MINUTES = 30;
 const MAX_RETRIES = 1;
 const MAX_ITEMS_PER_RUN = 1;
 
 /**
- * Load queue from file
+ * Load queue from file. If queue file doesn't exist, load from seed so runs have items to process.
  */
 export function loadQueue() {
   try {
-    if (!fs.existsSync(QUEUE_FILE)) {
+    const pathToLoad = fs.existsSync(QUEUE_FILE)
+      ? QUEUE_FILE
+      : (fs.existsSync(QUEUE_SEED_FILE) ? QUEUE_SEED_FILE : null);
+    if (!pathToLoad) {
       return {
         lock: {
           locked: false,
@@ -38,8 +42,12 @@ export function loadQueue() {
         items: []
       };
     }
-    const raw = fs.readFileSync(QUEUE_FILE, 'utf-8');
-    return JSON.parse(raw);
+    const raw = fs.readFileSync(pathToLoad, 'utf-8');
+    const queue = JSON.parse(raw);
+    if (pathToLoad === QUEUE_SEED_FILE) {
+      console.log('📋 Queue loaded from seed (costofliving-queue.json not found)');
+    }
+    return queue;
   } catch (error) {
     console.error('❌ Error loading queue:', error.message);
     return {

@@ -409,8 +409,15 @@ async function generateDailyBatch(options = {}) {
   }
   
   if (safeKeywords.length === 0) {
-    console.log('\n⚠️ No keywords available!\n');
-    return log;
+    // Fallback: use first keyword from pool to avoid 0 articles (e.g. duplicate check too strict)
+    const fallback = allKeywords.find(kw => !skippedKeywords.find(s => s.keyword === kw.keyword));
+    if (fallback) {
+      console.log('\n⚠️ No keywords passed duplicate check; using 1 fallback keyword (will try generation)\n');
+      safeKeywords = [fallback];
+    } else {
+      console.log('\n⚠️ No keywords available!\n');
+      return log;
+    }
   }
   
   console.log('\n' + '📝'.repeat(20));
@@ -643,7 +650,12 @@ Examples:
   }
   
   try {
-    await generateDailyBatch(options);
+    const log = await generateDailyBatch(options);
+    const successful = log?.summary?.successful ?? 0;
+    if (!options.dryRun && successful === 0 && (log?.results?.length ?? 0) > 0) {
+      console.error('\n❌ No articles were created (all failed or skipped). Failing the run.');
+      process.exit(1);
+    }
   } catch (error) {
     console.error('\n❌ FATAL ERROR:', error.message);
     process.exit(1);

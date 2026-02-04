@@ -52,6 +52,8 @@ jobs:
   generate-cost-of-living:
     name: Generate Cost of Living Article
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -246,4 +248,17 @@ jobs:
             # Scheduled trigger - process queue
             echo "📋 Processing queue (scheduled run)..."
             STRICT_DEDUP=1 node scripts/process-costofliving-queue.js
+          fi
+      
+      - name: Persist Cost of Living queue (scheduled runs only)
+        if: github.event_name == 'schedule'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/costofliving-queue.json 2>/dev/null || true
+          if git diff --staged --quiet; then
+            echo "No queue file changes to commit"
+          else
+            git commit -m "chore: update costofliving queue after run"
+            git push
           fi
