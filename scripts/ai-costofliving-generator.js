@@ -1176,8 +1176,26 @@ function parseGeneratedContent(content) {
       console.warn('⚠️ Content extracted using fallback (no ---CONTENT--- marker found)');
     }
   }
-  
+
+  // Normalize TL;DR: ensure it's an H2 heading, not plain text (model sometimes outputs "TL;DR" alone)
+  if (sections.content) {
+    sections.content = normalizeTL;DRInContent(sections.content);
+  }
+
   return sections;
+}
+
+/**
+ * Fix TL;DR when model outputs it as plain text instead of ## TL;DR heading
+ */
+function normalizeTL;DRInContent(markdown) {
+  // Replace standalone "TL;DR" line (optional trailing space) with ## TL;DR
+  let out = markdown.replace(/^TL;DR\s*$/m, '## TL;DR');
+  // If content starts with "TL;DR\n" (no ##), fix it
+  if (out.startsWith('TL;DR\n') || out.startsWith('TL;DR\r\n')) {
+    out = '## TL;DR\n' + out.slice(out.indexOf('\n') + 1);
+  }
+  return out;
 }
 
 // ===== QUALITY GATES =====

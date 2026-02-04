@@ -12,6 +12,7 @@
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { VertexAI } from '@google-cloud/vertexai';
 import { createClient } from '@sanity/client';
 import { searchPhotos, trackDownload } from './unsplash-service.js';
 import {
@@ -33,7 +34,8 @@ const __dirname = path.dirname(__filename);
 
 // ===== CONFIGURAZIONE =====
 const CONFIG = {
-  geminiModel: 'gemini-1.5-pro-latest',
+  // Vertex AI: gemini-2.5-pro (fallback 2.5-flash-lite). Google AI Studio fallback: gemini-1.5-flash
+  geminiModel: process.env.GEMINI_MODEL || 'gemini-2.5-pro',
   maxTokens: 8000,
   temperature: 0.7,
   publishImmediately: true,
@@ -115,17 +117,95 @@ const sanityClient = createClient({
   token: process.env.SANITY_API_TOKEN
 });
 
-// Gemini AI
+// Gemini AI - Support both Vertex AI and Google AI Studio (like Cost of Living)
 let genAI = null;
+let vertexAI = null;
+let useVertexAI = false;
+let forceAiStudio = false;
 
 function getGeminiAI() {
+  if (forceAiStudio) {
+    if (!genAI) {
+      if (!process.env.GEMINI_API_KEY) {
+        throw new Error('GEMINI_API_KEY mancante (fallback su AI Studio).');
+      }
+      genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+      console.log('✅ Google AI Studio inizializzato (fallback)');
+    }
+    return genAI;
+  }
+  if (process.env.GCP_PROJECT_ID && process.env.GCP_LOCATION) {
+    if (!vertexAI) {
+      try {
+        vertexAI = new VertexAI({
+          project: process.env.GCP_PROJECT_ID,
+          location: process.env.GCP_LOCATION || 'us-central1'
+        });
+        useVertexAI = true;
+        console.log(`✅ Vertex AI inizializzato: project=${process.env.GCP_PROJECT_ID}, location=${process.env.GCP_LOCATION}`);
+      } catch (error) {
+        useVertexAI = false;
+        console.warn('❌ Vertex AI init fallito:', error.message);
+        throw new Error(`Vertex AI init fallito: ${error.message}`);
+      }
+    }
+    return vertexAI;
+  }
   if (!genAI) {
     if (!process.env.GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY non configurata');
+      throw new Error('GEMINI_API_KEY mancante (o imposta GCP_PROJECT_ID e GCP_LOCATION per Vertex AI).');
     }
     genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    console.log('✅ Google AI Studio inizializzato');
   }
   return genAI;
+}
+
+/**
+ * Genera testo con Gemini (Vertex con 2.5-pro o Google AI Studio con 1.5-flash)
+ */
+async function generateText(prompt, options = {}) {
+  const ai = getGeminiAI();
+  const temperature = options.temperature ?? CONFIG.temperature;
+  const maxOutputTokens = options.maxOutputTokens ?? CONFIG.maxTokens;
+  let modelName = options.model ?? CONFIG.geminiModel;
+  if (!useVertexAI && (modelName === 'gemini-2.5-pro' || modelName === 'gemini-2.5-flash-lite')) {
+    modelName = 'gemini-1.5-flash';
+  }
+  if (useVertexAI) {
+    let model;
+    try {
+      model = ai.getGenerativeModel({ model: modelName });
+    } catch (modelError) {
+      if (modelName === 'gemini-2.5-pro') {
+        console.warn('⚠️ gemini-2.5-pro non disponibile, provo gemini-2.5-flash-lite...');
+        try {
+          model = ai.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
+        } catch (fallbackError) {
+          throw new Error(`Sia gemini-2.5-pro che gemini-2.5-flash-lite falliti: ${fallbackError.message}`);
+        }
+      } else {
+        throw modelError;
+      }
+    }
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { temperature, maxOutputTokens }
+    });
+    const text = result?.response?.candidates?.[0]?.content?.parts
+      ?.map(p => p.text)
+      .filter(Boolean)
+      .join('\n')
+      .trim();
+    if (!text) throw new Error('Vertex AI ha restituito risposta vuota');
+    return text;
+  }
+  const model = ai.getGenerativeModel({ model: modelName });
+  const result = await model.generateContent({
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    generationConfig: { temperature, maxOutputTokens }
+  });
+  return result.response.text();
 }
 
 // ===== GESTIONE IMMAGINI =====
@@ -494,27 +574,33 @@ export async function generateArticle(keyword, categorySlug = 'personal-finance'
 
   let articleContent;
   const maxRetries = 3;
-  
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const ai = getGeminiAI();
-      const model = ai.getGenerativeModel({ model: CONFIG.geminiModel });
-      
-      const result = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: CONFIG.temperature,
-          maxOutputTokens: CONFIG.maxTokens
-        }
+      articleContent = await generateText(prompt, {
+        temperature: CONFIG.temperature,
+        maxOutputTokens: CONFIG.maxTokens,
+        model: CONFIG.geminiModel
       });
-
-      articleContent = result.response.text();
       log('✅ Contenuto generato con successo');
       break;
-      
     } catch (error) {
+      const isVertexError = error.message && (
+        error.message.includes('SERVICE_DISABLED') ||
+        error.message.includes('PERMISSION_DENIED') ||
+        error.message.includes('403') ||
+        error.message.includes('Unable to authenticate') ||
+        error.message.includes('credentials')
+      );
+      if (useVertexAI && isVertexError && attempt === 1 && process.env.GEMINI_API_KEY) {
+        log('⚠️ Vertex AI fallito, fallback su Google AI Studio...');
+        forceAiStudio = true;
+        useVertexAI = false;
+        genAI = null;
+        vertexAI = null;
+        continue;
+      }
       const isRateLimit = error.message.includes('429') || error.message.includes('Too Many Requests');
-      
       if (isRateLimit && attempt < maxRetries) {
         const waitTime = attempt * 30;
         log(`⏳ Rate limit (429) - Attendo ${waitTime}s prima del retry ${attempt + 1}/${maxRetries}...`);

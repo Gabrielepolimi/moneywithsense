@@ -47,6 +47,7 @@ jobs:
           echo "::add-mask::${{ secrets.SANITY_API_TOKEN }}"
           echo "::add-mask::${{ secrets.UNSPLASH_ACCESS_KEY }}"
           echo "::add-mask::${{ secrets.YOUTUBE_API_KEY }}"
+          echo "::add-mask::${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}"
       
       - name: Verify secrets are configured
         run: |
@@ -64,9 +65,32 @@ jobs:
           fi
           echo "✅ All required secrets are configured"
       
+      - name: Setup Vertex AI credentials
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+        run: |
+          if [ -z "$GCP_PROJECT_ID" ]; then
+            echo "ℹ️ GCP_PROJECT_ID not set, skipping Vertex AI setup"
+            exit 0
+          fi
+          if [ -z "$GOOGLE_APPLICATION_CREDENTIALS_JSON" ]; then
+            echo "ℹ️ GOOGLE_APPLICATION_CREDENTIALS_JSON not set, using GEMINI_API_KEY only"
+            exit 0
+          fi
+          CREDS_FILE="${{ runner.temp }}/gcp-credentials.json"
+          echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" > "$CREDS_FILE"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$CREDS_FILE" >> $GITHUB_ENV
+          chmod 600 "$CREDS_FILE"
+          echo "✅ Vertex AI credentials ready"
+      
       - name: Generate Articles
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ secrets.GEMINI_MODEL }}
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCP_LOCATION: ${{ secrets.GCP_LOCATION || 'us-central1' }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
           SANITY_API_TOKEN: ${{ secrets.SANITY_API_TOKEN }}
           NEXT_PUBLIC_SANITY_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_SANITY_PROJECT_ID }}
           NEXT_PUBLIC_SANITY_DATASET: production
