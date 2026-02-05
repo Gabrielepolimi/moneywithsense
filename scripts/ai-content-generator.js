@@ -463,18 +463,7 @@ SEASON: {season}
    h) DISCLAIMER (required at end)
       - "This content is for informational purposes only and does not constitute financial advice. Always consult a qualified professional for personalized guidance."
 
-4) INTERNAL LINKS (required):
-   - Include 1 link to pillar guide: [related pillar topic](/guides/{pillar-slug})
-   - Include 2 links to related articles: [anchor text](/articles/{article-topic-slug})
-   - Use natural anchor text, not exact match keywords
-   
-   Available pillar guides:
-   - /guides/saving-money-guide
-   - /guides/budgeting-guide
-   - /guides/investing-basics-guide
-   - /guides/side-hustles-guide
-   - /guides/credit-debt-guide
-   - /guides/money-psychology-guide
+4) INTERNAL LINKS: DO NOT include internal links in the article markdown (no [/articles/...] or [/guides/...] links). The AI cannot know which slugs exist; invented links cause 404s. Related content is shown automatically by the site.
 
 5) LENGTH: 1,200-1,600 words (minimum 900, never below 800)
 
@@ -514,7 +503,7 @@ Content here...
 ### Start With Small Steps
 More content...
 
-Include internal links and disclaimer at the end.]
+Do not add internal links. Include disclaimer at the end.]
 ---END---
 
 === EXCLUSIONS ===
