@@ -13,10 +13,11 @@
       "comparisonCity": null,
       "mode": "city",
       "priority": 100,
-      "status": "pending",
+      "status": "completed",
       "retryCount": 0,
       "failedAt": null,
-      "addedAt": "2025-01-18T00:00:00.000Z"
+      "addedAt": "2025-01-18T00:00:00.000Z",
+      "completedAt": "2026-02-16T10:04:15.130Z"
     },
     {
       "city": "New York City",
