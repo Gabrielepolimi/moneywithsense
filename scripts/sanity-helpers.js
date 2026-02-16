@@ -183,6 +183,24 @@ export async function getLatestArticles(count = 5) {
 }
 
 /**
+ * Recupera slug e titolo di articoli pubblicati per link interni (solo pagine esistenti)
+ * @param {number} limit - Numero massimo di articoli da restituire
+ * @returns {Promise<Array<{slug: string, title: string}>>}
+ */
+export async function getArticleSlugsForInternalLinks(limit = 40) {
+  try {
+    const articles = await sanityClient.fetch(
+      `*[_type == "post" && status == "published" && defined(publishedAt)] | order(publishedAt desc) [0...$limit]{ "slug": slug.current, title }`,
+      { limit }
+    );
+    return (articles || []).filter((a) => a?.slug && a?.title);
+  } catch (error) {
+    console.error('❌ Errore recupero slug per link interni:', error.message);
+    return [];
+  }
+}
+
+/**
  * Recupera tutti gli articoli esistenti per il controllo duplicati semantici
  * @returns {Promise<Array>} Lista degli articoli con titolo, slug, excerpt, keywords
  */

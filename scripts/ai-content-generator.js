@@ -19,6 +19,7 @@ import {
   getDefaultAuthorId,
   getCategoryIdBySlug,
   articleExistsBySlug,
+  getArticleSlugsForInternalLinks,
   markdownToBlockContent,
   slugify,
   validatePostDocument
@@ -463,7 +464,7 @@ SEASON: {season}
    h) DISCLAIMER (required at end)
       - "This content is for informational purposes only and does not constitute financial advice. Always consult a qualified professional for personalized guidance."
 
-4) INTERNAL LINKS: DO NOT include internal links in the article markdown (no [/articles/...] or [/guides/...] links). The AI cannot know which slugs exist; invented links cause 404s. Related content is shown automatically by the site.
+4) INTERNAL LINKS: {INTERNAL_LINKS_SECTION}
 
 5) LENGTH: 1,200-1,600 words (minimum 900, never below 800)
 
@@ -503,7 +504,7 @@ Content here...
 ### Start With Small Steps
 More content...
 
-Do not add internal links. Include disclaimer at the end.]
+{INTERNAL_LINKS_CONTENT} Include disclaimer at the end.]
 ---END---
 
 === EXCLUSIONS ===
@@ -553,13 +554,28 @@ export async function generateArticle(keyword, categorySlug = 'personal-finance'
   }
   const finalSlug = slugExists ? `${baseSlug}-${Date.now()}` : baseSlug;
 
-  // 3. Genera contenuto con Gemini
+  // 3. Articoli esistenti per link interni (solo slug che esistono)
+  log('🔗 Recupero articoli esistenti per link interni...');
+  const existingArticles = await getArticleSlugsForInternalLinks(40);
+  const internalLinksList = existingArticles.map((a) => `- ${a.slug}: ${a.title}`).join('\n');
+  const hasInternalLinksPool = existingArticles.length > 0;
+  const internalLinksSection = hasInternalLinksPool
+    ? `When relevant, include 1–2 internal links to existing articles. Use ONLY the following slugs (these pages exist). Format: [anchor text](/articles/EXACT-SLUG). Do not invent slugs.\n\nAvailable articles (slug : title):\n${internalLinksList}`
+    : 'DO NOT include internal links in the article markdown. Related content is shown automatically by the site.';
+  const internalLinksContent = hasInternalLinksPool
+    ? 'If relevant, add 1–2 internal links using only the slugs listed above. '
+    : 'Do not add internal links. ';
+  if (hasInternalLinksPool) log(`   ${existingArticles.length} articoli disponibili per link interni`);
+
+  // 4. Genera contenuto con Gemini
   log('🤖 Generazione contenuto con Gemini AI...');
   const season = getCurrentSeason();
   const prompt = ARTICLE_PROMPT
     .replace('{keyword}', keyword)
     .replace('{category}', categorySlug)
-    .replace('{season}', season);
+    .replace('{season}', season)
+    .replace('{INTERNAL_LINKS_SECTION}', internalLinksSection)
+    .replace('{INTERNAL_LINKS_CONTENT}', internalLinksContent);
 
   let articleContent;
   const maxRetries = 3;
