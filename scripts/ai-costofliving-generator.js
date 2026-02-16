@@ -1179,7 +1179,7 @@ function parseGeneratedContent(content) {
 
   // Normalize TL;DR: ensure it's an H2 heading, not plain text (model sometimes outputs "TL;DR" alone)
   if (sections.content) {
-    sections.content = normalizeTL;DRInContent(sections.content);
+    sections.content = normalizeTLDRInContent(sections.content);
   }
 
   return sections;
@@ -1188,7 +1188,7 @@ function parseGeneratedContent(content) {
 /**
  * Fix TL;DR when model outputs it as plain text instead of ## TL;DR heading
  */
-function normalizeTL;DRInContent(markdown) {
+function normalizeTLDRInContent(markdown) {
   // Replace standalone "TL;DR" line (optional trailing space) with ## TL;DR
   let out = markdown.replace(/^TL;DR\s*$/m, '## TL;DR');
   // If content starts with "TL;DR\n" (no ##), fix it
