@@ -323,12 +323,25 @@ export async function processNextItem(generatorFn) {
         result: result
       };
     } catch (error) {
+      const isDuplicate = error.message?.includes('Duplicate article already exists');
+      if (isDuplicate) {
+        markDone(queue, item);
+        console.log(`ℹ️ Article already exists for ${item.city} — marking as completed`);
+        return {
+          processed: true,
+          success: false,
+          duplicate: true,
+          item: item,
+          error: error.message
+        };
+      }
       markFailed(queue, item, error);
       console.error(`❌ Queue item failed: ${error.message}`);
       
       return {
         processed: true,
         success: false,
+        duplicate: false,
         item: item,
         error: error.message
       };

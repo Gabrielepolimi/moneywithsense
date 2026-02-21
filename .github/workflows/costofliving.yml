@@ -251,7 +251,7 @@ jobs:
           fi
       
       - name: Persist Cost of Living queue (scheduled runs only)
-        if: github.event_name == 'schedule'
+        if: always() && github.event_name == 'schedule'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
