@@ -42,8 +42,8 @@ const CONFIG = {
   publishImmediately: true,
   readingTimeMin: 5,
   readingTimeMax: 12,
-  initialLikesMin: 120,
-  initialLikesMax: 520,
+  initialLikesMin: 0,
+  initialLikesMax: 0,
   // Cartella immagini fallback (finance)
   fallbackImagesDir: path.join(__dirname, '..', 'public', 'images', 'fallback-finance'),
   // Retry config per Unsplash
@@ -680,7 +680,7 @@ export async function generateArticle(keyword, categorySlug = 'personal-finance'
     categories: categoryId ? [{ _type: 'reference', _ref: categoryId }] : [],
     body: bodyBlocks,
     readingTime,
-    initialLikes,
+    ...(initialLikes > 0 && { initialLikes }),
     seoTitle: parsed.title,
     seoDescription: excerpt,
     seoKeywords: parsed.keywords || [],

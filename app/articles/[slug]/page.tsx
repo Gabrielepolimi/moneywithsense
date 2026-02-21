@@ -411,12 +411,14 @@ export default async function PostPage({ params }: Props) {
                 </>
               )}
             </div>
-            <div className="flex items-center gap-4">
-              <LikeButton 
-                articleId={post._id} 
-                initialLikes={post.initialLikes || 0} 
-              />
-            </div>
+            {(post.initialLikes != null && post.initialLikes > 0) && (
+              <div className="flex items-center gap-4">
+                <LikeButton 
+                  articleId={post._id} 
+                  initialLikes={post.initialLikes} 
+                />
+              </div>
+            )}
           </div>
         </header>
 

@@ -2,31 +2,42 @@ name: Cost of Living Content Generation
 
 on:
   schedule:
-    # Run every day at 09:00 UTC (alternate days logic in code)
-    - cron: '0 9 * * *'  # Every day at 9:00 AM UTC
+    # Monday and Thursday at 08:00 UTC — 2 articles per week from Sanity queue
+    - cron: '0 8 * * 1,4'
   workflow_dispatch:
     inputs:
-      city:
-        description: 'City name (e.g., London)'
+      mode:
+        description: 'Generation mode'
         required: false
-        default: 'London'
+        default: 'queue'
+        type: choice
+        options:
+          - 'queue'
+          - 'manual'
+      count:
+        description: 'Number of articles to generate from queue (queue mode only)'
+        required: false
+        default: '1'
+        type: string
+      city:
+        description: 'City name (manual mode only, e.g., London)'
+        required: false
         type: string
       country:
-        description: 'Country name (e.g., UK)'
+        description: 'Country name (manual mode only, e.g., UK)'
         required: false
-        default: 'UK'
         type: string
       year:
-        description: 'Year'
+        description: 'Year (manual mode only)'
         required: false
         default: '2026'
         type: string
       comparison_city:
-        description: 'Comparison city (optional, for comparison articles)'
+        description: 'Comparison city (manual mode, optional)'
         required: false
         type: string
-      mode:
-        description: 'Article mode'
+      article_mode:
+        description: 'Article mode (manual mode only)'
         required: false
         default: 'city'
         type: choice
@@ -35,12 +46,7 @@ on:
           - 'comparison'
           - 'budget'
       dry_run:
-        description: 'Dry run (test only, no articles created)'
-        required: false
-        default: false
-        type: boolean
-      force_generation:
-        description: 'Force generation even if duplicate exists (will use unique slug)'
+        description: 'Dry run (preview only, no articles created)'
         required: false
         default: false
         type: boolean
@@ -57,7 +63,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Debug - Show workflow info
         run: |
           echo "🔍 Workflow Debug Info:"
@@ -66,30 +72,30 @@ jobs:
           echo "   SHA: ${{ github.sha }}"
           echo "   Workflow: ${{ github.workflow }}"
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "   Inputs:"
-            echo "     City: ${{ github.event.inputs.city }}"
-            echo "     Country: ${{ github.event.inputs.country }}"
-            echo "     Year: ${{ github.event.inputs.year }}"
+            echo "   Mode: ${{ github.event.inputs.mode }}"
+            echo "   Count: ${{ github.event.inputs.count }}"
+            echo "   City: ${{ github.event.inputs.city }}"
+            echo "   Country: ${{ github.event.inputs.country }}"
+            echo "   Dry Run: ${{ github.event.inputs.dry_run }}"
           fi
-      
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Mask secrets in logs
         run: |
           echo "::add-mask::${{ secrets.GEMINI_API_KEY }}"
           echo "::add-mask::${{ secrets.SANITY_API_TOKEN }}"
           echo "::add-mask::${{ secrets.UNSPLASH_ACCESS_KEY }}"
           echo "::add-mask::${{ secrets.YOUTUBE_API_KEY }}"
-      
+
       - name: Verify secrets are configured
         run: |
-          # Check for either Vertex AI or Google AI Studio API
           if [ -z "${{ secrets.GCP_PROJECT_ID }}" ] && [ -z "${{ secrets.GEMINI_API_KEY }}" ]; then
             echo "❌ Either GCP_PROJECT_ID (for Vertex AI) or GEMINI_API_KEY (for Google AI Studio) must be configured!"
             exit 1
@@ -104,33 +110,30 @@ jobs:
             echo "✅ Google AI Studio API configured"
           fi
           echo "✅ All required secrets are configured"
-      
+
       - name: Setup Vertex AI credentials
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
         run: |
-          # Only setup credentials if GCP_PROJECT_ID is set
           if [ -z "$GCP_PROJECT_ID" ]; then
             echo "ℹ️ GCP_PROJECT_ID not set, skipping Vertex AI credentials setup"
             exit 0
           fi
-          
+
           if [ -z "$GOOGLE_APPLICATION_CREDENTIALS_JSON" ]; then
             echo "❌ GOOGLE_APPLICATION_CREDENTIALS_JSON not set - Vertex AI requires credentials"
             exit 1
           fi
-          
+
           CREDS_FILE="${{ runner.temp }}/gcp-credentials.json"
           echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" > "$CREDS_FILE"
-          
-          # Verify file was created and is valid JSON
+
           if [ ! -f "$CREDS_FILE" ]; then
             echo "❌ Failed to create credentials file"
             exit 1
           fi
-          
-          # Check if it's valid JSON (using jq if available, otherwise skip validation)
+
           if command -v jq > /dev/null 2>&1; then
             if ! jq empty "$CREDS_FILE" > /dev/null 2>&1; then
               echo "❌ Credentials file is not valid JSON"
@@ -138,32 +141,24 @@ jobs:
             fi
             echo "✅ JSON validation passed (using jq)"
           else
-            echo "⚠️ jq not available, skipping JSON validation (Vertex AI will validate on use)"
+            echo "⚠️ jq not available, skipping JSON validation"
           fi
-          
+
           echo "GOOGLE_APPLICATION_CREDENTIALS=$CREDS_FILE" >> $GITHUB_ENV
-          echo "✅ Vertex AI credentials file created and verified at $CREDS_FILE"
-          
-          # Verify file permissions and readability
+          echo "✅ Vertex AI credentials file created at $CREDS_FILE"
+
           chmod 600 "$CREDS_FILE"
-          if [ -r "$CREDS_FILE" ]; then
-            echo "✅ Credentials file is readable"
-          else
-            echo "❌ Credentials file is not readable"
-            exit 1
-          fi
-      
+
       - name: Verify credentials before generation
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           GCP_LOCATION: ${{ secrets.GCP_LOCATION }}
         run: |
-          # Only verify if GCP_PROJECT_ID is set
           if [ -z "$GCP_PROJECT_ID" ]; then
             echo "ℹ️ GCP_PROJECT_ID not set, skipping credentials verification"
             exit 0
           fi
-          
+
           if [ -z "$GOOGLE_APPLICATION_CREDENTIALS" ]; then
             echo "❌ GOOGLE_APPLICATION_CREDENTIALS environment variable not set"
             exit 1
@@ -175,7 +170,7 @@ jobs:
           echo "✅ Credentials file verified: $GOOGLE_APPLICATION_CREDENTIALS"
           echo "✅ GCP_PROJECT_ID: $GCP_PROJECT_ID"
           echo "✅ GCP_LOCATION: ${GCP_LOCATION:-us-central1}"
-      
+
       - name: Ensure Cost of Living pillar exists
         env:
           SANITY_API_TOKEN: ${{ secrets.SANITY_API_TOKEN }}
@@ -184,8 +179,8 @@ jobs:
         run: |
           echo "🏛️ Checking if Cost of Living pillar page exists..."
           node scripts/create-costofliving-pillar.js || echo "⚠️ Pillar creation script completed (may already exist)"
-      
-      - name: Generate Cost of Living Article
+
+      - name: Generate Cost of Living Articles
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
@@ -197,68 +192,57 @@ jobs:
           NEXT_PUBLIC_SANITY_DATASET: production
           UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          STRICT_DEDUP: "1"
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            # Manual trigger
-            CITY="${{ github.event.inputs.city || 'London' }}"
-            COUNTRY="${{ github.event.inputs.country || 'UK' }}"
+          GEN_MODE="${{ github.event.inputs.mode || 'queue' }}"
+          DRY_RUN="${{ github.event.inputs.dry_run || 'false' }}"
+
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            GEN_MODE="queue"
+          fi
+
+          if [ "$GEN_MODE" = "manual" ]; then
+            CITY="${{ github.event.inputs.city }}"
+            COUNTRY="${{ github.event.inputs.country }}"
             YEAR="${{ github.event.inputs.year || '2026' }}"
             COMPARISON_CITY="${{ github.event.inputs.comparison_city }}"
-            MODE="${{ github.event.inputs.mode || 'city' }}"
-            DRY_RUN="${{ github.event.inputs.dry_run || 'false' }}"
-            FORCE_GENERATION="${{ github.event.inputs.force_generation || 'false' }}"
-            
-            # Validate required inputs
+            MODE="${{ github.event.inputs.article_mode || 'city' }}"
+
             if [ -z "$CITY" ] || [ -z "$COUNTRY" ]; then
-              echo "❌ City and Country are required!"
+              echo "❌ City and Country are required in manual mode!"
               exit 1
             fi
-            
-            echo "🏙️ Generating Cost of Living article:"
+
+            echo "🏙️ Manual generation:"
             echo "   City: $CITY"
             echo "   Country: $COUNTRY"
             echo "   Year: $YEAR"
-            if [ -n "$COMPARISON_CITY" ] && [ "$COMPARISON_CITY" != "" ]; then
-              echo "   Comparison City: $COMPARISON_CITY"
-            fi
             echo "   Mode: $MODE"
-            echo "   Dry Run: $DRY_RUN"
-            echo "   Force Generation: $FORCE_GENERATION"
-            
-            # Build command arguments
+
             ARGS=("$CITY" "$COUNTRY" "$YEAR")
             if [ -n "$COMPARISON_CITY" ] && [ "$COMPARISON_CITY" != "" ]; then
               ARGS+=("$COMPARISON_CITY")
-              if [ -n "$MODE" ] && [ "$MODE" != "" ]; then
-                ARGS+=("$MODE")
-              fi
+              [ -n "$MODE" ] && ARGS+=("$MODE")
             elif [ -n "$MODE" ] && [ "$MODE" != "" ]; then
               ARGS+=("" "$MODE")
             fi
-            
+
             if [ "$DRY_RUN" = "true" ]; then
-              echo ""
-              echo "🔍 DRY RUN MODE - Will validate but not create article"
-              echo "   (Note: Dry run still checks duplicates and validates structure)"
-              DRY_RUN=1 node scripts/ai-costofliving-generator.js "${ARGS[@]}" || echo "✅ Dry run validation completed"
+              echo "🔍 DRY RUN MODE"
+              DRY_RUN=1 node scripts/ai-costofliving-generator.js "${ARGS[@]}" || echo "✅ Dry run completed"
             else
               node scripts/ai-costofliving-generator.js "${ARGS[@]}"
             fi
           else
-            # Scheduled trigger - process queue
-            echo "📋 Processing queue (scheduled run)..."
-            STRICT_DEDUP=1 node scripts/process-costofliving-queue.js
-          fi
-      
-      - name: Persist Cost of Living queue (scheduled runs only)
-        if: always() && github.event_name == 'schedule'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/costofliving-queue.json 2>/dev/null || true
-          if git diff --staged --quiet; then
-            echo "No queue file changes to commit"
-          else
-            git commit -m "chore: update costofliving queue after run"
-            git push
+            # Queue mode — process from Sanity topic queue
+            COUNT="${{ github.event.inputs.count || '1' }}"
+            COUNT="${COUNT:-1}"
+
+            echo "📋 Queue mode — generating $COUNT article(s) from Sanity topic queue..."
+
+            if [ "$DRY_RUN" = "true" ]; then
+              node scripts/generate-col-batch.js --count "$COUNT" --dry-run
+            else
+              node scripts/generate-col-batch.js --count "$COUNT"
+            fi
           fi

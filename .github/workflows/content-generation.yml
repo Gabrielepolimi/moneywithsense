@@ -1,10 +1,10 @@
-name: AI Content Generation
+name: AI Content Generation (DISABLED - generic articles)
 
 on:
-  schedule:
-    # Phase 1 (first 3 months): 1 article/day at 8 AM UTC
-    # Phase 2 (after stable indexing): change to 2 articles/day
-    - cron: '0 8 * * *'  # Daily at 8:00 AM UTC
+  # Schedule disabled: pivoting to cost-of-living only content.
+  # Generic finance articles compete with NerdWallet/Investopedia and don't rank.
+  # schedule:
+  #   - cron: '0 8 * * *'
   workflow_dispatch:
     inputs:
       article_count:

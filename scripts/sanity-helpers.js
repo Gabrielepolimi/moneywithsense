@@ -514,6 +514,41 @@ export async function printSanityReport() {
   console.log('\n' + '='.repeat(50));
 }
 
+// ===== COST OF LIVING TOPIC QUEUE =====
+
+/**
+ * Get unused cost-of-living topics, ordered by priority (alta first) then creation date
+ * @param {number} limit - Max topics to return
+ * @returns {Promise<Array>}
+ */
+export async function getUnusedCOLTopics(limit = 5) {
+  const query = `*[
+    _type == "costOfLivingTopic" &&
+    used != true &&
+    defined(city) &&
+    defined(country)
+  ] | order(
+    select(priority == "alta" => 0, priority == "media" => 1, priority == "bassa" => 2),
+    _createdAt asc
+  )[0...$limit]{
+    _id, city, country, region, mode, comparisonCity, comparisonCountry,
+    priority, searchIntent, notes, year
+  }`;
+  return sanityClient.fetch(query, { limit });
+}
+
+/**
+ * Mark a cost-of-living topic as used
+ * @param {string} topicId - Sanity document ID
+ * @returns {Promise<Object>}
+ */
+export async function markCOLTopicAsUsed(topicId) {
+  return sanityClient.patch(topicId).set({
+    used: true,
+    usedAt: new Date().toISOString()
+  }).commit();
+}
+
 // ===== EXPORT DEFAULT =====
 export default {
   sanityClient,
@@ -530,6 +565,8 @@ export default {
   validatePostDocument,
   markdownToBlockContent,
   slugify,
-  printSanityReport
+  printSanityReport,
+  getUnusedCOLTopics,
+  markCOLTopicAsUsed
 };
 

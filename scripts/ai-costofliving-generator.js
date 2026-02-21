@@ -44,8 +44,8 @@ const CONFIG = {
   publishImmediately: true,
   readingTimeMin: 6,
   readingTimeMax: 15,
-  initialLikesMin: 120,
-  initialLikesMax: 520,
+  initialLikesMin: 0,
+  initialLikesMax: 0,
   fallbackImagesDir: path.join(__dirname, '..', 'public', 'images', 'fallback-finance'),
   unsplashMaxRetries: 2,
   unsplashRetryDelay: 2000,
@@ -898,9 +898,71 @@ YEAR: {year}
 
 7) LENGTH: 1,600-2,100 words
 
-=== OUTPUT FORMAT ===
-[Same as single city template with COST_DATA_JSON for both cities or combined ranges]
+=== OUTPUT FORMAT (EXACT — DO NOT CHANGE) ===
 
+---TITLE---
+[Display title, max 60 chars]
+
+---SEO_TITLE---
+[SEO title, max 60 chars]
+
+---META_DESCRIPTION---
+[Max 140 characters]
+
+---EXCERPT---
+[Max 150 characters]
+
+---KEYWORDS---
+[primary keyword, related keyword 1, related keyword 2, related keyword 3]
+---END_KEYWORDS---
+
+---COST_DATA_JSON---
+{
+  "currency": "{localCurrency}",
+  "timeUnit": "monthly",
+  "rentCityCenterMin": 0,
+  "rentCityCenterMax": 0,
+  "rentOutsideMin": 0,
+  "rentOutsideMax": 0,
+  "utilitiesMin": 0,
+  "utilitiesMax": 0,
+  "groceriesMin": 0,
+  "groceriesMax": 0,
+  "transportMin": 0,
+  "transportMax": 0,
+  "eatingOutMin": 0,
+  "eatingOutMax": 0,
+  "internetPhoneMin": 0,
+  "internetPhoneMax": 0,
+  "entertainmentMin": 0,
+  "entertainmentMax": 0,
+  "totalMin": 0,
+  "totalMax": 0
+}
+---END_COST_DATA_JSON---
+
+---DATA_POLICY_JSON---
+{
+  "dataSources": [
+    "Public rental listings",
+    "Consumer price indices",
+    "Local cost databases"
+  ],
+  "assumptions": [
+    "Based on a one-bedroom apartment",
+    "Moderate lifestyle",
+    "No luxury expenses included"
+  ],
+  "lastVerifiedAt": "{year}-01-01T00:00:00Z"
+}
+---END_DATA_POLICY_JSON---
+
+---CONTENT---
+[Full markdown article]
+
+---END---
+
+Use the COST_DATA_JSON to provide combined or averaged cost ranges for both cities.
 Write a comprehensive comparison that helps readers decide between the two cities.`;
 
 const PROMPT_TEMPLATE_BUDGET_FRAMING = `You are a cost-of-living researcher writing for MoneyWithSense.com.
@@ -944,8 +1006,69 @@ FRAMING: "How much do you need to live in {city}?"
 
 7) LENGTH: 1,200-1,800 words
 
-=== OUTPUT FORMAT ===
-[Same as single city template]
+=== OUTPUT FORMAT (EXACT — DO NOT CHANGE) ===
+
+---TITLE---
+[Display title, max 60 chars]
+
+---SEO_TITLE---
+[SEO title, max 60 chars]
+
+---META_DESCRIPTION---
+[Max 140 characters]
+
+---EXCERPT---
+[Max 150 characters]
+
+---KEYWORDS---
+[primary keyword, related keyword 1, related keyword 2, related keyword 3]
+---END_KEYWORDS---
+
+---COST_DATA_JSON---
+{
+  "currency": "{localCurrency}",
+  "timeUnit": "monthly",
+  "rentCityCenterMin": 0,
+  "rentCityCenterMax": 0,
+  "rentOutsideMin": 0,
+  "rentOutsideMax": 0,
+  "utilitiesMin": 0,
+  "utilitiesMax": 0,
+  "groceriesMin": 0,
+  "groceriesMax": 0,
+  "transportMin": 0,
+  "transportMax": 0,
+  "eatingOutMin": 0,
+  "eatingOutMax": 0,
+  "internetPhoneMin": 0,
+  "internetPhoneMax": 0,
+  "entertainmentMin": 0,
+  "entertainmentMax": 0,
+  "totalMin": 0,
+  "totalMax": 0
+}
+---END_COST_DATA_JSON---
+
+---DATA_POLICY_JSON---
+{
+  "dataSources": [
+    "Public rental listings",
+    "Consumer price indices",
+    "Local cost databases"
+  ],
+  "assumptions": [
+    "Based on a one-bedroom apartment",
+    "Moderate lifestyle",
+    "No luxury expenses included"
+  ],
+  "lastVerifiedAt": "{year}-01-01T00:00:00Z"
+}
+---END_DATA_POLICY_JSON---
+
+---CONTENT---
+[Full markdown article]
+
+---END---
 
 Focus on answering "how much do I need?" with clear budget tiers.`;
 
@@ -1664,7 +1787,8 @@ export async function generateCostOfLivingArticle(city, country, year, compariso
   
   // 2. Check for duplicates (fail closed in scheduled mode)
   log('🔍 Checking for duplicates...');
-  const strictDedup = process.env.STRICT_DEDUP === '1' || process.env.STRICT_DEDUP === 'true';
+  const isCI = process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true';
+  const strictDedup = isCI || process.env.STRICT_DEDUP === '1' || process.env.STRICT_DEDUP === 'true';
   if (strictDedup) {
     log('   ⚠️ Strict deduplication mode enabled (fail closed)');
   }
@@ -2058,7 +2182,7 @@ IMPORTANT: TL;DR must start with "## TL;DR" followed by a newline, then bullet p
     categories: [{ _type: 'reference', _ref: categoryId }],
     body: bodyBlocks,
     readingTime,
-    initialLikes,
+    ...(initialLikes > 0 && { initialLikes }),
     seoTitle: parsed.seoTitle || parsed.title,
     seoDescription: parsed.metaDescription || parsed.excerpt,
     seoKeywords: parsed.keywords,

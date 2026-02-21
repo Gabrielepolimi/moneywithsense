@@ -16,6 +16,46 @@
       ],
       "destination": "https://moneywithsense.com/:path*",
       "permanent": true
+    },
+    {
+      "source": "/articles/how-to-save-money-on-a-low-income",
+      "destination": "/articles/how-to-save-money-on-a-low-income-1771662369137",
+      "permanent": true
+    },
+    {
+      "source": "/articles/painless-ways-to-cut-monthly-expenses",
+      "destination": "/articles/painless-ways-to-cut-monthly-expenses-1770885656027",
+      "permanent": true
+    },
+    {
+      "source": "/articles/how-to-afford-having-a-baby",
+      "destination": "/articles/how-to-afford-having-a-baby-1768811358854",
+      "permanent": true
+    },
+    {
+      "source": "/articles/financial-checklist-before-getting-married",
+      "destination": "/articles/financial-checklist-before-getting-married-1770539278963",
+      "permanent": true
+    },
+    {
+      "source": "/articles/budgeting-for-a-wedding-on-any-income",
+      "destination": "/articles/budgeting-for-a-wedding-on-any-income-1771057632827",
+      "permanent": true
+    },
+    {
+      "source": "/articles/how-to-break-the-paycheck-to-paycheck-cycle",
+      "destination": "/articles/how-to-break-the-paycheck-to-paycheck-cycle-1769156785635",
+      "permanent": true
+    },
+    {
+      "source": "/articles/preparing-financially-for-retirement",
+      "destination": "/articles/preparing-financially-for-retirement-1768738886355",
+      "permanent": true
+    },
+    {
+      "source": "/articles/average-cost-of-living-in-london",
+      "destination": "/articles/cost-of-living-in-london-2026",
+      "permanent": true
     }
   ],
   "headers": [
