@@ -879,20 +879,29 @@ YEAR: {year}
 3) META_DESCRIPTION: max 140 characters
 4) EXCERPT: max 150 characters
 
-5) CONTENT STRUCTURE:
-   - TL;DR / In Brief
-   - Last Updated
-   - Side-by-side comparison table (both cities)
-   - Key Differences section
-   - Pros and Cons for each city
-   - Lifestyle scenarios for both
-   - How to save money (both cities)
-   - Common mistakes
-   - Quick checklist
-   - FAQ (3-6 questions)
-   - Sources & Methodology (with variability and validation guidance)
-   - Conclusion
-   - Disclaimer
+5) CONTENT STRUCTURE — use these EXACT H2 headings in this order:
+   a) ## TL;DR
+   b) ## Last Updated
+   c) ## Cost Comparison
+      - Side-by-side Markdown table comparing costs in both cities
+      - Table MUST have: header row, separator row with colons (| :--- |), data rows
+   d) ## Key Differences
+      - Explain the major cost differences between the two cities
+   e) ## Pros and Cons
+      - For each city
+   f) ## How to Save Money
+      - Tips for both cities
+   g) ## Common Mistakes
+      - 3-5 frequent budgeting errors when choosing between these cities
+   h) ## Quick Checklist
+      - Use markdown checkboxes: - [ ] item
+   i) ## FAQ
+      - 3-6 questions as ### H3 headings
+   j) ## Sources & Methodology
+      - Data variability and validation guidance
+   k) ## Conclusion
+   l) ## Disclaimer
+      - "This content is for informational purposes only and does not constitute financial advice."
 
 6) INTERNAL LINKS: DO NOT include internal links in markdown - handled automatically by system
 
@@ -986,21 +995,30 @@ FRAMING: "How much do you need to live in {city}?"
 3) META_DESCRIPTION: max 140 characters
 4) EXCERPT: max 150 characters
 
-5) CONTENT STRUCTURE:
-   - TL;DR / In Brief (focus on minimum budget)
-   - Last Updated
-   - Minimum Viable Budget (bare bones)
-   - Comfortable Budget (moderate lifestyle)
-   - Luxury Budget (if applicable)
-   - Monthly Cost Breakdown table
-   - By Lifestyle scenarios
-   - How to save money
-   - Common mistakes
-   - Quick checklist
-   - FAQ
-   - Sources & Methodology
-   - Conclusion
-   - Disclaimer
+5) CONTENT STRUCTURE — use these EXACT H2 headings in this order:
+   a) ## TL;DR
+      - Focus on minimum budget needed
+   b) ## Last Updated
+   c) ## Minimum Viable Budget
+      - Bare bones monthly cost
+   d) ## Comfortable Budget
+      - Moderate lifestyle monthly cost
+   e) ## Monthly Cost Breakdown
+      - Markdown table with header, separator row with colons (| :--- |), data rows
+   f) ## By Lifestyle
+      - Single person, couple, family, digital nomad scenarios
+   g) ## How to Save Money
+      - City-specific tips
+   h) ## Common Mistakes
+      - 3-5 frequent budgeting errors
+   i) ## Quick Checklist
+      - Use markdown checkboxes: - [ ] item
+   j) ## FAQ
+      - 3-6 questions as ### H3 headings
+   k) ## Sources & Methodology
+   l) ## Conclusion
+   m) ## Disclaimer
+      - "This content is for informational purposes only and does not constitute financial advice."
 
 6) INTERNAL LINKS: DO NOT include internal links in markdown - handled automatically by system
 
@@ -1360,19 +1378,37 @@ function validateArticleStructure(content, mode = 'city') {
   const errors = [];
   const warnings = [];
   
-  // Check required sections - must be EXACT H2 headings (as specified in prompt)
-  const requiredH2Headings = [
+  // Mode-specific required H2 headings
+  const commonHeadings = [
     { exact: '## TL;DR', flexible: false },
     { exact: '## Last Updated', flexible: false },
-    { exact: '## Monthly Cost Breakdown', flexible: false },
-    { exact: '## By Lifestyle', flexible: false },
-    { exact: '## How to Save Money', flexible: true }, // Allow "in {city}" suffix
+    { exact: '## How to Save Money', flexible: true },
     { exact: '## Common Mistakes', flexible: false },
     { exact: '## Quick Checklist', flexible: false },
     { exact: '## FAQ', flexible: false },
     { exact: '## Sources & Methodology', flexible: false },
     { exact: '## Conclusion', flexible: false },
     { exact: '## Disclaimer', flexible: false }
+  ];
+
+  const modeSpecificHeadings = {
+    city: [
+      { exact: '## Monthly Cost Breakdown', flexible: false },
+      { exact: '## By Lifestyle', flexible: false }
+    ],
+    comparison: [
+      { exact: '## Cost Comparison', flexible: false },
+      { exact: '## Key Differences', flexible: false }
+    ],
+    budget: [
+      { exact: '## Monthly Cost Breakdown', flexible: false },
+      { exact: '## By Lifestyle', flexible: false }
+    ]
+  };
+
+  const requiredH2Headings = [
+    ...commonHeadings,
+    ...(modeSpecificHeadings[mode] || modeSpecificHeadings.city)
   ];
   
   /**
@@ -1423,8 +1459,9 @@ function validateArticleStructure(content, mode = 'city') {
   // Check for markdown table (header + separator row with proper format)
   // Must have: header row with pipes, separator row with colons and dashes, at least one data row
   const hasTable = /\n\|[^\n]+\|\n\|[:\s-|]+\|\n\|[^\n]+\|\n/.test(content);
+  const tableSectionName = mode === 'comparison' ? 'Cost Comparison' : 'Monthly Cost Breakdown';
   if (!hasTable) {
-    errors.push('Monthly Cost Breakdown section must contain a properly formatted Markdown table with header, separator, and data rows');
+    errors.push(`${tableSectionName} section must contain a properly formatted Markdown table with header, separator, and data rows`);
   } else {
     // Additional validation: check that table has at least 5 data rows for cost categories
     const tableMatch = content.match(/\n\|[^\n]+\|\n\|[:\s-|]+\|\n((?:\|[^\n]+\|\n?)+)/);
