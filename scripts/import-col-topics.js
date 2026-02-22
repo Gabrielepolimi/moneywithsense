@@ -17,7 +17,11 @@ import { createClient } from '@sanity/client';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DATA_FILE = path.join(__dirname, '..', 'data', 'moneywithsense_topic_queue_100.json');
+const fileArg = process.argv.find(a => a.startsWith('--file='))?.split('=')[1]
+  || (process.argv.indexOf('--file') !== -1 ? process.argv[process.argv.indexOf('--file') + 1] : null);
+const DATA_FILE = fileArg
+  ? path.resolve(fileArg)
+  : path.join(__dirname, '..', 'data', 'moneywithsense_topic_queue_100.json');
 
 const sanityClient = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || 'z0g6hj8g',
