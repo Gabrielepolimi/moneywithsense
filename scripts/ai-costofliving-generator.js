@@ -1715,9 +1715,9 @@ async function findPillarPost() {
       _type == "post" && 
       contentSeries == "cost-of-living" &&
       slug.current == "cost-of-living-guide-2026"
-    ][0]{ _id }`);
+    ][0]{ _id, title, "slug": slug.current }`);
     
-    return pillar?._id || null;
+    return pillar || null;
   } catch (error) {
     console.error('❌ Error finding pillar post:', error.message);
     return null;
@@ -1725,8 +1725,46 @@ async function findPillarPost() {
 }
 
 /**
- * Find related posts (same country or same series)
+ * Inject internal links into markdown content before converting to blocks.
+ * Adds contextual links to related articles + pillar page.
+ * @param {string} markdown - Article markdown content
+ * @param {Array} relatedPosts - Related posts with title and slug
+ * @param {Object} pillar - Pillar post with title and slug
+ * @returns {string} Markdown with injected links
  */
+function injectInternalLinks(markdown, relatedPosts, pillar) {
+  if (!relatedPosts.length && !pillar) return markdown;
+
+  // --- 1. Pillar link at the end of TL;DR ---
+  if (pillar?.slug) {
+    const tldrEnd = markdown.match(/^## TL;DR\s*\n([\s\S]*?)(?=\n## )/m);
+    if (tldrEnd) {
+      const insertPos = tldrEnd.index + tldrEnd[0].length;
+      const pillarCTA = `\n\nFor a complete overview, see our [Cost of Living Guide 2026](/articles/${pillar.slug}).\n`;
+      markdown = markdown.slice(0, insertPos) + pillarCTA + markdown.slice(insertPos);
+    }
+  }
+
+  // --- 2. "You May Also Like" section before ## Conclusion (related articles only) ---
+  if (relatedPosts.length > 0) {
+    const linkItems = relatedPosts
+      .filter(p => p.slug)
+      .map(p => `- [${p.title}](/articles/${p.slug})`)
+      .join('\n');
+
+    const relatedSection = `\n## You May Also Like\n\n${linkItems}\n`;
+
+    const conclusionIdx = markdown.search(/^## Conclusion/m);
+    if (conclusionIdx !== -1) {
+      markdown = markdown.slice(0, conclusionIdx) + relatedSection + '\n' + markdown.slice(conclusionIdx);
+    } else {
+      markdown += '\n' + relatedSection;
+    }
+  }
+
+  return markdown;
+}
+
 /**
  * Find related posts for cost-of-living articles
  * Excludes current post by citySlug + year, prioritizes same country, then recency
@@ -2171,11 +2209,27 @@ IMPORTANT: TL;DR must start with "## TL;DR" followed by a newline, then bullet p
     throw new Error('Cost of Living category not found. Create it first.');
   }
   
-  // 11. Convert markdown to block content
-  log('📄 Converting markdown to blocks...');
-  const bodyBlocks = markdownToBlockContent(parsed.content);
+  // 11. Find internal links (before converting markdown to blocks, so we can inject links)
+  log('🔗 Finding internal links...');
+  const pillar = await findPillarPost();
+  if (!pillar) {
+    throw new Error('Pillar post (cost-of-living-guide-2026) not found. Create it first.');
+  }
+  const pillarId = pillar._id;
   
-  // 11b. Validate no H1 in blocks
+  const relatedPosts = await findRelatedPosts(citySlug, countryCode, year, null, 3);
+  log(`   Found pillar: ${pillarId}`);
+  log(`   Found ${relatedPosts.length} related posts: ${relatedPosts.map(p => p.slug).join(', ')}`);
+  
+  // 11b. Inject internal links into markdown content (pillar in TL;DR + related before Conclusion)
+  const linkedContent = injectInternalLinks(parsed.content, relatedPosts, pillar);
+  log(`   Injected ${1 + relatedPosts.length} internal links`);
+  
+  // 12. Convert markdown to block content
+  log('📄 Converting markdown to blocks...');
+  const bodyBlocks = markdownToBlockContent(linkedContent);
+  
+  // 12b. Validate no H1 in blocks
   const hasH1 = bodyBlocks.some(block => block._type === 'block' && block.style === 'h1');
   if (hasH1) {
     log('⚠️ Found H1 in body blocks, converting to H2...');
@@ -2185,18 +2239,6 @@ IMPORTANT: TL;DR must start with "## TL;DR" followed by a newline, then bullet p
       }
     });
   }
-  
-  // 12. Find internal links (after we have slug, before creating document)
-  log('🔗 Finding internal links...');
-  const pillarId = await findPillarPost();
-  if (!pillarId) {
-    throw new Error('Pillar post (cost-of-living-guide-2026) not found. Create it first.');
-  }
-  
-  // Find related posts (exclude current by citySlug+year, will exclude by _id after creation)
-  const relatedPosts = await findRelatedPosts(citySlug, countryCode, year, null, 2);
-  log(`   Found pillar: ${pillarId}`);
-  log(`   Found ${relatedPosts.length} related posts`);
   
   // 13. Calculate reading time
   const wordCount = parsed.content.split(/\s+/).length;
@@ -2291,9 +2333,8 @@ IMPORTANT: TL;DR must start with "## TL;DR" followed by a newline, then bullet p
   if (relatedPosts.length > 0) {
     log('🔄 Updating related posts (excluding current)...');
     try {
-      const updatedRelatedPosts = await findRelatedPosts(citySlug, countryCode, year, created._id, 2);
+      const updatedRelatedPosts = await findRelatedPosts(citySlug, countryCode, year, created._id, 3);
       if (updatedRelatedPosts.length !== relatedPosts.length || updatedRelatedPosts.some((p, i) => p._id !== relatedPosts[i]?._id)) {
-        // Update internal links if different
         await sanityClient.patch(created._id).set({
           'internalLinks.relatedRefs': updatedRelatedPosts.map(p => ({ _type: 'reference', _ref: p._id }))
         }).commit();

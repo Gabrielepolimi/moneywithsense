@@ -2,8 +2,8 @@ name: Cost of Living Content Generation
 
 on:
   schedule:
-    # Monday and Thursday at 08:00 UTC — 2 articles per week from Sanity queue
-    - cron: '0 8 * * 1,4'
+    # Every day at 08:00 UTC — 1 article per day from Sanity queue
+    - cron: '0 8 * * *'
   workflow_dispatch:
     inputs:
       mode:
