@@ -296,6 +296,9 @@ export default async function PostPage({ params }: Props) {
   }
   
   const faqs = extractFAQFromBody(post.body);
+
+  const primaryCategory = post.categories?.[0];
+  const guideSlug = primaryCategory ? categoryToGuide[primaryCategory.slug] : undefined;
   
   const articleJsonLd = {
     '@context': 'https://schema.org',
@@ -325,6 +328,24 @@ export default async function PostPage({ params }: Props) {
     keywords: post.seoKeywords?.join(', ') || 'personal finance, budgeting, investing',
   };
   
+  const breadcrumbItems = [
+    { name: 'Home', url: siteUrl },
+    { name: 'Articles', url: `${siteUrl}/articles` },
+    ...(primaryCategory ? [{ name: primaryCategory.title, url: `${siteUrl}/categories/${primaryCategory.slug}` }] : []),
+    { name: post.title, url: `${siteUrl}/articles/${post.slug}` },
+  ];
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: breadcrumbItems.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: item.name,
+      item: item.url,
+    })),
+  };
+
   // Generate FAQ schema if FAQs exist
   const faqJsonLd = faqs.length > 0 ? {
     '@context': 'https://schema.org',
@@ -339,9 +360,6 @@ export default async function PostPage({ params }: Props) {
     }))
   } : null;
 
-  const primaryCategory = post.categories?.[0];
-  const guideSlug = primaryCategory ? categoryToGuide[primaryCategory.slug] : undefined;
-
   return (
     <>
       <script
@@ -354,6 +372,10 @@ export default async function PostPage({ params }: Props) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
         />
       )}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <article className="max-w-4xl mx-auto px-4 sm:px-6 py-8 lg:py-12">
         {/* Breadcrumb */}
         <nav className="mb-6 text-sm">

@@ -19,7 +19,12 @@
     },
     {
       "source": "/articles/how-to-save-money-on-a-low-income",
-      "destination": "/articles/how-to-save-money-on-a-low-income-1771662369137",
+      "destination": "/articles/how-to-save-money-without-changing-lifestyle",
+      "permanent": true
+    },
+    {
+      "source": "/articles/how-to-save-money-on-a-low-income-1771662369137",
+      "destination": "/articles/how-to-save-money-without-changing-lifestyle",
       "permanent": true
     },
     {
@@ -55,6 +60,176 @@
     {
       "source": "/articles/average-cost-of-living-in-london",
       "destination": "/articles/cost-of-living-in-london-2026",
+      "permanent": true
+    },
+    {
+      "source": "/articles/long-term-financial-planning",
+      "destination": "/articles/monthly-financial-checklist-template",
+      "permanent": true
+    },
+    {
+      "source": "/articles/how-to-save-money-abroad",
+      "destination": "/articles/personal-finance-for-expats-and-immigrants",
+      "permanent": true
+    },
+    {
+      "source": "/articles/madrid-neighborhood-guide",
+      "destination": "/articles/cost-of-living-in-madrid",
+      "permanent": true
+    },
+    {
+      "source": "/articles/how-to-start-saving-money",
+      "destination": "/articles/how-to-save-money-without-changing-lifestyle",
+      "permanent": true
+    },
+    {
+      "source": "/articles/%7Barticle-topic-slug%7D",
+      "destination": "/articles",
+      "permanent": true
+    },
+    {
+      "source": "/articles/building-better-money-habits",
+      "destination": "/articles/money-saving-habits-that-actually-work",
+      "permanent": true
+    },
+    {
+      "source": "/articles/how-to-build-credit",
+      "destination": "/articles/finance-tips-for-college-students",
+      "permanent": true
+    },
+    {
+      "source": "/articles/save-money-on-groceries",
+      "destination": "/articles/painless-ways-to-cut-monthly-expenses-1770885656027",
+      "permanent": true
+    },
+    {
+      "source": "/articles/how-to-build-credit-from-scratch",
+      "destination": "/articles/simple-personal-finance-system-for-beginners",
+      "permanent": true
+    },
+    {
+      "source": "/articles/emergency-fund-guide",
+      "destination": "/articles/how-to-build-savings-on-an-irregular-income",
+      "permanent": true
+    },
+    {
+      "source": "/articles/debt-snowball-vs-avalanche",
+      "destination": "/articles/how-to-break-the-paycheck-to-paycheck-cycle-1769156785635",
+      "permanent": true
+    },
+    {
+      "source": "/articles/best-side-hustles",
+      "destination": "/articles/weekend-side-hustles-for-busy-people",
+      "permanent": true
+    },
+    {
+      "source": "/articles/smart-spending-habits",
+      "destination": "/articles/money-saving-habits-that-actually-work",
+      "permanent": true
+    },
+    {
+      "source": "/articles/budgeting-tips-for-beginners",
+      "destination": "/articles/simple-personal-finance-system-for-beginners",
+      "permanent": true
+    },
+    {
+      "source": "/articles/freelancer-tax-tips",
+      "destination": "/articles/personal-finance-for-gig-economy-workers",
+      "permanent": true
+    },
+    {
+      "source": "/articles/financial-tips-for-creatives",
+      "destination": "/articles/finance-basics-for-artists-and-creatives",
+      "permanent": true
+    },
+    {
+      "source": "/articles/handling-unexpected-expenses",
+      "destination": "/articles/finances-after-losing-a-job",
+      "permanent": true
+    },
+    {
+      "source": "/articles/smart-money-moves",
+      "destination": "/articles/financial-habits-that-look-smart-but-arent",
+      "permanent": true
+    },
+    {
+      "source": "/articles/tax-deductions-101",
+      "destination": "/articles/how-to-start-freelancing-for-beginners",
+      "permanent": true
+    },
+    {
+      "source": "/articles/understanding-financial-rules",
+      "destination": "/articles/simple-personal-finance-system-for-beginners",
+      "permanent": true
+    },
+    {
+      "source": "/articles/automate-your-savings",
+      "destination": "/articles/money-saving-habits-that-actually-work",
+      "permanent": true
+    },
+    {
+      "source": "/articles/how-to-use-ynab",
+      "destination": "/articles/money-management-apps-comparison",
+      "permanent": true
+    },
+    {
+      "source": "/articles/simplifi-vs-mint",
+      "destination": "/articles/money-management-apps-comparison",
+      "permanent": true
+    },
+    {
+      "source": "/articles/benefits-of-budgeting",
+      "destination": "/articles/simple-personal-finance-system-for-beginners",
+      "permanent": true
+    },
+    {
+      "source": "/articles/what-is-financial-infidelity",
+      "destination": "/articles/financial-red-flags-in-relationships",
+      "permanent": true
+    },
+    {
+      "source": "/articles/easy-side-hustles",
+      "destination": "/articles/weekend-side-hustles-for-busy-people",
+      "permanent": true
+    },
+    {
+      "source": "/articles/practical-ways-to-start-saving",
+      "destination": "/articles/how-to-save-money-without-changing-lifestyle",
+      "permanent": true
+    },
+    {
+      "source": "/articles/strategies-for-managing-credit-card-debt",
+      "destination": "/articles/how-to-break-the-paycheck-to-paycheck-cycle-1769156785635",
+      "permanent": true
+    },
+    {
+      "source": "/articles/financial-planning-basics",
+      "destination": "/articles/simple-personal-finance-system-for-beginners",
+      "permanent": true
+    },
+    {
+      "source": "/articles/making-a-budget-simple",
+      "destination": "/articles/simple-personal-finance-system-for-beginners",
+      "permanent": true
+    },
+    {
+      "source": "/articles/online-shopping-hacks",
+      "destination": "/articles/painless-ways-to-cut-monthly-expenses-1770885656027",
+      "permanent": true
+    },
+    {
+      "source": "/articles/budgeting-for-groceries",
+      "destination": "/articles/painless-ways-to-cut-monthly-expenses-1770885656027",
+      "permanent": true
+    },
+    {
+      "source": "/articles/tax-deductions-beginners",
+      "destination": "/articles/how-to-start-freelancing-for-beginners",
+      "permanent": true
+    },
+    {
+      "source": "/articles/beginner-budgeting-tips",
+      "destination": "/articles/simple-personal-finance-system-for-beginners",
       "permanent": true
     }
   ],

@@ -1,0 +1,61 @@
+import {defineType, defineField} from 'sanity'
+
+export default defineType({
+  name: 'post',
+  title: 'Post',
+  type: 'document',
+  fields: [
+    defineField({name: 'title', title: 'Title', type: 'string'}),
+    defineField({name: 'slug', title: 'Slug', type: 'slug', options: {source: 'title'}}),
+    defineField({name: 'excerpt', title: 'Excerpt', type: 'text', rows: 3}),
+    defineField({name: 'author', title: 'Author', type: 'reference', to: [{type: 'author'}]}),
+    defineField({
+      name: 'categories',
+      title: 'Categories',
+      type: 'array',
+      of: [{type: 'reference', to: [{type: 'category'}]}],
+    }),
+    defineField({name: 'mainImage', title: 'Main Image', type: 'image', options: {hotspot: true}}),
+    defineField({name: 'body', title: 'Body', type: 'blockContent'}),
+    defineField({name: 'readingTime', title: 'Reading Time (min)', type: 'number'}),
+    defineField({name: 'initialLikes', title: 'Initial Likes', type: 'number'}),
+    defineField({name: 'seoTitle', title: 'SEO Title', type: 'string'}),
+    defineField({name: 'seoDescription', title: 'SEO Description', type: 'text', rows: 2}),
+    defineField({name: 'seoKeywords', title: 'SEO Keywords', type: 'array', of: [{type: 'string'}]}),
+    defineField({
+      name: 'status',
+      title: 'Status',
+      type: 'string',
+      options: {list: ['draft', 'published', 'archived']},
+    }),
+    defineField({name: 'publishedAt', title: 'Published At', type: 'datetime'}),
+    defineField({name: 'contentSeries', title: 'Content Series', type: 'string'}),
+    defineField({name: 'primaryKeyword', title: 'Primary Keyword', type: 'string'}),
+    defineField({name: 'city', title: 'City', type: 'string'}),
+    defineField({name: 'citySlug', title: 'City Slug', type: 'string'}),
+    defineField({name: 'country', title: 'Country', type: 'string'}),
+    defineField({name: 'countryCode', title: 'Country Code', type: 'string'}),
+    defineField({name: 'year', title: 'Year', type: 'number'}),
+    defineField({name: 'comparisonCity', title: 'Comparison City', type: 'string'}),
+    defineField({name: 'comparisonCitySlug', title: 'Comparison City Slug', type: 'string'}),
+    defineField({name: 'dataPolicy', title: 'Data Policy', type: 'text'}),
+    defineField({name: 'unsplashPhotoId', title: 'Unsplash Photo ID', type: 'string'}),
+    defineField({
+      name: 'internalLinks',
+      title: 'Internal Links',
+      type: 'object',
+      fields: [
+        defineField({name: 'pillarRef', title: 'Pillar Page', type: 'reference', to: [{type: 'post'}]}),
+        defineField({
+          name: 'relatedRefs',
+          title: 'Related Posts',
+          type: 'array',
+          of: [{type: 'reference', to: [{type: 'post'}]}],
+        }),
+      ],
+    }),
+  ],
+  preview: {
+    select: {title: 'title', subtitle: 'city', media: 'mainImage'},
+  },
+})

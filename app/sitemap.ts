@@ -35,6 +35,7 @@ const categories = [
   'taxes-tips',
   'side-hustles',
   'money-psychology',
+  'cost-of-living',
 ]
 
 // Pillar Guides (important for SEO)
