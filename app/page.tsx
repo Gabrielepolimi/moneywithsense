@@ -2,7 +2,13 @@ import HeroSection from '../components/home/HeroSection';
 import FeaturedArticles from '../components/home/FeaturedArticles';
 import NewsletterSection from '../components/home/NewsletterSection';
 import CategoryArticles from '../components/home/CategoryArticles';
+import HomeCityExplore from '../components/cities/HomeCityExplore';
+import HomePopularComparisons from '../components/home/HomePopularComparisons';
+import HomeFreeToolsSection from '../components/home/HomeFreeToolsSection';
 import { getPosts } from '../lib/getPosts';
+import { getCityBySlug, type City } from '../lib/cities';
+
+export const revalidate = 3600;
 
 // Finance categories with proper colors
 const categories = [
@@ -14,13 +20,24 @@ const categories = [
   { name: 'Credit & Debt', slug: 'credit-debt', color: 'orange' },
 ];
 
+const FEATURED_CITY_SLUGS = ['new-york', 'london', 'dubai', 'tokyo', 'toronto', 'singapore'] as const;
+
 export default async function HomePage() {
-  const posts = await getPosts();
+  let posts: Awaited<ReturnType<typeof getPosts>> = [];
+  try {
+    posts = await getPosts({ excludeCostOfLivingCategory: true });
+  } catch {
+    console.error('Failed to fetch posts for home');
+  }
+  const featuredCities = FEATURED_CITY_SLUGS.map((s) => getCityBySlug(s)).filter((c): c is City => Boolean(c));
 
   return (
     <div className="min-h-screen bg-white">
       <HeroSection />
-      <FeaturedArticles articles={posts} />
+      {featuredCities.length > 0 && <HomeCityExplore featured={featuredCities} />}
+      <HomePopularComparisons />
+      <HomeFreeToolsSection />
+      <FeaturedArticles articles={posts} sectionTitle="Personal Finance Guides" />
 
       {/* Category sections - only show if articles exist */}
       {categories.map((category) => (

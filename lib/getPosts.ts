@@ -1,7 +1,6 @@
 import client from '../sanityClient';
 
-export async function getPosts() {
-  return await client.fetch(`*[_type == "post" && status == "published" && publishedAt <= $now] | order(publishedAt desc){
+const postProjection = `{
     _id,
     title,
     slug,
@@ -13,13 +12,51 @@ export async function getPosts() {
     "categories": categories[]->title,
     excerpt,
     body,
-        showYouTubeVideo,
-        youtubeUrl,
-        youtubeTitle,
-        youtubeDescription
-  }`, { now: new Date().toISOString() }, {
-    // Disabilita il caching per Vercel
-    cache: 'no-store',
-    next: { revalidate: 0 }
-  });
+    showYouTubeVideo,
+    youtubeUrl,
+    youtubeTitle,
+    youtubeDescription
+  }`;
+
+export type GetPostsOptions = {
+  /** Exclude posts tagged with Sanity category slug `cost-of-living` */
+  excludeCostOfLivingCategory?: boolean;
+  /** ISR revalidate seconds; default 3600. Use 0 for no-store (admin/debug). */
+  revalidate?: number;
+};
+
+export async function getPosts(options?: GetPostsOptions) {
+  const exclude =
+    options?.excludeCostOfLivingCategory === true
+      ? ` && !("cost-of-living" in categories[]->slug.current)`
+      : '';
+
+  const revalidate = options?.revalidate !== undefined ? options.revalidate : 3600;
+
+  return await client.fetch(
+    `*[_type == "post" && status == "published" && publishedAt <= $now${exclude}] | order(publishedAt desc) ${postProjection}`,
+    { now: new Date().toISOString() },
+    revalidate === 0
+      ? { cache: 'no-store', next: { revalidate: 0 } }
+      : { next: { revalidate } }
+  );
+}
+
+/** Posts in Cost of Living category (for hub + editorial remainder on /categories/cost-of-living) */
+export async function getCostOfLivingCategoryPosts(revalidate = 3600) {
+  return await client.fetch(
+    `*[_type == "post" && status == "published" && publishedAt <= $now && "cost-of-living" in categories[]->slug.current] | order(publishedAt desc) ${postProjection}`,
+    { now: new Date().toISOString() },
+    { next: { revalidate } }
+  );
+}
+
+/** Slugs for `generateStaticParams` on /articles/[slug] (ISR-friendly). */
+export async function getAllPublishedPostSlugs(revalidate = 3600) {
+  const slugs = await client.fetch<string[]>(
+    `*[_type == "post" && status == "published" && publishedAt <= $now].slug.current`,
+    { now: new Date().toISOString() },
+    { next: { revalidate } }
+  );
+  return Array.isArray(slugs) ? slugs.filter(Boolean) : [];
 }

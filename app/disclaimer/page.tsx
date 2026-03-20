@@ -4,6 +4,7 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'Financial Disclaimer',
   description: 'Important disclaimer regarding the educational nature of MoneyWithSense content. Not financial advice.',
+  robots: { index: false, follow: true },
 };
 
 export default function DisclaimerPage() {

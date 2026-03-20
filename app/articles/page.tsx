@@ -18,8 +18,15 @@ const categories = [
   { name: 'Credit & Debt', slug: 'credit-debt' },
 ];
 
+export const revalidate = 3600;
+
 export default async function ArticlesPage() {
-  const articles = await getPosts();
+  let articles: Awaited<ReturnType<typeof getPosts>> = [];
+  try {
+    articles = await getPosts({ excludeCostOfLivingCategory: true });
+  } catch {
+    console.error('Failed to fetch articles for /articles');
+  }
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return '';

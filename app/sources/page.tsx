@@ -4,6 +4,7 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'Sources & References',
   description: 'Authoritative sources and references used by MoneyWithSense for personal finance content.',
+  robots: { index: false, follow: true },
 };
 
 const sources = {

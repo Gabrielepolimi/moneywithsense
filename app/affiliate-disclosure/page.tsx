@@ -4,6 +4,7 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'Affiliate Disclosure',
   description: 'Affiliate disclosure for MoneyWithSense. Transparency about how we may earn commissions from product recommendations.',
+  robots: { index: false, follow: true },
 };
 
 export default function AffiliateDisclosurePage() {

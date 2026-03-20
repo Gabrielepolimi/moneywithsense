@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { PortableText, PortableTextComponents } from '@portabletext/react';
 import type { PortableTextBlock } from '@portabletext/types';
 import { sanityClient } from '../../../sanityClient';
+import { getAllPublishedPostSlugs } from '../../../lib/getPosts';
 import RelatedArticlesCarousel from '../../../components/articles/RelatedArticlesCarousel';
 import LikeButton from '../../../components/articles/LikeButton';
 import YouTubeEmbed from '../../../components/articles/YouTubeEmbed';
@@ -76,8 +77,16 @@ const categoryToGuide: Record<string, string> = {
   'money-psychology': 'money-psychology-guide',
 };
 
-export const dynamic = 'force-dynamic';
 export const revalidate = 3600;
+
+export async function generateStaticParams() {
+  try {
+    const slugs = await getAllPublishedPostSlugs(3600);
+    return slugs.map((slug) => ({ slug }));
+  } catch {
+    return [];
+  }
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -157,8 +166,7 @@ async function getPost(slug: string): Promise<Post | null> {
         youtube
       }
     `, { slug }, {
-      cache: 'no-store',
-      next: { revalidate: 0 }
+      next: { revalidate: 3600 },
     });
 
     return post;
@@ -185,8 +193,7 @@ async function getRelatedArticles(currentArticleId: string): Promise<Article[]> 
       currentId: currentArticleId,
       now: new Date().toISOString()
     }, {
-      cache: 'no-store',
-      next: { revalidate: 0 }
+      next: { revalidate: 3600 },
     });
 
     return articles || [];

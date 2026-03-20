@@ -59,7 +59,7 @@
     },
     {
       "source": "/articles/average-cost-of-living-in-london",
-      "destination": "/articles/cost-of-living-in-london-2026",
+      "destination": "/cities/london",
       "permanent": true
     },
     {
@@ -74,7 +74,7 @@
     },
     {
       "source": "/articles/madrid-neighborhood-guide",
-      "destination": "/articles/cost-of-living-in-madrid",
+      "destination": "/cities/madrid",
       "permanent": true
     },
     {

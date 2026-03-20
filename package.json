@@ -10,7 +10,9 @@
     "lint": "next lint",
     "update-sitemap": "node update-sitemap-auto.js",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "cities:build": "node scripts/build-initial-cities.mjs",
+    "cities:sync": "node scripts/sync-cities.js"
   },
   "dependencies": {
     "@google-cloud/vertexai": "^1.10.0",
@@ -22,8 +24,10 @@
     "@sanity/image-url": "^1.0.2",
     "autoprefixer": "^10.4.22",
     "cloudinary": "^2.8.0",
+    "jspdf": "^2.5.2",
     "lucide-react": "^0.556.0",
     "next": "^16.0.7",
+    "recharts": "^2.15.0",
     "puppeteer": "^24.32.0",
     "react": "^18",
     "react-dom": "^18",

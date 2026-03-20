@@ -1,3 +1,32 @@
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { buildArticleCostOfLivingRedirects } from './lib/articleRedirects.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+/** 301 inverse slug → canonical (alphabetical) for top comparison pairs */
+function buildTopCompareRedirects() {
+  try {
+    const raw = readFileSync(join(__dirname, 'data/top-comparison-pairs.json'), 'utf8');
+    const pairs = JSON.parse(raw);
+    const redirects = [];
+    for (const [a, b] of pairs) {
+      const s1 = a < b ? a : b;
+      const s2 = a < b ? b : a;
+      const destination = `/compare/${s1}-vs-${s2}`;
+      const source = `/compare/${s2}-vs-${s1}`;
+      if (source !== destination) {
+        redirects.push({ source, destination, permanent: true });
+      }
+    }
+    return redirects;
+  } catch {
+    return [];
+  }
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   trailingSlash: false,
@@ -24,6 +53,8 @@ const nextConfig = {
         destination: 'https://moneywithsense.com/:path*',
         permanent: true,
       },
+      ...buildArticleCostOfLivingRedirects(),
+      ...buildTopCompareRedirects(),
     ];
   },
 

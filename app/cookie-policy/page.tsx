@@ -4,6 +4,7 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'Cookie Policy',
   description: 'MoneyWithSense cookie policy - how we use cookies and similar technologies.',
+  robots: { index: false, follow: true },
 };
 
 export default function CookiePolicyPage() {

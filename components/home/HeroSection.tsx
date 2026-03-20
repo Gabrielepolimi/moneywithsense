@@ -28,11 +28,14 @@ export default function HeroSection() {
               Practical money education
             </div>
             
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-secondary-900 leading-[1.1] mb-6 animate-slide-up">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-secondary-900 leading-[1.1] mb-4 animate-slide-up">
               Make smarter
               <br />
               <span className="text-primary-600">money decisions</span>
             </h1>
+            <p className="text-base sm:text-lg text-secondary-500 mb-6 max-w-lg animate-slide-up animation-delay-75">
+              Cost of living data for 100+ cities • City comparisons • Free budget tools
+            </p>
             
             <p className="text-xl text-secondary-600 leading-relaxed mb-8 max-w-lg animate-slide-up animation-delay-100">
               Clear, actionable personal finance guidance. Learn to save more, budget better, invest wisely, and build multiple income streams.

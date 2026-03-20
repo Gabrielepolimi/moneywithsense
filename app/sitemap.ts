@@ -1,29 +1,13 @@
 import { MetadataRoute } from 'next'
 import { getPosts } from '../lib/getPosts'
+import { getAllCities, getAllComparePairParams } from '../lib/cities'
 
 const baseUrl = 'https://moneywithsense.com'
 
-// Static pages
-const staticPages = [
-  { url: '', priority: 1.0, changeFrequency: 'daily' as const },
-  { url: '/articles', priority: 0.9, changeFrequency: 'daily' as const },
-  { url: '/categories', priority: 0.9, changeFrequency: 'weekly' as const },
-  { url: '/guides', priority: 0.9, changeFrequency: 'weekly' as const },
-  { url: '/tools', priority: 0.8, changeFrequency: 'weekly' as const },
-  { url: '/newsletter', priority: 0.8, changeFrequency: 'monthly' as const },
-  { url: '/about', priority: 0.7, changeFrequency: 'monthly' as const },
-  { url: '/editorial-policy', priority: 0.6, changeFrequency: 'monthly' as const },
-  { url: '/sources', priority: 0.6, changeFrequency: 'monthly' as const },
-  { url: '/contact', priority: 0.6, changeFrequency: 'monthly' as const },
-  { url: '/privacy', priority: 0.5, changeFrequency: 'yearly' as const },
-  { url: '/terms', priority: 0.5, changeFrequency: 'yearly' as const },
-  { url: '/cookie-policy', priority: 0.5, changeFrequency: 'yearly' as const },
-  { url: '/disclaimer', priority: 0.5, changeFrequency: 'yearly' as const },
-  { url: '/affiliate-disclosure', priority: 0.5, changeFrequency: 'yearly' as const },
-  { url: '/site-map', priority: 0.4, changeFrequency: 'weekly' as const },
-]
-
-// Categories
+/**
+ * Task 6 — consolidated sitemap (legal/utility pages excluded).
+ * ~603 URLs: home + hubs + categories + articles + cities + compare + tools.
+ */
 const categories = [
   'personal-finance',
   'saving-money',
@@ -38,82 +22,75 @@ const categories = [
   'cost-of-living',
 ]
 
-// Pillar Guides (important for SEO)
-const pillarGuides = [
-  'personal-finance-guide',
-  'saving-money-guide',
-  'budgeting-guide',
-  'investing-basics-guide',
-  'passive-income-guide',
-  'credit-debt-guide',
-  'banking-cards-guide',
-  'taxes-tips-guide',
-  'side-hustles-guide',
-  'money-psychology-guide',
-  'cost-of-living-guide-2026',
-]
-
-// Tools
 const tools = [
   'savings-goal',
+  'salary-checker',
+  'relocation-calculator',
+  'budget-planner',
+  'cost-of-living-index',
 ]
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Get all published articles
-  // Note: getPosts returns slug as string directly (not slug.current)
-  let articles: { slug: string; publishedAt?: string }[] = []
+  let articles: { slug: string | { current: string }; publishedAt?: string }[] = []
   try {
-    articles = await getPosts()
+    articles = await getPosts({ excludeCostOfLivingCategory: true })
   } catch {
     console.error('Failed to fetch posts for sitemap')
     articles = []
   }
 
-  // Static pages
-  const staticEntries = staticPages.map((page) => ({
-    url: `${baseUrl}${page.url}`,
+  const core: MetadataRoute.Sitemap = [
+    { url: baseUrl, lastModified: new Date(), changeFrequency: 'weekly', priority: 1.0 },
+    { url: `${baseUrl}/cities`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${baseUrl}/compare`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${baseUrl}/tools`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${baseUrl}/articles`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
+  ]
+
+  const categoryEntries: MetadataRoute.Sitemap = categories.map((slug) => ({
+    url: `${baseUrl}/categories/${slug}`,
     lastModified: new Date(),
-    changeFrequency: page.changeFrequency,
-    priority: page.priority,
+    changeFrequency: 'monthly',
+    priority: 0.5,
   }))
 
-  // Category pages
-  const categoryEntries = categories.map((category) => ({
-    url: `${baseUrl}/categories/${category}`,
+  const toolEntries: MetadataRoute.Sitemap = tools.map((tool) => ({
+    url: `${baseUrl}/tools/${tool}`,
     lastModified: new Date(),
-    changeFrequency: 'weekly' as const,
+    changeFrequency: 'monthly',
     priority: 0.8,
   }))
 
-  // Pillar Guide pages (high priority for SEO)
-  const guideEntries = pillarGuides.map((guide) => ({
-    url: `${baseUrl}/guides/${guide}`,
-    lastModified: new Date(),
-    changeFrequency: 'monthly' as const,
-    priority: 0.9,
-  }))
-
-  // Tool pages
-  const toolEntries = tools.map((tool) => ({
-    url: `${baseUrl}/tools/${tool}`,
-    lastModified: new Date(),
-    changeFrequency: 'monthly' as const,
-    priority: 0.7,
-  }))
-
-  // Article pages
-  const articleEntries = articles.map((article) => ({
-    url: `${baseUrl}/articles/${article.slug}`,
+  const articleEntries: MetadataRoute.Sitemap = articles.map((article) => ({
+    url: `${baseUrl}/articles/${typeof article.slug === 'string' ? article.slug : article.slug?.current}`,
     lastModified: article.publishedAt ? new Date(article.publishedAt) : new Date(),
-    changeFrequency: 'weekly' as const,
-    priority: 0.7,
+    changeFrequency: 'monthly',
+    priority: 0.6,
   }))
 
-  return [
-    ...staticEntries,
-    ...categoryEntries,
-    ...guideEntries,
-    ...toolEntries,
-    ...articleEntries,
-  ]
+  let cityEntries: MetadataRoute.Sitemap = []
+  try {
+    cityEntries = getAllCities().map((city) => ({
+      url: `${baseUrl}/cities/${city.slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.85,
+    }))
+  } catch {
+    cityEntries = []
+  }
+
+  let compareEntries: MetadataRoute.Sitemap = []
+  try {
+    compareEntries = getAllComparePairParams().map(({ pair }) => ({
+      url: `${baseUrl}/compare/${pair}`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.75,
+    }))
+  } catch {
+    compareEntries = []
+  }
+
+  return [...core, ...categoryEntries, ...toolEntries, ...articleEntries, ...cityEntries, ...compareEntries]
 }

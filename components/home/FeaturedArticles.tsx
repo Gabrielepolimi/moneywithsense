@@ -15,9 +15,16 @@ interface Article {
 
 interface FeaturedArticlesProps {
   articles: Article[];
+  /** Section heading (default: editorial focus vs database cities) */
+  sectionTitle?: string;
+  sectionEyebrow?: string;
 }
 
-export default function FeaturedArticles({ articles }: FeaturedArticlesProps) {
+export default function FeaturedArticles({
+  articles,
+  sectionTitle = 'Personal Finance Guides',
+  sectionEyebrow = 'Latest Insights',
+}: FeaturedArticlesProps) {
   const formatDate = (dateString?: string) => {
     if (!dateString) return '';
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -65,10 +72,10 @@ export default function FeaturedArticles({ articles }: FeaturedArticlesProps) {
         <div className="flex items-end justify-between mb-12">
           <div>
             <span className="text-primary-600 text-sm font-semibold uppercase tracking-wider mb-2 block">
-              Latest Insights
+              {sectionEyebrow}
             </span>
             <h2 className="text-3xl font-bold text-secondary-900 mb-2">
-              Fresh articles
+              {sectionTitle}
             </h2>
             <p className="text-secondary-600">
               Practical guides on saving, budgeting, investing, and building income.

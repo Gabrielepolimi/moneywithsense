@@ -1,22 +1,14 @@
 import { MetadataRoute } from 'next'
 
+const baseUrl = 'https://moneywithsense.com'
+
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = 'https://moneywithsense.com'
-  
   return {
-    rules: [
-      {
-        userAgent: '*',
-        allow: '/',
-        disallow: [
-          '/api/',
-          '/admin/',
-          '/_next/',
-          '/private/',
-        ],
-      },
-    ],
+    rules: {
+      userAgent: '*',
+      allow: '/',
+      disallow: ['/api/', '/_next/', '/studio/', '/admin/'],
+    },
     sitemap: `${baseUrl}/sitemap.xml`,
-    host: baseUrl,
   }
 }

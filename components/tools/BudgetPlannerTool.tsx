@@ -1,0 +1,387 @@
+'use client';
+
+import { useMemo, useState } from 'react';
+import Link from 'next/link';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
+import { jsPDF } from 'jspdf';
+import citiesData from '../../data/cities.json';
+import type { City } from '../../lib/cities';
+import { lifestyleCost } from '../../lib/tools/cityCosts';
+
+const cities = citiesData as City[];
+
+type Lifestyle = 'frugal' | 'moderate' | 'comfortable';
+type Housing = 'studio' | 'oneBed' | 'twoBed' | 'shared';
+type TransportMode = 'public' | 'car' | 'both';
+
+const COLORS = ['#0d9488', '#6366f1', '#f59e0b', '#94a3b8', '#ec4899', '#22c55e'];
+
+function housingRent(city: City, housing: Housing, life: Lifestyle): number {
+  const studio = city.costs.rentCenterStudio ?? { min: 0, max: 0 };
+  const one = city.costs.rentCenterOneBed ?? { min: 0, max: 0 };
+  const out = city.costs.rentOutsideOneBed ?? { min: 0, max: 0 };
+  if (housing === 'studio') return lifestyleCost(studio, life);
+  if (housing === 'oneBed') return lifestyleCost(one, life);
+  if (housing === 'twoBed') return lifestyleCost(one, life) * 1.45;
+  return lifestyleCost(out, life) * 0.5;
+}
+
+function transportCost(city: City, mode: TransportMode, life: Lifestyle): number {
+  const base = lifestyleCost(city.costs.transport, life);
+  if (mode === 'public') return base;
+  if (mode === 'car') return base * 2.5;
+  return base * 1.75;
+}
+
+function formatUsd(n: number) {
+  return `$${Math.round(n).toLocaleString('en-US')}`;
+}
+
+export default function BudgetPlannerTool() {
+  const sorted = useMemo(
+    () => [...cities].sort((a, b) => a.name.localeCompare(b.name, 'en')),
+    []
+  );
+
+  const [citySlug, setCitySlug] = useState('');
+  const [lifestyle, setLifestyle] = useState<Lifestyle>('moderate');
+  const [housing, setHousing] = useState<Housing>('oneBed');
+  const [transportMode, setTransportMode] = useState<TransportMode>('public');
+  const [done, setDone] = useState(false);
+
+  const city = citySlug ? cities.find((c) => c.slug === citySlug) : undefined;
+
+  const plan = useMemo(() => {
+    if (!city) return null;
+
+    const rent = housingRent(city, housing, lifestyle);
+    const utilities = lifestyleCost(city.costs.utilities, lifestyle);
+    const internet = lifestyleCost(city.costs.internet, lifestyle);
+    const housingTotal = rent + internet;
+    const utilitiesSlice = utilities;
+
+    const groceries = lifestyleCost(city.costs.groceries, lifestyle);
+    const eatingOut = lifestyleCost(city.costs.restaurantMid, lifestyle) * 10;
+    const foodTotal = groceries + eatingOut;
+
+    const transport = transportCost(city, transportMode, lifestyle);
+
+    const gym = lifestyleCost(city.costs.gym, lifestyle);
+    const entertainment = lifestyle === 'frugal' ? 80 : lifestyle === 'comfortable' ? 220 : 150;
+    const clothing = lifestyle === 'frugal' ? 70 : lifestyle === 'comfortable' ? 180 : 125;
+    const personal = gym + entertainment + clothing;
+
+    const subtotal = housingTotal + utilitiesSlice + foodTotal + transport + personal;
+    const grandTotal = subtotal / 0.84;
+    const savings = grandTotal - subtotal;
+
+    const pieData = [
+      { name: 'Housing', value: Math.round(housingTotal) },
+      { name: 'Food', value: Math.round(foodTotal) },
+      { name: 'Transport', value: Math.round(transport) },
+      { name: 'Utilities', value: Math.round(utilitiesSlice) },
+      { name: 'Personal', value: Math.round(personal) },
+      { name: 'Savings', value: Math.round(savings) },
+    ];
+
+    return {
+      rent,
+      utilities,
+      internet,
+      housingTotal,
+      utilitiesSlice,
+      groceries,
+      eatingOut,
+      foodTotal,
+      transport,
+      gym,
+      entertainment,
+      clothing,
+      personal,
+      grandTotal,
+      savings,
+      pieData,
+    };
+  }, [city, housing, lifestyle, transportMode]);
+
+  function downloadPdf() {
+    if (!city || !plan) return;
+    const monthYear = new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' });
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text(`Monthly Budget — ${city.name} — ${monthYear}`, 14, 20);
+    doc.setFontSize(10);
+    let y = 32;
+    doc.text(`Lifestyle: ${lifestyle} | Housing: ${housing} | Transport: ${transportMode}`, 14, y);
+    y += 10;
+    doc.text(`Total (incl. savings target): ${formatUsd(plan.grandTotal)}/month`, 14, y);
+    y += 12;
+    const rows = [
+      ['Housing (rent+internet)', formatUsd(plan.housingTotal)],
+      ['Utilities', formatUsd(plan.utilitiesSlice)],
+      ['Food', formatUsd(plan.foodTotal)],
+      ['Transport', formatUsd(plan.transport)],
+      ['Personal', formatUsd(plan.personal)],
+      ['Savings (16% target)', formatUsd(plan.savings)],
+    ];
+    rows.forEach(([a, b]) => {
+      doc.text(`${a}: ${b}`, 14, y);
+      y += 7;
+    });
+    y += 8;
+    doc.setFontSize(9);
+    doc.setTextColor(100);
+    doc.text('Generated by MoneyWithSense.com — estimates only, not financial advice.', 14, y);
+    doc.save(`budget-${city.slug}-${new Date().toISOString().slice(0, 10)}.pdf`);
+  }
+
+  async function shareBudget() {
+    if (!city || !plan) return;
+    const text = `My ${lifestyle} monthly budget for ${city.name}: ~${formatUsd(plan.grandTotal)}/month (incl. savings). Plan yours: https://moneywithsense.com/tools/budget-planner`;
+    try {
+      await navigator.clipboard.writeText(text);
+      alert('Budget summary copied!');
+    } catch {
+      alert('Could not copy to clipboard.');
+    }
+  }
+
+  const housingLabel =
+    housing === 'studio'
+      ? 'Studio'
+      : housing === 'oneBed'
+        ? '1-Bedroom'
+        : housing === 'twoBed'
+          ? '2-Bedroom'
+          : 'Shared room';
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-10">
+      <div className="rounded-2xl border border-secondary-200 bg-secondary-50 p-6 md:p-8 space-y-8">
+        <div>
+          <h3 className="text-sm font-bold text-secondary-500 uppercase mb-2">Step 1: Choose your city</h3>
+          <select
+            className="w-full max-w-lg rounded-xl border border-secondary-200 px-4 py-2.5 bg-white"
+            value={citySlug}
+            onChange={(e) => {
+              setCitySlug(e.target.value);
+              setDone(false);
+            }}
+          >
+            <option value="">Select city…</option>
+            {sorted.map((c) => (
+              <option key={c.slug} value={c.slug}>
+                {c.name}, {c.country}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <h3 className="text-sm font-bold text-secondary-500 uppercase mb-2">Step 2: Lifestyle</h3>
+          <div className="flex flex-wrap gap-2">
+            {(['frugal', 'moderate', 'comfortable'] as Lifestyle[]).map((l) => (
+              <button
+                key={l}
+                type="button"
+                onClick={() => setLifestyle(l)}
+                className={`px-4 py-2 rounded-full text-sm font-medium border ${
+                  lifestyle === l
+                    ? 'bg-primary-600 text-white border-primary-600'
+                    : 'bg-white border-secondary-200'
+                }`}
+              >
+                {l.charAt(0).toUpperCase() + l.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <h3 className="text-sm font-bold text-secondary-500 uppercase mb-2">Step 3: Housing</h3>
+          <div className="flex flex-wrap gap-2">
+            {(
+              [
+                ['studio', 'Studio'],
+                ['oneBed', '1-Bedroom'],
+                ['twoBed', '2-Bedroom'],
+                ['shared', 'Shared room'],
+              ] as const
+            ).map(([v, label]) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setHousing(v)}
+                className={`px-4 py-2 rounded-full text-sm font-medium border ${
+                  housing === v
+                    ? 'bg-primary-600 text-white border-primary-600'
+                    : 'bg-white border-secondary-200'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <h3 className="text-sm font-bold text-secondary-500 uppercase mb-2">Step 4: Transport</h3>
+          <div className="flex flex-wrap gap-2">
+            {(
+              [
+                ['public', 'Public transit'],
+                ['car', 'Car'],
+                ['both', 'Both'],
+              ] as const
+            ).map(([v, label]) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setTransportMode(v)}
+                className={`px-4 py-2 rounded-full text-sm font-medium border ${
+                  transportMode === v
+                    ? 'bg-primary-600 text-white border-primary-600'
+                    : 'bg-white border-secondary-200'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setDone(true)}
+          className="px-8 py-3 rounded-full bg-primary-600 text-white font-semibold hover:bg-primary-700"
+        >
+          Generate my budget →
+        </button>
+      </div>
+
+      {done && city && plan && (
+        <div className="space-y-8">
+          <div>
+            <h2 className="text-2xl font-bold text-secondary-900">Your Monthly Budget for {city.name}</h2>
+            <p className="text-secondary-600 mt-1">
+              Lifestyle: {lifestyle.charAt(0).toUpperCase() + lifestyle.slice(1)} | {housingLabel} |{' '}
+              {transportMode === 'public' ? 'Public transit' : transportMode === 'car' ? 'Car' : 'Both'}
+            </p>
+          </div>
+
+          <div className="h-80 w-full max-w-xl mx-auto">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={plan.pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={120}>
+                  {plan.pieData.map((_, i) => (
+                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(v: number) => formatUsd(v)} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="rounded-2xl border border-secondary-200 overflow-hidden">
+            <table className="w-full text-sm">
+              <tbody>
+                {plan.pieData.map((row, i) => (
+                  <tr key={row.name} className="border-t border-secondary-100">
+                    <td className="p-3 font-medium">
+                      <span className="inline-flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
+                        {row.name}
+                      </span>
+                    </td>
+                    <td className="p-3 text-right">{Math.round((row.value / plan.grandTotal) * 100)}%</td>
+                    <td className="p-3 text-right font-semibold">{formatUsd(row.value)}</td>
+                  </tr>
+                ))}
+                <tr className="border-t-2 border-secondary-300 bg-secondary-50 font-bold">
+                  <td className="p-3" colSpan={2}>
+                    Total
+                  </td>
+                  <td className="p-3 text-right">{formatUsd(plan.grandTotal)}/month</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="prose prose-sm max-w-none text-secondary-800 space-y-6">
+            <h3 className="text-lg font-bold text-secondary-900">Detailed breakdown</h3>
+            <div>
+              <p className="font-semibold">🏠 Housing</p>
+              <ul className="list-disc pl-5 text-sm">
+                <li>
+                  Rent ({housingLabel}) {formatUsd(Math.round(plan.rent * 0.95))}–{formatUsd(Math.round(plan.rent * 1.05))}
+                </li>
+                <li>
+                  Utilities {formatUsd(city.costs.utilities.min)}–{formatUsd(city.costs.utilities.max)}
+                </li>
+                <li>
+                  Internet {formatUsd(city.costs.internet.min)}–{formatUsd(city.costs.internet.max)}
+                </li>
+              </ul>
+            </div>
+            <div>
+              <p className="font-semibold">🛒 Food & Dining</p>
+              <ul className="list-disc pl-5 text-sm">
+                <li>
+                  Groceries {formatUsd(city.costs.groceries.min)}–{formatUsd(city.costs.groceries.max)}
+                </li>
+                <li>
+                  Eating out (moderate) ~{formatUsd(plan.eatingOut / 10)} per meal × 10
+                </li>
+              </ul>
+            </div>
+            <div>
+              <p className="font-semibold">🚌 Transport</p>
+              <ul className="list-disc pl-5 text-sm">
+                <li>
+                  Monthly estimate {formatUsd(city.costs.transport.min)}–{formatUsd(city.costs.transport.max)} (adjusted for
+                  your mode)
+                </li>
+              </ul>
+            </div>
+            <div>
+              <p className="font-semibold">💪 Personal</p>
+              <ul className="list-disc pl-5 text-sm">
+                <li>
+                  Gym {formatUsd(city.costs.gym.min)}–{formatUsd(city.costs.gym.max)}
+                </li>
+                <li>Entertainment ~{formatUsd(plan.entertainment)}</li>
+                <li>Clothing est. ~{formatUsd(plan.clothing)}</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-4">
+            <button
+              type="button"
+              onClick={downloadPdf}
+              className="px-6 py-3 rounded-full bg-secondary-900 text-white font-semibold hover:bg-secondary-800"
+            >
+              Download as PDF
+            </button>
+            <button
+              type="button"
+              onClick={shareBudget}
+              className="px-6 py-3 rounded-full border-2 border-primary-600 text-primary-700 font-semibold"
+            >
+              Share budget
+            </button>
+            <Link href={`/cities/${city.slug}`} className="px-6 py-3 text-primary-600 font-semibold hover:underline">
+              Full {city.name} guide →
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {done && !city && <p className="text-amber-700">Please select a city.</p>}
+    </div>
+  );
+}

@@ -4,6 +4,7 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'Terms of Service',
   description: 'Terms of Service for MoneyWithSense. Please read these terms carefully before using our website.',
+  robots: { index: false, follow: true },
 };
 
 export default function TermsPage() {

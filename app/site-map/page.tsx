@@ -4,6 +4,7 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'Sitemap',
   description: 'Complete sitemap for MoneyWithSense - find all our pages, categories, and resources.',
+  robots: { index: false, follow: true },
 };
 
 const siteLinks = {

@@ -4,6 +4,7 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'About Us',
   description: 'Learn about MoneyWithSense — our mission, editorial approach, and commitment to providing clear, practical personal finance education for everyday people.',
+  robots: { index: false, follow: true },
 };
 
 export default function AboutPage() {

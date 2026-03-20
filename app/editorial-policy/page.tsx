@@ -4,6 +4,7 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'Editorial Policy',
   description: 'Learn about MoneyWithSense editorial standards, content creation process, and commitment to accuracy in personal finance education.',
+  robots: { index: false, follow: true },
 };
 
 export default function EditorialPolicyPage() {

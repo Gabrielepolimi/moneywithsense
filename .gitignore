@@ -1,3 +1,6 @@
+# Local npm cache (optional CI)
+.npm-cache/
+
 # Dependencies
 node_modules/
 npm-debug.log*
@@ -8,6 +11,7 @@ yarn-error.log*
 .next/
 out/
 build/
+*.tsbuildinfo
 
 # Environment variables
 .env

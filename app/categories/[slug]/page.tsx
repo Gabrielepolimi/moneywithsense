@@ -2,7 +2,9 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Metadata } from 'next';
-import { getPosts } from '../../../lib/getPosts';
+import { getPosts, getCostOfLivingCategoryPosts } from '../../../lib/getPosts';
+import { isMigratedCostOfLivingArticleSlug } from '../../../lib/costOfLivingArticleSlugs';
+import CostOfLivingCategoryPage from '../../../components/categories/CostOfLivingCategoryPage';
 
 interface PageProps {
   params: Promise<{
@@ -23,6 +25,13 @@ const categories = [
   { slug: 'taxes-tips', name: 'Taxes & Tips', description: 'Tax basics, deductions, and strategies for everyday people.', keywords: 'tax tips, deductions, tax planning, filing taxes', icon: '📋' },
   { slug: 'side-hustles', name: 'Side Hustles', description: 'Ideas and strategies for earning extra income outside your job.', keywords: 'side hustles, freelancing, gig economy, extra income', icon: '🚀' },
   { slug: 'money-psychology', name: 'Money Psychology', description: 'Understanding your relationship with money and building better habits.', keywords: 'money mindset, financial habits, behavioral finance', icon: '🧠' },
+  {
+    slug: 'cost-of-living',
+    name: 'Cost of Living',
+    description: 'City-by-city budgets, comparisons, and guides for living costs worldwide.',
+    keywords: 'cost of living, cities, relocate, budget, international',
+    icon: '🌍',
+  },
 ];
 
 function slugifyCategory(value?: string) {
@@ -49,6 +58,23 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return {
       title: 'Category not found',
       description: 'The category you are looking for does not exist.',
+    };
+  }
+
+  if (slug === 'cost-of-living') {
+    return {
+      title: 'Cost of Living Guides 2026 | MoneyWithSense',
+      description:
+        'Explore 100+ cities with cost breakdowns, comparisons, and editorial guides — budgets, rent, transport, and quality of life.',
+      alternates: { canonical: `${siteUrl}/categories/cost-of-living` },
+      openGraph: {
+        title: 'Cost of Living Guides 2026 | MoneyWithSense',
+        description:
+          'Explore 100+ cities with cost breakdowns, comparisons, and editorial guides — budgets, rent, transport, and quality of life.',
+        url: `${siteUrl}/categories/cost-of-living`,
+        siteName: 'MoneyWithSense',
+        type: 'website',
+      },
     };
   }
 
@@ -84,6 +110,20 @@ export default async function CategoryPage({ params }: PageProps) {
 
   if (!category) {
     notFound();
+  }
+
+  if (slug === 'cost-of-living') {
+    let colPosts: Awaited<ReturnType<typeof getCostOfLivingCategoryPosts>> = [];
+    try {
+      colPosts = await getCostOfLivingCategoryPosts();
+    } catch {
+      console.error('Failed to fetch cost-of-living category posts');
+    }
+    const editorialPosts = colPosts.filter(
+      (p: { slug?: { current?: string } }) =>
+        p.slug?.current && !isMigratedCostOfLivingArticleSlug(p.slug.current)
+    );
+    return <CostOfLivingCategoryPage editorialPosts={editorialPosts} />;
   }
 
   const posts = await getPosts();

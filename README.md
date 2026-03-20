@@ -55,6 +55,13 @@ UNSPLASH_ACCESS_KEY=your_unsplash_key
 - `scripts/generate-weekly-batch.js`: Batch generator with duplicate checking.
 - `scripts/weekly-content-planner.js`: Plans weekly finance content topics.
 
+### City data layer (pages / comparisons)
+- `data/cities.json`: 100 cities with costs in **USD** (frontend converts via `lib/cities.ts`).
+- `lib/cities.ts`: Helpers — `getAllCities`, `getCityBySlug`, `getCitiesByContinent`, `getSimilarCities`, `getCheaperAlternatives`, `getComparisonPairs`, `formatCost`.
+- `scripts/build-initial-cities.mjs`: Regenerate seed JSON from embedded metadata (`npm run cities:build`).
+- `scripts/sync-cities.js`: Pull **Teleport** scores (and rent hints when available) into `cities.json` (`npm run cities:sync`).
+- `.github/workflows/sync-cities.yml`: Monthly sync (1st @ 06:00 UTC), auto-commit if changed, optional **Vercel** deploy via `VERCEL_DEPLOY_HOOK` secret.
+
 ### Cost of Living Generator
 - `scripts/ai-costofliving-generator.js`: Generates cost-of-living articles for cities.
 - `scripts/costofliving-queue.js`: Queue manager for scheduled article generation.

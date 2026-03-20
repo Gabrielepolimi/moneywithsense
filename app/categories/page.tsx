@@ -87,6 +87,14 @@ const categories = [
     color: 'bg-violet-50 border-violet-100 text-violet-700',
     articles: 6,
   },
+  {
+    name: 'Cost of Living',
+    slug: 'cost-of-living',
+    description: '100+ city budgets, comparisons, and editorial guides for living costs worldwide.',
+    icon: '🌍',
+    color: 'bg-sky-50 border-sky-100 text-sky-800',
+    articles: 100,
+  },
 ];
 
 export default function CategoriesPage() {
