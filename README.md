@@ -48,6 +48,29 @@ GEMINI_MODEL=gemini-2.0-flash-exp  # or gemini-2.5-pro when available
 UNSPLASH_ACCESS_KEY=your_unsplash_key
 ```
 
+### Vercel (produzione) — Sanity
+
+Per evitare **fallback vuoti** su articoli, sitemap e home durante il **build** su Vercel, imposta queste variabili nel progetto Vercel (**Settings → Environment Variables**), per almeno *Production* (e *Preview* se usi preview deploy):
+
+| Variabile | Dove | Note |
+|-----------|------|------|
+| `NEXT_PUBLIC_SANITY_PROJECT_ID` | Client + build | ID progetto Sanity (es. `z0g6hj8g`). |
+| `NEXT_PUBLIC_SANITY_DATASET` | Client + build | Di solito `production`. |
+| `SANITY_API_TOKEN` | **Server only** (no `NEXT_PUBLIC_`) | Token con permesso di **lettura** (o Editor) sui documenti pubblicati; necessario per le fetch GROQ lato server a build time. |
+
+Senza `SANITY_API_TOKEN` (o con project ID errato), il build può loggare errori tipo *Failed to fetch posts* e generare pagine articolo / liste senza dati.
+
+### GitHub Actions — rebuild dopo sync città
+
+Il workflow [`.github/workflows/sync-cities.yml`](.github/workflows/sync-cities.yml) aggiorna `data/cities.json` il **1° di ogni mese** (e su *workflow_dispatch*). Dopo un commit con modifiche, può innescare un nuovo deploy Vercel.
+
+1. In **Vercel**: progetto → **Settings → Git → Deploy Hooks** → crea un hook (es. nome `sync-cities`) → copia l’URL completo.
+2. In **GitHub**: repo → **Settings → Secrets and variables → Actions** → **New repository secret**:
+   - Name: `VERCEL_DEPLOY_HOOK`
+   - Value: incolla l’URL del deploy hook.
+
+Se il secret **non** è impostato, il workflow salta il trigger (solo log) e il sito si aggiorna al prossimo push o deploy manuale.
+
 ## Content Scripts
 
 ### Finance Articles Generator

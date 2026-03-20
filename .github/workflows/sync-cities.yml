@@ -1,3 +1,5 @@
+# Monthly Teleport sync → commit data/cities.json → optional Vercel redeploy.
+# GitHub: add secret VERCEL_DEPLOY_HOOK = full URL from Vercel → Settings → Git → Deploy Hooks.
 name: Sync cities data (Teleport)
 
 on:

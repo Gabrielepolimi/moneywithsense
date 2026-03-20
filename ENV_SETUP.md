@@ -61,6 +61,10 @@ YOUTUBE_API_KEY=
 6. Permissions: **Editor**
 7. Copia il token
 
+**Vercel (build produzione):** aggiungi anche `NEXT_PUBLIC_SANITY_PROJECT_ID` e `NEXT_PUBLIC_SANITY_DATASET` insieme a `SANITY_API_TOKEN` (vedi README → sezione *Vercel — Sanity*). Senza token, il build può non popolare articoli / sitemap.
+
+**GitHub Actions (sync città):** per il redeploy automatico dopo l’aggiornamento mensile di `cities.json`, crea il secret `VERCEL_DEPLOY_HOOK` con l’URL del Deploy Hook Vercel (README → *GitHub Actions — rebuild dopo sync città*).
+
 ---
 
 ### 3. UNSPLASH_ACCESS_KEY (Opzionale)
