@@ -8,8 +8,6 @@ import {
   getSimilarCities,
   getCheaperAlternatives,
   countryFlagEmoji,
-  formatCost,
-  formatCostRange,
   scoreColorClass,
   scoreBarClass,
   getQualityOfLifeScore,
@@ -334,8 +332,7 @@ export default async function CityPage({ params }: Props) {
                 <thead className="bg-secondary-50">
                   <tr>
                     <th className="text-left p-3 font-semibold text-secondary-800">Category</th>
-                    <th className="text-right p-3 font-semibold text-secondary-800">USD</th>
-                    <th className="text-right p-3 font-semibold text-secondary-800 hidden sm:table-cell">Local</th>
+                    <th className="text-right p-3 font-semibold text-secondary-800">USD/month</th>
                     <th className="text-right p-3 font-semibold text-secondary-800">vs global</th>
                   </tr>
                 </thead>
@@ -361,9 +358,6 @@ export default async function CityPage({ params }: Props) {
                         <td className="p-3 text-secondary-800">{label}</td>
                         <td className="p-3 text-right tabular-nums font-medium text-secondary-900">
                           ${r.min.toLocaleString('en-US')}–${r.max.toLocaleString('en-US')}
-                        </td>
-                        <td className="p-3 text-right tabular-nums text-secondary-600 hidden sm:table-cell">
-                          {formatCostRange(r.min, r.max, city)}
                         </td>
                         <td className="p-3 text-right">
                           <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${tone}`}>
@@ -499,10 +493,9 @@ export default async function CityPage({ params }: Props) {
                 return (
                   <div key={k} className="rounded-2xl border border-secondary-200 p-5 bg-white shadow-sm">
                     <h3 className="font-bold text-lg text-secondary-900 mb-2">{label}</h3>
-                    <p className="text-primary-700 font-semibold mb-1">
-                      ${b.min.toLocaleString('en-US')}–${b.max.toLocaleString('en-US')}/mo USD
+                    <p className="text-primary-700 font-semibold mb-4">
+                      ${b.min.toLocaleString('en-US')}–${b.max.toLocaleString('en-US')}/month
                     </p>
-                    <p className="text-secondary-600 text-sm mb-4">{formatCostRange(b.min, b.max, city)}</p>
                     <p className="text-xs font-semibold text-secondary-500 uppercase mb-2">Top expenses</p>
                     <ul className="text-sm text-secondary-700 space-y-1">
                       <li>Rent (1-bed center): ~${city.costs.rentCenterOneBed.max.toLocaleString('en-US')}/mo</li>
@@ -534,8 +527,7 @@ export default async function CityPage({ params }: Props) {
                       </div>
                       <p className="text-sm text-secondary-600 mb-3">{n.vibe}</p>
                       <p className="text-sm font-medium text-primary-700">
-                        Est. 1-bed rent: ${usdMin.toLocaleString('en-US')}–${usdMax.toLocaleString('en-US')}/mo (
-                        {formatCostRange(usdMin, usdMax, city)})
+                        Est. 1-bed rent: ${usdMin.toLocaleString('en-US')}–${usdMax.toLocaleString('en-US')}/mo
                       </p>
                     </div>
                   );
