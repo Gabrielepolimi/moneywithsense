@@ -241,8 +241,7 @@ export default async function CityPage({ params }: Props) {
                   <span className="text-xl md:text-2xl font-bold text-secondary-700">/month</span>
                 </p>
                 <p className="text-sm text-secondary-600 mb-5">
-                  Range ${single.min.toLocaleString('en-US')}–${single.max.toLocaleString('en-US')} •{' '}
-                  {formatCostRange(single.min, single.max, city)}
+                  Range ${single.min.toLocaleString('en-US')}–${single.max.toLocaleString('en-US')}/month
                 </p>
 
                 <div className="flex flex-wrap gap-1.5 md:gap-2">
