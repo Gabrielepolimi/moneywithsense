@@ -13,7 +13,11 @@ import {
   scoreColorClass,
   scoreBarClass,
   getQualityOfLifeScore,
-  canonicalComparePairSlug
+  canonicalComparePairSlug,
+  getGlobalCostMeans,
+  mortgageMonthly,
+  canAffordRent,
+  avgCostUsd
 } from '../../../lib/cities';
 import { fetchCityRelatedPosts } from '../../../lib/fetchCityRelatedPosts';
 import { ogImageForCity, siteUrl } from '../../../lib/seo';
@@ -31,11 +35,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!city) return { title: 'City not found' };
   const { single } = city.monthlyBudget;
   const title = `Cost of Living in ${city.name} ${YEAR} - Monthly Budget Guide | MoneyWithSense`;
-  const description = `Planning to live in ${city.name}? A single person needs $${single.min.toLocaleString('en-US')}-$${single.max.toLocaleString('en-US')}/month. Full breakdown: rent, food, transport, and quality of life scores.`;
+  const description = `Planning to live in ${city.name}? A single person needs $${single.min.toLocaleString('en-US')}-$${single.max.toLocaleString('en-US')}/month. Full breakdown: rent, food, transport, salaries, housing and quality of life scores.`;
   const og = ogImageForCity(city.slug);
+  const keywords = [
+    `cost of living ${city.name} ${YEAR}`,
+    `${city.name} salary`,
+    `average salary ${city.name}`,
+    `cost to buy apartment ${city.name}`,
+    `daily expenses ${city.name} ${YEAR}`,
+    `${city.name} cost of living for expats`,
+    `${city.name} monthly budget`,
+    `rent in ${city.name}`
+  ];
   return {
     title,
     description,
+    keywords,
     alternates: {
       canonical: `${siteUrl}/cities/${city.slug}`,
       languages: { en: `${siteUrl}/cities/${city.slug}` },
@@ -148,17 +163,49 @@ export default async function CityPage({ params }: Props) {
     '@context': 'https://schema.org',
     '@type': 'Dataset',
     name: `Cost of Living in ${city.name} 2026`,
-    description: `Monthly cost breakdown for ${city.name}: rent, food, transport, utilities and quality of life scores.`,
+    description: `Monthly cost breakdown for ${city.name}: rent, food, transport, utilities, salaries, property prices and quality of life scores.`,
     url: `${siteUrl}/cities/${city.slug}`,
     creator: { '@type': 'Organization', name: 'MoneyWithSense' },
     dateModified: city.lastUpdated,
-    variableMeasured: ['Rent', 'Groceries', 'Transport', 'Utilities', 'Overall cost of living']
+    variableMeasured: [
+      'Rent',
+      'Groceries',
+      'Transport',
+      'Utilities',
+      'Salary',
+      'Property price',
+      'Daily expenses',
+      'Overall cost of living'
+    ]
   };
 
   const overall = city.scores?.overall ?? 0;
   const safety = city.scores?.safety ?? 0;
   const housing = city.scores?.housing ?? 0;
   const qol = getQualityOfLifeScore(city);
+
+  const comfortable = single.max;
+  const globalMeans = getGlobalCostMeans();
+  const dc = city.dailyCosts;
+  const hd = city.housingDetails;
+  const transportMid = avgCostUsd(city.costs.transport);
+  const gymMid = avgCostUsd(city.costs.gym);
+
+  const UNIT_SQM = 60;
+  const mortgageEstimate =
+    hd?.buyPricePerSqmCenter?.usd && hd?.avgMortgageRate
+      ? mortgageMonthly(hd.buyPricePerSqmCenter.usd * UNIT_SQM, hd.avgMortgageRate, 25)
+      : null;
+
+  const SALARY_ROLES: { key: keyof NonNullable<typeof city.salaries>; label: string }[] = [
+    { key: 'averageNet', label: 'Average net salary' },
+    { key: 'softwareEngineer', label: 'Software engineer (mid)' },
+    { key: 'marketing', label: 'Marketing manager' },
+    { key: 'teacher', label: 'Teacher (secondary)' },
+    { key: 'nurse', label: 'Nurse (RN)' }
+  ];
+
+  const rentMax = city.costs.rentCenterOneBed?.max ?? 0;
 
   return (
     <>
@@ -168,66 +215,162 @@ export default async function CityPage({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(datasetJsonLd) }} />
 
       <article className="min-h-screen bg-white">
+        {/* Split hero */}
         <div className="bg-gradient-to-b from-primary-50 to-white border-b border-secondary-100">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14 text-center">
-            <div className="text-5xl mb-3" aria-hidden>
-              {countryFlagEmoji(city.countryCode)}
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+            <div className="grid md:grid-cols-2 gap-6 md:gap-10 items-start">
+              {/* Left: headline + budget + pills */}
+              <div className="order-1">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-4xl md:text-5xl leading-none" aria-hidden>
+                    {countryFlagEmoji(city.countryCode)}
+                  </span>
+                  <div>
+                    <h1 className="text-2xl md:text-3xl font-bold text-secondary-900 leading-tight">
+                      Cost of Living in {city.name}
+                    </h1>
+                    <p className="text-sm md:text-base text-secondary-600">{city.country}</p>
+                  </div>
+                </div>
+
+                <p className="text-xs text-secondary-500 uppercase tracking-wider mb-1 font-semibold">
+                  Comfortable budget (single)
+                </p>
+                <p className="text-4xl md:text-5xl font-extrabold text-primary-700 mb-1 leading-none">
+                  ${comfortable.toLocaleString('en-US')}
+                  <span className="text-xl md:text-2xl font-bold text-secondary-700">/month</span>
+                </p>
+                <p className="text-sm text-secondary-600 mb-5">
+                  Range ${single.min.toLocaleString('en-US')}–${single.max.toLocaleString('en-US')} •{' '}
+                  {formatCostRange(single.min, single.max, city)}
+                </p>
+
+                <div className="flex flex-wrap gap-1.5 md:gap-2">
+                  <span className={`px-2.5 md:px-3 py-1 md:py-1.5 rounded-full text-[11px] md:text-xs font-bold whitespace-nowrap ${scoreColorClass(overall)}`}>
+                    Overall {overall.toFixed(1)}
+                  </span>
+                  <span className={`px-2.5 md:px-3 py-1 md:py-1.5 rounded-full text-[11px] md:text-xs font-bold whitespace-nowrap ${scoreColorClass(safety)}`}>
+                    Safety {safety.toFixed(1)}
+                  </span>
+                  <span className={`px-2.5 md:px-3 py-1 md:py-1.5 rounded-full text-[11px] md:text-xs font-bold whitespace-nowrap ${scoreColorClass(housing)}`}>
+                    Housing {housing.toFixed(1)}
+                  </span>
+                  <span className={`px-2.5 md:px-3 py-1 md:py-1.5 rounded-full text-[11px] md:text-xs font-bold whitespace-nowrap ${scoreColorClass(qol)}`}>
+                    QoL {qol.toFixed(1)}
+                  </span>
+                </div>
+                <p className="text-xs text-secondary-400 mt-4">Last updated: {city.lastUpdated}</p>
+              </div>
+
+              {/* Right: salary checker compact */}
+              <div className="order-2">
+                <SalaryChecker
+                  cityName={city.name}
+                  monthlyBudget={city.monthlyBudget}
+                  costs={city.costs}
+                  compact
+                />
+              </div>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-secondary-900 mb-1">
-              Cost of Living in {city.name}
-            </h1>
-            <p className="text-lg text-secondary-600 mb-6">{city.country}</p>
-            <p className="text-sm text-secondary-500 uppercase tracking-wide mb-2">Monthly budget (single)</p>
-            <p className="text-4xl md:text-5xl font-extrabold text-primary-700 mb-2">
-              ${single.min.toLocaleString('en-US')}–${single.max.toLocaleString('en-US')}
-              <span className="text-2xl md:text-3xl font-bold text-secondary-700">/month</span>
-            </p>
-            <p className="text-lg text-secondary-700 mb-8">
-              {formatCostRange(single.min, single.max, city)} <span className="text-secondary-500">(local currency)</span>
-            </p>
-            <div className="flex flex-wrap justify-center gap-3">
-              <span className={`px-4 py-2 rounded-full text-sm font-bold ${scoreColorClass(overall)}`}>
-                Overall {overall.toFixed(1)}
-              </span>
-              <span className={`px-4 py-2 rounded-full text-sm font-bold ${scoreColorClass(safety)}`}>
-                Safety {safety.toFixed(1)}
-              </span>
-              <span className={`px-4 py-2 rounded-full text-sm font-bold ${scoreColorClass(housing)}`}>
-                Housing {housing.toFixed(1)}
-              </span>
-              <span className={`px-4 py-2 rounded-full text-sm font-bold ${scoreColorClass(qol)}`}>
-                Quality of life {qol.toFixed(1)}
-              </span>
-            </div>
-            <p className="text-xs text-secondary-400 mt-6">Last updated: {city.lastUpdated}</p>
           </div>
         </div>
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-14">
-          <SalaryChecker cityName={city.name} monthlyBudget={city.monthlyBudget} costs={city.costs} />
+          {/* Daily costs at a glance */}
+          {(dc?.coffee || dc?.beer || dc?.lunch || dc?.monthlyGroceries) && (
+            <section>
+              <h2 className="text-2xl font-bold text-secondary-900 mb-2">Daily costs at a glance</h2>
+              <p className="text-secondary-600 mb-6 text-sm md:text-base">
+                Typical prices you&apos;ll pay in {city.name} for everyday essentials.
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+                {dc?.coffee && (
+                  <DailyCard emoji="☕" label="Coffee" amount={`$${dc.coffee.usd}`} note={dc.coffee.note} tone="primary" />
+                )}
+                {dc?.beer && (
+                  <DailyCard emoji="🍺" label="Beer" amount={`$${dc.beer.usd}`} note={dc.beer.note} tone="amber" />
+                )}
+                {dc?.lunch && (
+                  <DailyCard emoji="🍽️" label="Lunch" amount={`$${dc.lunch.usd}`} note={dc.lunch.note} tone="emerald" />
+                )}
+                {dc?.monthlyGroceries && (
+                  <DailyCard
+                    emoji="🛒"
+                    label="Groceries"
+                    amount={`$${dc.monthlyGroceries.usd}`}
+                    note={dc.monthlyGroceries.note ?? 'monthly'}
+                    tone="primary"
+                  />
+                )}
+                {transportMid > 0 && (
+                  <DailyCard
+                    emoji="🚌"
+                    label="Transport"
+                    amount={`$${transportMid.toLocaleString('en-US')}`}
+                    note="monthly pass"
+                    tone="amber"
+                  />
+                )}
+                {gymMid > 0 && (
+                  <DailyCard
+                    emoji="💪"
+                    label="Gym"
+                    amount={`$${gymMid.toLocaleString('en-US')}`}
+                    note="monthly membership"
+                    tone="emerald"
+                  />
+                )}
+              </div>
+            </section>
+          )}
 
+          {/* Full cost breakdown with vs-global badge */}
           <section>
-            <h2 className="text-2xl font-bold text-secondary-900 mb-4">Cost breakdown</h2>
+            <h2 className="text-2xl font-bold text-secondary-900 mb-2">Full cost breakdown</h2>
+            <p className="text-secondary-600 mb-6 text-sm md:text-base">
+              Colors show how each category compares to the global average of our 100 tracked cities.
+            </p>
             <div className="overflow-x-auto rounded-2xl border border-secondary-200">
               <table className="w-full text-sm">
                 <thead className="bg-secondary-50">
                   <tr>
                     <th className="text-left p-3 font-semibold text-secondary-800">Category</th>
                     <th className="text-right p-3 font-semibold text-secondary-800">USD</th>
-                    <th className="text-right p-3 font-semibold text-secondary-800">Local currency</th>
+                    <th className="text-right p-3 font-semibold text-secondary-800 hidden sm:table-cell">Local</th>
+                    <th className="text-right p-3 font-semibold text-secondary-800">vs global</th>
                   </tr>
                 </thead>
                 <tbody>
                   {COST_ROWS.map(({ key, label }) => {
                     const r = city.costs[key as string];
                     if (!r) return null;
+                    const mid = (r.min + r.max) / 2;
+                    const mean = globalMeans[key];
+                    let diffPct: number | null = null;
+                    if (mean && mean > 0) diffPct = Math.round(((mid - mean) / mean) * 100);
+                    const tone =
+                      diffPct === null
+                        ? 'text-secondary-500'
+                        : diffPct <= -15
+                          ? 'text-emerald-700 bg-emerald-50'
+                          : diffPct >= 15
+                            ? 'text-red-700 bg-red-50'
+                            : 'text-secondary-600 bg-secondary-50';
+                    const arrow = diffPct === null ? '—' : diffPct > 0 ? '↑' : diffPct < 0 ? '↓' : '•';
                     return (
                       <tr key={key} className="border-t border-secondary-100">
                         <td className="p-3 text-secondary-800">{label}</td>
-                        <td className="p-3 text-right tabular-nums">
+                        <td className="p-3 text-right tabular-nums font-medium text-secondary-900">
                           ${r.min.toLocaleString('en-US')}–${r.max.toLocaleString('en-US')}
                         </td>
-                        <td className="p-3 text-right tabular-nums">{formatCostRange(r.min, r.max, city)}</td>
+                        <td className="p-3 text-right tabular-nums text-secondary-600 hidden sm:table-cell">
+                          {formatCostRange(r.min, r.max, city)}
+                        </td>
+                        <td className="p-3 text-right">
+                          <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${tone}`}>
+                            {arrow} {diffPct === null ? 'n/a' : `${diffPct > 0 ? '+' : ''}${diffPct}%`}
+                          </span>
+                        </td>
                       </tr>
                     );
                   })}
@@ -235,6 +378,118 @@ export default async function CityPage({ params }: Props) {
               </table>
             </div>
           </section>
+
+          {/* Housing market */}
+          {hd?.buyPricePerSqmCenter && (
+            <section>
+              <h2 className="text-2xl font-bold text-secondary-900 mb-2">Housing market</h2>
+              <p className="text-secondary-600 mb-6 text-sm md:text-base">
+                Rent vs buy snapshot for {city.name} — useful if you&apos;re comparing long-term relocation options.
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                <HousingStat
+                  label="Rent (1-bed center)"
+                  value={`$${city.costs.rentCenterOneBed.min.toLocaleString('en-US')}–$${city.costs.rentCenterOneBed.max.toLocaleString('en-US')}/mo`}
+                />
+                <HousingStat
+                  label="Buy center (per m²)"
+                  value={`$${hd.buyPricePerSqmCenter.usd.toLocaleString('en-US')}`}
+                />
+                {hd.buyPricePerSqmOutside && (
+                  <HousingStat
+                    label="Buy outside (per m²)"
+                    value={`$${hd.buyPricePerSqmOutside.usd.toLocaleString('en-US')}`}
+                  />
+                )}
+                {typeof hd.priceToRentRatio === 'number' && (
+                  <HousingStat label="Price-to-rent ratio" value={`${hd.priceToRentRatio}×`} />
+                )}
+                {typeof hd.avgMortgageRate === 'number' && (
+                  <HousingStat label="Avg mortgage rate" value={`${hd.avgMortgageRate.toFixed(1)}%`} />
+                )}
+              </div>
+              {mortgageEstimate !== null && (
+                <p className="mt-5 text-secondary-700 text-sm md:text-base bg-primary-50 border border-primary-200 rounded-2xl p-4 md:p-5">
+                  💰 <strong>Mortgage estimate:</strong> a 60 m² apartment in {city.name} center at
+                  ~${hd.buyPricePerSqmCenter.usd.toLocaleString('en-US')}/m² with a 25y loan at{' '}
+                  {hd.avgMortgageRate?.toFixed(1)}% would cost roughly{' '}
+                  <strong className="text-primary-700">
+                    ${mortgageEstimate.toLocaleString('en-US')}/month
+                  </strong>{' '}
+                  — compare that to the rent range above.
+                </p>
+              )}
+            </section>
+          )}
+
+          {/* Local salaries */}
+          {city.salaries && (
+            <section>
+              <h2 className="text-2xl font-bold text-secondary-900 mb-2">Local salaries (monthly net, USD)</h2>
+              <p className="text-secondary-600 mb-6 text-sm md:text-base">
+                Typical take-home in {city.name}. A green badge means the salary covers at least 2.5× the max rent
+                for a 1-bed in the center.
+              </p>
+              <div className="overflow-x-auto rounded-2xl border border-secondary-200">
+                <table className="w-full text-sm">
+                  <thead className="bg-secondary-50">
+                    <tr>
+                      <th className="text-left p-3 font-semibold text-secondary-800">Role</th>
+                      <th className="text-right p-3 font-semibold text-secondary-800">Monthly net</th>
+                      <th className="text-right p-3 font-semibold text-secondary-800">Covers rent?</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {SALARY_ROLES.map(({ key, label }) => {
+                      const s = city.salaries?.[key];
+                      if (!s || typeof s.usd !== 'number') return null;
+                      const covers = canAffordRent(s.usd, rentMax);
+                      return (
+                        <tr key={key} className="border-t border-secondary-100">
+                          <td className="p-3 text-secondary-800">{label}</td>
+                          <td className="p-3 text-right tabular-nums font-medium text-secondary-900">
+                            ${s.usd.toLocaleString('en-US')}
+                          </td>
+                          <td className="p-3 text-right">
+                            <span
+                              className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                                covers
+                                  ? 'bg-emerald-100 text-emerald-700'
+                                  : 'bg-red-100 text-red-700'
+                              }`}
+                            >
+                              {covers ? '✅ Yes' : '❌ No'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+
+          {/* Insider tips */}
+          {city.localTips && city.localTips.length > 0 && (
+            <section>
+              <h2 className="text-2xl font-bold text-secondary-900 mb-2">Local insider tips</h2>
+              <p className="text-secondary-600 mb-6 text-sm md:text-base">
+                Practical ways to cut costs that actually work in {city.name}.
+              </p>
+              <div className="grid md:grid-cols-3 gap-3 md:gap-4">
+                {city.localTips.slice(0, 3).map((tip, i) => (
+                  <div
+                    key={i}
+                    className="rounded-2xl border border-amber-200 bg-amber-50 p-4 md:p-5 flex gap-3"
+                  >
+                    <div className="text-2xl leading-none" aria-hidden>💡</div>
+                    <p className="text-sm md:text-base text-amber-900">{tip}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           <section>
             <h2 className="text-2xl font-bold text-secondary-900 mb-6">Budget scenarios</h2>
@@ -339,52 +594,22 @@ export default async function CityPage({ params }: Props) {
             <div className="grid md:grid-cols-2 gap-8">
               <div>
                 <h3 className="font-semibold text-secondary-800 mb-3">Similar cities</h3>
-                <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
                   {similar.map((c) => (
-                    <Link
-                      key={c.slug}
-                      href={`/cities/${c.slug}`}
-                      className="block rounded-xl border border-secondary-200 p-4 hover:border-primary-300 transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl">{countryFlagEmoji(c.countryCode)}</span>
-                        <div>
-                          <p className="font-medium text-secondary-900">{c.name}</p>
-                          <p className="text-sm text-secondary-500">{c.country}</p>
-                          <p className="text-sm text-primary-600 mt-1">
-                            ${c.monthlyBudget.single.min.toLocaleString('en-US')}–$
-                            {c.monthlyBudget.single.max.toLocaleString('en-US')}/mo
-                          </p>
-                        </div>
-                      </div>
-                    </Link>
+                    <CityCard key={c.slug} city={c} />
                   ))}
                 </div>
               </div>
-              <div>
-                <h3 className="font-semibold text-secondary-800 mb-3">Cheaper alternatives</h3>
-                <div className="space-y-3">
-                  {cheaper.map((c) => (
-                    <Link
-                      key={c.slug}
-                      href={`/cities/${c.slug}`}
-                      className="block rounded-xl border border-secondary-200 p-4 hover:border-primary-300 transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl">{countryFlagEmoji(c.countryCode)}</span>
-                        <div>
-                          <p className="font-medium text-secondary-900">{c.name}</p>
-                          <p className="text-sm text-secondary-500">{c.country}</p>
-                          <p className="text-sm text-primary-600 mt-1">
-                            ${c.monthlyBudget.single.min.toLocaleString('en-US')}–$
-                            {c.monthlyBudget.single.max.toLocaleString('en-US')}/mo
-                          </p>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
+              {cheaper.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-secondary-800 mb-3">Cheaper alternatives</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {cheaper.map((c) => (
+                      <CityCard key={c.slug} city={c} accent="emerald" />
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </section>
 
@@ -436,5 +661,74 @@ export default async function CityPage({ params }: Props) {
         </div>
       </article>
     </>
+  );
+}
+
+/* ---------- Presentational helpers (server components) ---------- */
+
+function DailyCard({
+  emoji,
+  label,
+  amount,
+  note,
+  tone
+}: {
+  emoji: string;
+  label: string;
+  amount: string;
+  note?: string;
+  tone: 'primary' | 'amber' | 'emerald';
+}) {
+  const toneClass =
+    tone === 'primary'
+      ? 'bg-primary-50 border-primary-100'
+      : tone === 'amber'
+        ? 'bg-amber-50 border-amber-100'
+        : 'bg-emerald-50 border-emerald-100';
+  return (
+    <div className={`rounded-2xl border ${toneClass} p-4 md:p-5`}>
+      <div className="text-3xl md:text-4xl leading-none mb-2" aria-hidden>
+        {emoji}
+      </div>
+      <p className="text-xs uppercase font-semibold text-secondary-500 tracking-wider mb-1">{label}</p>
+      <p className="text-xl md:text-2xl font-extrabold text-secondary-900 tabular-nums">{amount}</p>
+      {note && <p className="text-xs text-secondary-500 mt-1 line-clamp-2">{note}</p>}
+    </div>
+  );
+}
+
+function HousingStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-secondary-200 bg-white p-4 md:p-5">
+      <p className="text-xs uppercase font-semibold text-secondary-500 tracking-wider mb-1">{label}</p>
+      <p className="text-lg md:text-xl font-bold text-secondary-900 tabular-nums">{value}</p>
+    </div>
+  );
+}
+
+function CityCard({
+  city,
+  accent = 'primary'
+}: {
+  city: import('../../../lib/cities').City;
+  accent?: 'primary' | 'emerald';
+}) {
+  const priceClass = accent === 'emerald' ? 'text-emerald-700' : 'text-primary-700';
+  const borderHover = accent === 'emerald' ? 'hover:border-emerald-300' : 'hover:border-primary-300';
+  return (
+    <Link
+      href={`/cities/${city.slug}`}
+      className={`block rounded-2xl border border-secondary-200 ${borderHover} bg-white p-4 transition-colors`}
+    >
+      <div className="text-3xl leading-none mb-2" aria-hidden>
+        {countryFlagEmoji(city.countryCode)}
+      </div>
+      <p className="font-semibold text-secondary-900 leading-tight">{city.name}</p>
+      <p className="text-xs text-secondary-500 mb-2">{city.country}</p>
+      <p className={`text-sm font-bold tabular-nums ${priceClass}`}>
+        ${city.monthlyBudget.single.min.toLocaleString('en-US')}–$
+        {city.monthlyBudget.single.max.toLocaleString('en-US')}/mo
+      </p>
+    </Link>
   );
 }

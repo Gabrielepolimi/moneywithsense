@@ -12,7 +12,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "cities:build": "node scripts/build-initial-cities.mjs",
-    "cities:sync": "node scripts/sync-cities.js"
+    "cities:sync": "node scripts/sync-cities.js",
+    "cities:derive": "node scripts/derive-city-extras.mjs",
+    "cities:salaries": "node scripts/generate-city-salaries-tips.mjs"
   },
   "dependencies": {
     "@google-cloud/vertexai": "^1.10.0",

@@ -22,6 +22,40 @@ export type CityScores = {
   internet: number;
 };
 
+export type CityDailyCostItem = {
+  usd: number;
+  note?: string;
+};
+
+export type CityDailyCosts = {
+  coffee?: CityDailyCostItem;
+  beer?: CityDailyCostItem;
+  lunch?: CityDailyCostItem;
+  dinner?: CityDailyCostItem;
+  taxi8km?: CityDailyCostItem;
+  monthlyGroceries?: CityDailyCostItem;
+};
+
+export type CityHousingDetails = {
+  buyPricePerSqmCenter?: { usd: number };
+  buyPricePerSqmOutside?: { usd: number };
+  avgMortgageRate?: number;
+  priceToRentRatio?: number;
+};
+
+export type CitySalaryItem = {
+  usd: number;
+  note?: string;
+};
+
+export type CitySalaries = {
+  averageNet?: CitySalaryItem;
+  softwareEngineer?: CitySalaryItem;
+  nurse?: CitySalaryItem;
+  teacher?: CitySalaryItem;
+  marketing?: CitySalaryItem;
+};
+
 export type City = {
   slug: string;
   name: string;
@@ -52,6 +86,11 @@ export type City = {
   cheaperAlternatives: string[];
   description: string;
   lastUpdated: string;
+  /** Task 7 — enriched fields (optional, populated incrementally) */
+  dailyCosts?: CityDailyCosts;
+  housingDetails?: CityHousingDetails;
+  salaries?: CitySalaries;
+  localTips?: string[];
 };
 
 const cities = citiesData as City[];
@@ -218,6 +257,56 @@ export function getAllComparePairParams(): { pair: string }[] {
   }
 
   return out;
+}
+
+/** Mid-point (USD) of a cost range. */
+export function avgCostUsd(r: CityCostRange | undefined): number {
+  if (!r) return 0;
+  return Math.round((r.min + r.max) / 2);
+}
+
+/** Lazy-cached global means (mid of each cost row) across all cities. Used for the "vs global" badge. */
+let _globalMeans: Record<string, number> | null = null;
+export function getGlobalCostMeans(): Record<string, number> {
+  if (_globalMeans) return _globalMeans;
+  const sums: Record<string, { s: number; n: number }> = {};
+  for (const c of cities) {
+    for (const [k, r] of Object.entries(c.costs)) {
+      if (!r || typeof r.min !== 'number' || typeof r.max !== 'number') continue;
+      const mid = (r.min + r.max) / 2;
+      if (!sums[k]) sums[k] = { s: 0, n: 0 };
+      sums[k].s += mid;
+      sums[k].n += 1;
+    }
+  }
+  const out: Record<string, number> = {};
+  for (const [k, v] of Object.entries(sums)) {
+    if (v.n > 0) out[k] = Math.round(v.s / v.n);
+  }
+  _globalMeans = out;
+  return out;
+}
+
+/**
+ * Monthly mortgage payment (French amortization) for a given principal USD at annual
+ * percentage rate (e.g. 4.5 = 4.5%) over `years`. Returns an integer USD amount.
+ */
+export function mortgageMonthly(principalUsd: number, annualRatePct: number, years = 25): number {
+  if (principalUsd <= 0) return 0;
+  const r = annualRatePct / 100 / 12;
+  const n = years * 12;
+  if (r <= 0) return Math.round(principalUsd / n);
+  const m = (principalUsd * r) / (1 - Math.pow(1 + r, -n));
+  return Math.round(m);
+}
+
+/**
+ * Rent affordability: a monthly net salary is considered to "cover rent" when it is at
+ * least `ratio` × the max of rentCenterOneBed (default 2.5 — classic rent-to-salary rule).
+ */
+export function canAffordRent(salaryUsdPerMonth: number, rentMaxUsd: number, ratio = 2.5): boolean {
+  if (salaryUsdPerMonth <= 0 || rentMaxUsd <= 0) return false;
+  return salaryUsdPerMonth >= rentMaxUsd * ratio;
 }
 
 export function isAfricaOrMiddleEast(city: City): boolean {

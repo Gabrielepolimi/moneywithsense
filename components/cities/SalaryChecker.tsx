@@ -13,13 +13,15 @@ type Props = {
     family: CityCostRange;
   };
   costs: Record<string, CityCostRange>;
+  /** Compact variant: used in the hero split layout (tighter padding, smaller heading). */
+  compact?: boolean;
 };
 
 function avg(r: CityCostRange) {
   return Math.round((r.min + r.max) / 2);
 }
 
-export default function SalaryChecker({ cityName, monthlyBudget, costs }: Props) {
+export default function SalaryChecker({ cityName, monthlyBudget, costs, compact = false }: Props) {
   const [salary, setSalary] = useState('');
   const [household, setHousehold] = useState<Household>('single');
   const [submitted, setSubmitted] = useState(false);
@@ -56,10 +58,16 @@ export default function SalaryChecker({ cityName, monthlyBudget, costs }: Props)
     }
   }
 
+  const wrapperClass = compact
+    ? 'rounded-2xl border border-primary-200 bg-white shadow-sm p-5 md:p-6'
+    : 'rounded-2xl border border-secondary-200 bg-secondary-50 p-6 md:p-8';
+
   return (
-    <section className="rounded-2xl border border-secondary-200 bg-secondary-50 p-6 md:p-8">
-      <h2 className="text-xl font-bold text-secondary-900 mb-2">Can you afford to live in {cityName}?</h2>
-      <p className="text-secondary-600 text-sm mb-6">
+    <section className={wrapperClass}>
+      <h2 className={compact ? 'text-lg font-bold text-secondary-900 mb-1' : 'text-xl font-bold text-secondary-900 mb-2'}>
+        Can you afford to live in {cityName}?
+      </h2>
+      <p className={compact ? 'text-secondary-600 text-xs mb-4' : 'text-secondary-600 text-sm mb-6'}>
         Enter your monthly take-home in USD. We compare it to typical budgets for your household size (estimates, not financial advice).
       </p>
 
